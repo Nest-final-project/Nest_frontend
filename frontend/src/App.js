@@ -1,25 +1,27 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import Header from './components/Header';
+import HeroSection from './components/HeroSection';
+import StatsSection from './components/StatsSection';
+import MentorSection from './components/MentorSection';
+import CTASection from './components/CTASection';
+import ParticleBackground from './components/ParticleBackground';
 
-function App() {
+const App = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <div className="app">
+        <ParticleBackground />
+        <Header isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+        <main className="main-content">
+          <HeroSection />
+          <StatsSection />
+          <MentorSection />
+          <CTASection />
+        </main>
+      </div>
   );
-}
+};
 
 export default App;
