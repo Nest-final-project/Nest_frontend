@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, Bell } from 'lucide-react';
 import './Header.css';
+import logo from '../image/cool.png';
 
 const Header = ({ isMenuOpen, setIsMenuOpen }) => {
   return (
@@ -8,7 +9,7 @@ const Header = ({ isMenuOpen, setIsMenuOpen }) => {
       <div className="header-content">
         <div className="logo-section">
           <div className="logo-icon">
-            🚀
+            <img src={logo}/>
           </div>
           <h1 className="logo-text gradient-text">Nest.dev</h1>
         </div>
