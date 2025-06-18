@@ -1,57 +1,95 @@
-import React from 'react';
-import { Menu, Bell } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, Bell, X } from 'lucide-react';
 import './Header.css';
+import logo from '../image/cool.png';
 
-const Header = ({ isMenuOpen, setIsMenuOpen }) => {
+const Header = ({ onLoginClick }) => {
+  const [isNavOpen, setIsNavOpen] = useState(false);
+
+  const handleLoginClick = () => {
+    setIsNavOpen(false); // 사이드바 닫기
+    onLoginClick(); // 로그인 모달 열기
+  };
+
   return (
-    <header className="header">
-      <div className="header-content">
-        <div className="logo-section">
-          <div className="logo-icon">
-            🚀
+    <>
+      <header className="header">
+        <div className="header-content">
+          <div className="logo-section">
+            {/* 햄버거 메뉴 버튼 - 병아리 아이콘 왼쪽에 위치 */}
+            <button 
+              onClick={() => setIsNavOpen(!isNavOpen)}
+              className="nav-menu-button"
+            >
+              <Menu className="icon" />
+            </button>
+            
+            <div className="logo-icon">
+              <img src={logo} alt="Cool Chick"/>
+            </div>
+            <h1 className="logo-text gradient-text">Nest.dev</h1>
           </div>
-          <h1 className="logo-text gradient-text">Nest.dev</h1>
+          
+          <div className="header-actions">
+            <button 
+              className="login-button glass-effect"
+              onClick={onLoginClick}
+            >
+              로그인
+            </button>
+            <button className="notification-button">
+              <Bell className="icon" />
+              <div className="notification-dot"></div>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* 사이드바 네비게이션 */}
+      <div className={`sidebar-overlay ${isNavOpen ? 'open' : ''}`} onClick={() => setIsNavOpen(false)} />
+      <div className={`sidebar-nav ${isNavOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <img src={logo} alt="Cool Chick"/>
+            <h2>Nest.dev</h2>
+          </div>
+          <button 
+            onClick={() => setIsNavOpen(false)}
+            className="sidebar-close-button"
+          >
+            <X className="icon" />
+          </button>
         </div>
         
-        {/* Desktop Navigation */}
-        <nav className="desktop-nav hide-mobile">
-          <a href="#home" className="nav-link">홈</a>
-          <a href="#mentors" className="nav-link">멘토</a>
-          <a href="#programs" className="nav-link">프로그램</a>
-          <a href="#about" className="nav-link">소개</a>
-          <a href="#contact" className="nav-link">문의</a>
+        <nav className="sidebar-content">
+          <a href="#home" className="sidebar-link" onClick={() => setIsNavOpen(false)}>
+            <span className="sidebar-link-icon">🏠</span>
+            홈
+          </a>
+          <a href="#about" className="sidebar-link" onClick={() => setIsNavOpen(false)}>
+            <span className="sidebar-link-icon">📖</span>
+            소개
+          </a>
+          <a href="#category" className="sidebar-link" onClick={() => setIsNavOpen(false)}>
+            <span className="sidebar-link-icon">📂</span>
+            카테고리
+          </a>
+          <a href="#contact" className="sidebar-link" onClick={() => setIsNavOpen(false)}>
+            <span className="sidebar-link-icon">📧</span>
+            문의
+          </a>
         </nav>
         
-        <div className="header-actions">
-          <button className="login-button glass-effect">
+        <div className="sidebar-footer">
+          <button 
+            className="sidebar-login-button"
+            onClick={handleLoginClick}
+          >
             로그인
           </button>
-          <button className="notification-button">
-            <Bell className="icon" />
-            <div className="notification-dot"></div>
-          </button>
-          
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="menu-button hide-desktop"
-          >
-            <Menu className="icon" />
-          </button>
         </div>
       </div>
-      
-      {/* Mobile Navigation */}
-      <div className={`mobile-nav ${isMenuOpen ? 'open' : ''}`}>
-        <nav className="mobile-nav-content">
-          <a href="#home" className="mobile-nav-link">홈</a>
-          <a href="#mentors" className="mobile-nav-link">멘토</a>
-          <a href="#programs" className="mobile-nav-link">프로그램</a>
-          <a href="#about" className="mobile-nav-link">소개</a>
-          <a href="#contact" className="mobile-nav-link">문의</a>
-        </nav>
-      </div>
-    </header>
+    </>
   );
 };
 
