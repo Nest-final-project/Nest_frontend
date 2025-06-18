@@ -13,14 +13,60 @@
   text-align: center;
   font-size: 3rem;
   font-weight: 900;
+  margin-bottom: 2rem;
+}
+
+/* 카테고리 탭 스타일 */
+.category-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
   margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.category-tab {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.category-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.category-tab.active {
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: white;
+  border-color: transparent;
 }
 
 .mentor-carousel {
   position: relative;
+  padding: 0 4rem;
+  overflow: hidden;
+}
+
+.mentor-slider {
+  width: 100%;
+  overflow: hidden;
+}
+
+.mentor-track {
   display: flex;
-  align-items: center;
   gap: 2rem;
+}
+
+.mentor-slide {
+  flex: 0 0 calc(33.333% - 1.33rem);
+  min-width: 280px;
 }
 
 .carousel-button {
@@ -48,11 +94,11 @@
 }
 
 .carousel-button-prev {
-  left: -4rem;
+  left: 0;
 }
 
 .carousel-button-next {
-  right: -4rem;
+  right: 0;
 }
 
 .mentor-grid {
@@ -120,6 +166,8 @@
 .gradient-bg-4 { background: linear-gradient(135deg, #f97316, #ef4444); }
 .gradient-bg-5 { background: linear-gradient(135deg, #6366f1, #a855f7); }
 .gradient-bg-6 { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+.gradient-bg-7 { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+.gradient-bg-8 { background: linear-gradient(135deg, #fbbf24, #f97316); }
 
 .mentor-name {
   font-size: 1.5rem;
@@ -231,18 +279,92 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .carousel-button-prev,
-  .carousel-button-next {
-    display: none;
+  .mentor-carousel {
+    padding: 0 3rem;
+  }
+  
+  .mentor-slide {
+    flex: 0 0 calc(50% - 1rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .mentor-carousel {
+    padding: 0 2.5rem;
+  }
+  
+  .mentor-slide {
+    flex: 0 0 100%;
+  }
+  
+  .carousel-button {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }
 
 @media (max-width: 640px) {
-  .mentor-grid {
-    grid-template-columns: 1fr;
-  }
-  
   .section-title {
     font-size: 2rem;
   }
+  
+  .category-tabs {
+    gap: 0.5rem;
+  }
+  
+  .category-tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* 슬라이드 인디케이터 */
+.slide-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.indicator.active {
+  width: 2rem;
+  border-radius: 0.25rem;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+}
+
+.carousel-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.carousel-button:disabled:hover {
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 예약하기 버튼 스타일 */
+.reservation-button {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reservation-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
 }
