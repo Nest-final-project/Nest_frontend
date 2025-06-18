@@ -1,9 +1,12 @@
 .dynamic-background {
   position: fixed;
   inset: 0;
-  background: linear-gradient(to bottom right, #000000, rgba(139, 92, 246, 0.1), #000000);
+  background: linear-gradient(90deg, #81C784 50%, #A5D6A7 100%);
+
   z-index: 0;
 }
+
+
 
 .gradient-overlay {
   position: absolute;

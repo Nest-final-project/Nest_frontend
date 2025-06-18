@@ -59,28 +59,37 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgb(253, 243, 243);
 }
 
+/* 스크롤바 색상 설정 */
+
 ::-webkit-scrollbar-thumb {
-  background: rgba(168, 85, 247, 0.5);
+  background: #A5D6A7;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(168, 85, 247, 0.8);
+  background: #81C784;
 }
 
 /* Utility classes */
 .gradient-text {
-  background: linear-gradient(to right, #a855f7, #ec4899, #3b82f6);
+  background: linear-gradient(to right, #ffc400, #ffd34b, #ffdc6c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mento-text {
+  background: linear-gradient(to right, #15803D, #65A30D, #FACC15);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .glass-effect {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);

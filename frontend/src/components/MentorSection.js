@@ -97,7 +97,7 @@ const MentorSection = () => {
   return (
     <section className="mentor-section">
       <div className="mentor-container">
-        <h2 className="section-title gradient-text">추천 멘토</h2>
+        <h2 className="section-title mento-text">추천 멘토</h2>
         
         <div className="mentor-carousel">
           <button 
@@ -146,10 +146,7 @@ const MentorSection = () => {
                 </div>
                 
                 <div className="mentor-footer">
-                  <span className="mentor-price">{mentor.price}</span>
-                  {mentor.isOnline && (
-                    <span className="online-status">온라인</span>
-                  )}
+                  <button className="reservation-button"> 예약하기 </button>
                 </div>
               </div>
             ))}
