@@ -123,11 +123,6 @@ export const chatroomAPI = {
   //leaveChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/leave`),
 };
 
-// WebSocket 서브토큰 발급용 API
-export const socketTokenAPI = {
-  getSocketToken: () => api.get('/socket/token'),
-};
-
 // Message API
 export const messageAPI = {
   // 메시지 목록 조회
