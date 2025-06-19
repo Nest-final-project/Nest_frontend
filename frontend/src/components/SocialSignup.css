@@ -1,0 +1,283 @@
+/* 소셜 회원가입 컨테이너 */
+.social-signup-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #000;
+  position: relative;
+}
+
+/* 배경 효과 */
+.social-signup-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, #000000, rgba(139, 92, 246, 0.1), #000000);
+  z-index: 0;
+}
+
+/* 카드 */
+.social-signup-card {
+  position: relative;
+  z-index: 1;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2rem;
+  width: 100%;
+  max-width: 480px;
+  padding: 3rem 2rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* 헤더 */
+.social-signup-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.social-signup-logo {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1rem;
+  display: block;
+}
+
+.social-signup-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 0.5rem;
+}
+
+.social-signup-subtitle {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+}
+
+/* 폼 스타일 */
+.social-signup-form {
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.label-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.form-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+/* 전화번호 입력 */
+.phone-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.phone-field {
+  flex: 1;
+  min-width: 0;
+  padding: 1rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  color: white;
+  font-size: 1rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.phone-field::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.phone-field:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+.phone-separator {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+/* 사용자 유형 선택 */
+.user-type-options {
+  display: flex;
+  gap: 1rem;
+}
+
+.user-type-option {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+}
+
+.user-type-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+}
+
+.option-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+}
+
+.option-text strong {
+  color: white;
+  font-size: 1rem;
+}
+
+.option-text small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+}
+
+.user-type-option input[type="radio"]:checked + .option-content {
+  background: rgba(168, 85, 247, 0.1);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.user-type-option:hover .option-content {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 제출 버튼 */
+.submit-button {
+  width: 100%;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  color: white;
+  border: none;
+  border-radius: 1rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3);
+}
+
+/* 푸터 */
+.social-signup-footer {
+  text-align: center;
+}
+
+.footer-text {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.footer-text a {
+  color: rgba(168, 85, 247, 0.8);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-text a:hover {
+  color: #a855f7;
+  text-decoration: underline;
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .social-signup-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .social-signup-title {
+    font-size: 1.75rem;
+  }
+
+  .user-type-options {
+    flex-direction: column;
+  }
+
+  .option-content {
+    padding: 1rem;
+  }
+
+  .option-icon {
+    font-size: 1.5rem;
+  }
+
+  .phone-inputs {
+    gap: 0.375rem;
+  }
+
+  .phone-field {
+    padding: 0.875rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .phone-separator {
+    font-size: 1rem;
+  }
+}
