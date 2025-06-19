@@ -1,16 +1,49 @@
+import SockJS from 'sockjs-client';
+import {Client} from '@stomp/stompjs';
+import {tokenAPI} from "@/api/socketTokenAPI";
+
 class WebSocketService {
   constructor() {
-    this.socket = null;
+    this.connected = false;
     this.reconnectInterval = 5000;
     this.maxReconnectAttempts = 5;
     this.reconnectAttempts = 0;
     this.listeners = new Map();
+    this.subscriptions = new Map();
   }
 
-  connect(url = 'ws://localhost:8080/ws') {
+  async connect() {
     try {
-      this.socket = new WebSocket(url);
-      this.setupEventListeners();
+      const res = await tokenAPI.getSocketToken();
+      const socketToken = res.data.token;
+      const socket = new SockJS(`/ws-nest?token=${socketToken}`);
+
+      this.stompClient = new Client({
+        webSocketFactory: () => socket,
+        debug: false,
+        reconnectDelay: 0,
+        onConnect: (frame) => {
+          console.log('STOMP connected:', frame);
+          this.connected = true;
+          this.reconnectAttempts = 0;
+        },
+        onStompError: (frame) => {
+          console.error('STOMP error:', frame.headers['message']);
+          if (frame.body) console.error('Detail:', frame.body);
+        },
+        onWebSocketClose: (event) => {
+          this.connected = false;
+          console.warn('WebSocket disconnected:', event.code, event.reason);
+          if (!event.wasClean) {
+            this.handleReconnect();
+          }
+        },
+        onWebSocketError: (event) => {
+          console.error('WebSocket error:', event);
+        },
+      });
+
+      this.stompClient.activate();
     } catch (error) {
       console.error('WebSocket connection failed:', error);
       this.handleReconnect();
@@ -69,24 +102,38 @@ class WebSocketService {
     }
   }
 
-  send(data) {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(data));
+  send(destination, payload) {
+    if (this.connected && this.stompClient) {
+      this.stompClient.publish({
+        destination,
+        body: JSON.stringify(payload),
+      });
     } else {
-      console.warn('WebSocket is not connected');
+      console.warn('STOMP client not connected');
     }
   }
 
   // 채팅 메시지 전송
-  sendChatMessage(chatroomId, message, messageType = 'TEXT') {
-    this.send({
-      type: 'CHAT_MESSAGE',
-      chatroomId,
-      message,
-      messageType,
-      timestamp: new Date().toISOString()
-    });
+  sendChatMessage(destination,payload) {
+    if (this.connected && this.stompClient) {
+      this.stompClient.publish({
+        destination,
+        body: JSON.stringify(payload),
+      });
+    } else {
+      console.warn('STOMP client not connected');
+    }
   }
+
+  subscribe(destination, callback) {
+    if (!this.connected || !this.stompClient) return;
+    const subscription = this.stompClient.subscribe(destination, (message) => {
+      const body = JSON.parse(message.body);
+      callback(body);
+    });
+    this.subscriptions.set(destination, subscription);
+  }
+
 
   // 채팅방 입장
   joinChatroom(chatroomId) {
@@ -150,9 +197,10 @@ class WebSocketService {
 
   // 연결 종료
   disconnect() {
-    if (this.socket) {
-      this.socket.close(1000, 'Client disconnect');
-      this.socket = null;
+    if (this.stompClient) {
+      this.stompClient.deactivate();
+      this.stompClient = null;
+      this.connected = false;
     }
   }
 
