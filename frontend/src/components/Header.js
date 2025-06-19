@@ -1,28 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, Bell, X } from 'lucide-react';
 import notificationService from '../services/notificationService';
 import './Header.css';
 import logo from '../image/cool.png';
+import { categoryAPI } from '../services/api';
 
-const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
+const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, isLoggedIn, userInfo }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [hasNotifications, setHasNotifications] = useState(true); // 알림 상태
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    if (isNavOpen && isCategoryOpen) {
+      categoryAPI.getCategories()
+      .then((res) => {
+        const categoryList = res?.data?.data?.content || [];
+        setCategories(categoryList);
+      })
+      .catch((err) => {
+        console.error('카테고리 불러오기 실패:', err);
+      });
+    }
+  }, [isNavOpen, isCategoryOpen]);
+
+  const toggleSidebar = () => setIsNavOpen(!isNavOpen);
+  const toggleCategory = () => setIsCategoryOpen(!isCategoryOpen);
 
   const handleLoginClick = () => {
-    setIsNavOpen(false); // 사이드바 닫기
-    onLoginClick(); // 로그인 모달 열기
+    setIsNavOpen(false);
+    onLoginClick();
   };
 
-  const handleCategoryClick = (category) => {
-    setIsNavOpen(false); // 사이드바 닫기
-    setIsCategoryOpen(false); // 카테고리 드롭다운 닫기
-    if (onCategorySelect) {
-      onCategorySelect(category); // 카테고리 선택
+  const handleProfileClick = () => {
+    if (onProfileClick) {
+      onProfileClick();
     }
   };
 
-  const toggleCategory = () => {
-    setIsCategoryOpen(!isCategoryOpen);
+  const handleCategoryClick = (categoryName) => {
+    setIsNavOpen(false);
+    setIsCategoryOpen(false);
+    onCategorySelect(categoryName);  // ✅ 여기서 category.name 넘김
   };
 
   return (
@@ -31,8 +50,8 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
         <div className="header-content">
           <div className="logo-section">
             {/* 햄버거 메뉴 버튼 - 병아리 아이콘 왼쪽에 위치 */}
-            <button 
-              onClick={() => setIsNavOpen(!isNavOpen)}
+            <button
+                onClick={toggleSidebar}
               className="nav-menu-button"
             >
               <Menu className="icon" />
@@ -45,16 +64,34 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
           </div>
           
           <div className="header-actions">
-            <button 
-              className="login-button glass-effect"
-              onClick={onLoginClick}
-            >
-              로그인
-            </button>
-            <button className="notification-button">
-              <Bell className="icon" />
-              <div className="notification-dot"></div>
-            </button>
+            {/* 로그인 상태에 따른 조건부 렌더링 */}
+            {isLoggedIn ? (
+                // 로그인된 상태: 알림 + 프로필 사진
+                <>
+                  <button className="notification-button">
+                    <Bell className="icon" />
+                    {hasNotifications && <div className="notification-dot"></div>}
+                  </button>
+                  <button className="profile-button" onClick={handleProfileClick}>
+                    <img
+                        src={userInfo?.profileImage || '/default-profile.svg'}
+                        alt="프로필"
+                        className="profile-image"
+                        onError={(e) => {
+                          e.target.src = '/default-profile.svg';
+                        }}
+                    />
+                  </button>
+                </>
+            ) : (
+                // 로그인되지 않은 상태: 로그인 버튼만
+                <button
+                    className="login-button glass-effect"
+                    onClick={onLoginClick}
+                >
+                  로그인
+                </button>
+            )}
           </div>
         </div>
       </header>
@@ -67,22 +104,17 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
             <img src={logo} alt="Cool Chick"/>
             <h2>Nest.dev</h2>
           </div>
-          <button 
-            onClick={() => setIsNavOpen(false)}
-            className="sidebar-close-button"
-          >
+          <button onClick={toggleSidebar} className="sidebar-close-button">
             <X className="icon" />
           </button>
         </div>
-        
+
         <nav className="sidebar-content">
-          <a href="#home" className="sidebar-link" onClick={() => setIsNavOpen(false)}>
-            <span className="sidebar-link-icon">🏠</span>
-            홈
+          <a href="#home" className="sidebar-link" onClick={toggleSidebar}>
+            <span className="sidebar-link-icon">🏠</span>홈
           </a>
-          <a href="#about" className="sidebar-link" onClick={() => setIsNavOpen(false)}>
-            <span className="sidebar-link-icon">📖</span>
-            소개
+          <a href="#about" className="sidebar-link" onClick={toggleSidebar}>
+            <span className="sidebar-link-icon">📖</span>소개
           </a>
           
           {/* 카테고리 드롭다운 섹션 */}
@@ -98,52 +130,19 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
               </span>
             </button>
             <div className={`sidebar-subcategories ${isCategoryOpen ? 'open' : ''}`}>
-              <button 
-                className="sidebar-sublink" 
-                onClick={() => handleCategoryClick('all')}
-              >
-                전체 멘토
-              </button>
-              <button 
-                className="sidebar-sublink" 
-                onClick={() => handleCategoryClick('backend')}
-              >
-                백엔드
-              </button>
-              <button 
-                className="sidebar-sublink" 
-                onClick={() => handleCategoryClick('frontend')}
-              >
-                프론트엔드
-              </button>
-              <button 
-                className="sidebar-sublink" 
-                onClick={() => handleCategoryClick('devops')}
-              >
-                DevOps
-              </button>
-              <button 
-                className="sidebar-sublink" 
-                onClick={() => handleCategoryClick('ai')}
-              >
-                AI/ML
-              </button>
-              <button 
-                className="sidebar-sublink" 
-                onClick={() => handleCategoryClick('design')}
-              >
-                디자인
-              </button>
-              <button 
-                className="sidebar-sublink" 
-                onClick={() => handleCategoryClick('fullstack')}
-              >
-                풀스택
-              </button>
+              {categories.map(cat => (
+                  <button
+                      key={cat.id}
+                      className="sidebar-sublink"
+                      onClick={() => handleCategoryClick(cat.name)}  // ✅ 여기
+                  >
+                    {cat.name}
+                  </button>
+              ))}
             </div>
           </div>
           
-          <a href="#contact" className="sidebar-link" onClick={() => setIsNavOpen(false)}>
+          <a href="#contact" className="sidebar-link" onClick={toggleSidebar}>
             <span className="sidebar-link-icon">📧</span>
             문의
           </a>

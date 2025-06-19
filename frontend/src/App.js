@@ -17,6 +17,7 @@ import Success from './components/Success';
 import Fail from './components/Fail';
 import PaymentSuccess from './components/PaymentSuccess';
 import ChatRoom from './components/ChatRoom';
+import MyPage from './components/MyPage';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
 
@@ -30,7 +31,20 @@ const App = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
 
+  // 로그인 상태 관리
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
+
   useEffect(() => {
+    // 로컬 스토리지에서 로그인 상태 확인
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('userData');
+
+    if (token && userData) {
+      setIsLoggedIn(true);
+      setUserInfo(JSON.parse(userData));
+    }
+
     // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
     const urlParams = new URLSearchParams(window.location.search);
     const needsAdditionalInfo = urlParams.get('additional-info');
@@ -54,6 +68,31 @@ const App = () => {
       setCurrentPage('fail');
     }
   }, []);
+
+  // 로그인 성공 처리
+  const handleLoginSuccess = (userData) => {
+    setIsLoggedIn(true);
+    setUserInfo(userData);
+    setIsLoginOpen(false);
+
+    // 로컬 스토리지에 저장
+    localStorage.setItem('token', userData.token);
+    localStorage.setItem('userData', JSON.stringify(userData));
+  };
+
+  // 로그아웃 처리
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserInfo(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('userData');
+    setCurrentPage('home');
+  };
+
+  // 프로필 클릭 시 마이페이지로 이동
+  const handleProfileClick = () => {
+    setCurrentPage('mypage');
+  };
 
   // 카테고리별 멘토 리스트 페이지로 이동
   const handleCategorySelect = (category) => {
@@ -136,6 +175,16 @@ const App = () => {
     return <SocialSignup />;
   }
 
+  // 마이페이지 렌더링
+  if (currentPage === 'mypage') {
+    return (
+      <MyPage
+        onBack={handleBackToHome}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   // 멘토 리스트 페이지 렌더링
   if (currentPage === 'mentor-list') {
     return (
@@ -149,6 +198,7 @@ const App = () => {
         <Login 
           isOpen={isLoginOpen} 
           onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
         />
         <NotificationContainer />
       </div>
@@ -159,7 +209,7 @@ const App = () => {
   if (currentPage === 'chat') {
     return (
       <div>
-        <ChatContainer 
+        <ChatContainer
           onBack={handleBackToHome}
         />
         <NotificationContainer />
@@ -252,6 +302,9 @@ const App = () => {
           setIsMenuOpen={setIsMenuOpen}
           onLoginClick={() => setIsLoginOpen(true)}
           onCategorySelect={handleCategorySelect}
+          onProfileClick={handleProfileClick}
+          isLoggedIn={isLoggedIn}
+          userInfo={userInfo}
           onChatRoom={handleChatRoom}
         />
         <main className="main-content">
@@ -263,6 +316,7 @@ const App = () => {
         <Login 
           isOpen={isLoginOpen} 
           onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
         />
         {/* 전역 알림 컨테이너 */}
         <NotificationContainer />

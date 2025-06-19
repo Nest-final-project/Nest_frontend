@@ -3,7 +3,7 @@ import { X, Mail, Lock, Eye, EyeOff, User, Phone, UserCheck } from 'lucide-react
 import './Login.css';
 import logo from '../image/cool.png';
 
-const Login = ({ isOpen, onClose }) => {
+const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +31,20 @@ const Login = ({ isOpen, onClose }) => {
       const phone = `${phone1}-${phone2}-${phone3}`;
       console.log('Sign Up:', { email, password, confirmPassword, name, nickname, phone, userType });
     } else {
-      // TODO: 로그인 로직 구현
+      // 임시 로그인 성공 처리 (실제로는 API 호출)
+      const userData = {
+        id: 1,
+        name: name || '테스트 사용자',
+        email: email,
+        profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
+        userType: 'mentee',
+        joinDate: '2024.01.01',
+        token: 'mock-jwt-token'
+      };
+      
+      if (onLoginSuccess) {
+        onLoginSuccess(userData);
+      }
       console.log('Login:', { email, password });
     }
   };

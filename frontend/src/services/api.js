@@ -77,6 +77,8 @@ export const userAPI = {
 
 // Profile API
 export const profileAPI = {
+
+  getAllMentors: () => api.get('/api/mentors/profiles'),
   // 프로필 생성
   createProfile: (profileData) => api.post('/api/profiles', profileData),
 
