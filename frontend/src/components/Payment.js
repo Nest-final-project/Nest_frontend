@@ -182,11 +182,48 @@ const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
               <span>플랫폼 수수료</span>
               <span>{platformFee.toLocaleString()}원</span>
             </div>
+            {couponDiscount > 0 && (
+              <div className="price-item discount">
+                <span>쿠폰 할인</span>
+                <span>-{couponDiscount.toLocaleString()}원</span>
+              </div>
+            )}
             <div className="price-divider"></div>
             <div className="price-item total">
               <span>총 결제금액</span>
               <span>{totalPrice.toLocaleString()}원</span>
             </div>
+          </div>
+        </div>
+
+        {/* 쿠폰 선택 */}
+        <div className="payment-section">
+          <h3><Gift className="icon" /> 쿠폰 사용</h3>
+          <div className="coupon-section">
+            {selectedCoupon ? (
+              <div className="selected-coupon">
+                <div className="coupon-info">
+                  <div className="coupon-name">{selectedCoupon.name}</div>
+                  <div className="coupon-discount">
+                    {selectedCoupon.type === 'fixed'
+                      ? `${selectedCoupon.discount.toLocaleString()}원 할인`
+                      : `${selectedCoupon.discount}% 할인 (최대 ${selectedCoupon.maxDiscount?.toLocaleString() || '무제한'}원)`
+                    }
+                  </div>
+                </div>
+                <button className="coupon-remove-btn" onClick={handleCouponRemove}>
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                className="coupon-select-btn"
+                onClick={() => setIsCouponModalOpen(true)}
+              >
+                <Gift className="coupon-icon" />
+                사용 가능한 쿠폰 선택하기
+              </button>
+            )}
           </div>
         </div>
 
@@ -225,6 +262,63 @@ const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
           )}
         </button>
       </div>
+
+      {/* 쿠폰 선택 모달 */}
+      {isCouponModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsCouponModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>사용 가능한 쿠폰</h3>
+              <button
+                className="modal-close"
+                onClick={() => setIsCouponModalOpen(false)}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {getUsableCoupons().length > 0 ? (
+                <div className="coupon-list">
+                  {getUsableCoupons().map(coupon => (
+                    <div
+                      key={coupon.id}
+                      className="coupon-item"
+                      onClick={() => handleCouponSelect(coupon)}
+                    >
+                      <div className="coupon-content">
+                        <div className="coupon-header">
+                          <span className="coupon-name">{coupon.name}</span>
+                          <span className="coupon-value">
+                            {coupon.type === 'fixed'
+                              ? `${coupon.discount.toLocaleString()}원`
+                              : `${coupon.discount}%`
+                            }
+                          </span>
+                        </div>
+                        <div className="coupon-description">{coupon.description}</div>
+                        <div className="coupon-details">
+                          <span>최소 주문금액: {coupon.minAmount.toLocaleString()}원</span>
+                          <span>만료일: {coupon.expiryDate}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-coupons">
+                  <Gift size={48} className="no-coupon-icon" />
+                  <p>사용 가능한 쿠폰이 없습니다.</p>
+                  <p className="no-coupon-desc">
+                    현재 주문 금액({servicePrice.toLocaleString()}원)으로는<br />
+                    사용할 수 있는 쿠폰이 없어요.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
