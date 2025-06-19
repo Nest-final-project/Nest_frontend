@@ -27,7 +27,7 @@ const MentorList = ({ category, onBack, onMentorSelect }) => {
 
   // 멘토 목록 로딩
   useEffect(() => {
-    profileAPI.getAllMentors()
+    profileAPI.searchMentors()
     .then(res => {
       const allMentors = res?.data?.data || [];
 

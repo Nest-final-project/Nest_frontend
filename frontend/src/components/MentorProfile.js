@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react'; // 필요한 아이콘만 임포트하는 것이 좋습니다.
 import './MentorProfile.css';
+import {profileAPI} from "../services/api"
 
 const MentorProfile = ({ mentor, onBack, onBooking }) => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(''); // 현재 코드에서는 사용되지 않지만, 더미 데이터와 연결되어 있습니다.
