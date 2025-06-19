@@ -10,6 +10,7 @@ import Login from './components/Login';
 import SocialSignup from './components/SocialSignup';
 import MentorList from './components/MentorList';
 import MentorProfile from './components/MentorProfile';
+import Booking from './components/Booking';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,6 +51,16 @@ const App = () => {
     setCurrentPage('mentor-list');
   };
 
+  // 예약 페이지로 이동
+  const handleBooking = () => {
+    setCurrentPage('booking');
+  };
+
+  // 멘토 프로필로 돌아가기
+  const handleBackToProfile = () => {
+    setCurrentPage('mentor-profile');
+  };
+
   // 소셜 회원가입 페이지 렌더링
   if (currentPage === 'social-signup') {
     return <SocialSignup />;
@@ -73,20 +84,24 @@ const App = () => {
     );
   }
 
+  // 예약 페이지 렌더링
+  if (currentPage === 'booking') {
+    return (
+      <Booking 
+        mentor={selectedMentor}
+        onBack={handleBackToProfile}
+      />
+    );
+  }
+
   // 멘토 프로필 페이지 렌더링
   if (currentPage === 'mentor-profile') {
     return (
-      <div className="app">
-        <ParticleBackground />
-        <MentorProfile 
-          mentor={selectedMentor}
-          onBack={handleBackToList}
-        />
-        <Login 
-          isOpen={isLoginOpen} 
-          onClose={() => setIsLoginOpen(false)}
-        />
-      </div>
+      <MentorProfile 
+        mentor={selectedMentor}
+        onBack={handleBackToList}
+        onBooking={handleBooking}
+      />
     );
   }
 

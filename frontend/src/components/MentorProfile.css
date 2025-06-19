@@ -1,14 +1,16 @@
 .mentor-profile-container {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: #f8f9fa !important;
   padding-bottom: 80px;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-header {
   display: flex;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: white;
+  background: white !important;
   border-bottom: 1px solid #e9ecef;
   position: sticky;
   top: 0;
@@ -35,14 +37,19 @@
 }
 
 .profile-content {
-  background: white;
+  background: white !important;
   margin: 0;
+  position: relative;
+  z-index: 1;
 }
 
 /* 프로필 헤로 섹션 */
 .profile-hero {
   padding: 2rem 1.5rem;
   border-bottom: 8px solid #f8f9fa;
+  background: white !important;
+  display: block !important;
+  position: relative;
 }
 
 .profile-avatar {
@@ -91,13 +98,17 @@
 .content-section {
   padding: 2rem 1.5rem;
   border-bottom: 8px solid #f8f9fa;
+  background: white !important;
+  display: block !important;
+  position: relative;
 }
 
 .section-title {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #333;
+  color: #333 !important;
   margin-bottom: 1.5rem;
+  display: block !important;
 }
 
 /* 소개 섹션 */

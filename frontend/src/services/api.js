@@ -45,10 +45,10 @@ export const authAPI = {
   login: (loginData) => api.post('/api/auth/login', loginData),
   
   // 회원가입
-  register: (registerData) => api.post('/api/auth/register', registerData),
+  signup: (signupData) => api.post('/api/auth/signup', signupData),
   
   // 로그아웃
-  logout: () => api.post('/api/auth/logout'),
+  logout: (logoutData) => api.post('/api/auth/logout', logoutData),
   
   // 토큰 갱신
   refresh: (refreshToken) => api.post('/api/auth/refresh', { refreshToken }),
@@ -59,17 +59,41 @@ export const authAPI = {
 
 // User API
 export const userAPI = {
-  // 사용자 프로필 조회
-  getProfile: () => api.get('/api/users/profile'),
+  // 마이페이지 조회
+  getUser: () => api.get('/api/users/me'),
   
-  // 사용자 프로필 업데이트
-  updateProfile: (profileData) => api.put('/api/users/profile', profileData),
+  // 사용자 정보 업데이트
+  updateUser: (userData) => api.patch('/api/users/me', userData),
   
-  // 멘토 목록 조회
-  getMentors: (params) => api.get('/api/users/mentors', { params }),
-  
+  // 비밀번호 수정
+  updatePassword: (passwordData) => api.patch('/api/users/me/password', passwordData),
+
+  // 추가정보 입력
+  updateExtraInfo: (extraInfoData) => api.patch('/api/users/me/extra-info', extraInfoData),
+
+  // 회원 탈퇴
+  deleteUser: (deleteData) => api.delete('/api/users/me', deleteData),
+};
+
+// Profile API
+export const profileAPI = {
+  // 프로필 생성
+  createProfile: (profileData) => api.post('/api/profiles', profileData),
+
+  // 내 프로필 전체 조회
+  getMyProfile: () => api.get('/api/profiles/me'),
+
   // 멘토 상세 조회
-  getMentorDetail: (mentorId) => api.get(`/api/users/mentors/${mentorId}`),
+  getMentorDetail: (userId, profileId) => api.get(`/api/users/${userId}/profiles/${profileId}`),
+
+  // 키워드로 검색
+  searchMentors: (keyword) => api.get('/api/mentors/profiles', { params: { keyword } }),
+
+  // 추천 멘토 프로필 조회
+  getRecommendedMentors: (categoryId) => api.get('/api/mentors/recommended-profiles', { params: { categoryId } }),
+
+  // 프로필 수정
+  updateProfile: (profileId, profileData) => api.patch(`/api/profiles/${profileId}`, profileData),
 };
 
 // Consultation API

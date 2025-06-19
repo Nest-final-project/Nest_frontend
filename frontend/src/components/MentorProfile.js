@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Star, ArrowLeft, Calendar, Award, Users, MapPin, Mail, Phone, Globe, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import './MentorProfile.css';
 
-const MentorProfile = ({ mentor, onBack }) => {
+const MentorProfile = ({ mentor, onBack, onBooking }) => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
   const [showCareer, setShowCareer] = useState(false);
   const [showServices, setShowServices] = useState(false);
@@ -201,8 +201,8 @@ const MentorProfile = ({ mentor, onBack }) => {
 
         {/* 고정 하단 버튼 */}
         <div className="fixed-bottom">
-          <button className="contact-button">
-            문의 및 상담 가능합니다
+          <button className="contact-button" onClick={onBooking}>
+            신청하기
           </button>
         </div>
       </div>
