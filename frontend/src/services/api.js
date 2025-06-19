@@ -61,10 +61,10 @@ export const authAPI = {
 export const userAPI = {
   // 마이페이지 조회
   getUser: () => api.get('/api/users/me'),
-  
+
   // 사용자 정보 업데이트
   updateUser: (userData) => api.patch('/api/users/me', userData),
-  
+
   // 비밀번호 수정
   updatePassword: (passwordData) => api.patch('/api/users/me/password', passwordData),
 
@@ -132,30 +132,23 @@ export const reservationAPI = {
 export const chatroomAPI = {
   // 채팅방 목록 조회
   getChatrooms: () => api.get('/api/chatrooms'),
-  
+
   // 채팅방 생성
-  createChatroom: (chatroomData) => api.post('/api/chatrooms', chatroomData),
-  
+  //createChatroom: (chatroomData) => api.post('/api/chatrooms', chatroomData),
+
   // 채팅방 입장
-  joinChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/join`),
-  
+  //joinChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/join`),
+
   // 채팅방 나가기
-  leaveChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/leave`),
+  //leaveChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/leave`),
 };
 
 // Message API
 export const messageAPI = {
   // 메시지 목록 조회
-  getMessages: (chatroomId, params) => 
-    api.get(`/api/chatrooms/${chatroomId}/messages`, { params }),
-  
-  // 메시지 전송
-  sendMessage: (chatroomId, messageData) => 
-    api.post(`/api/chatrooms/${chatroomId}/messages`, messageData),
-  
-  // 메시지 읽음 처리
-  markAsRead: (chatroomId, messageId) => 
-    api.patch(`/api/chatrooms/${chatroomId}/messages/${messageId}/read`),
+  getMessages: (chatroomId, params) =>
+      api.get(`/api/chatrooms/messages/${chatroomId}`, {params}),
+
 };
 
 // Payment API

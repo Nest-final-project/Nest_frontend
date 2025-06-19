@@ -15,6 +15,7 @@ import Payment from './components/Payment';
 import Checkout from './components/Checkout';
 import Success from './components/Success';
 import Fail from './components/Fail';
+import PaymentSuccess from './components/PaymentSuccess';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,6 +25,7 @@ const App = () => {
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [bookingData, setBookingData] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
+  const [paymentResult, setPaymentResult] = useState(null);
 
   useEffect(() => {
     // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
@@ -87,6 +89,12 @@ const App = () => {
   const handleCheckout = (data) => {
     setPaymentData(data);
     setCurrentPage('checkout');
+  };
+
+  // 결제 완료 페이지로 이동
+  const handlePaymentComplete = (result) => {
+    setPaymentResult(result);
+    setCurrentPage('payment-success');
   };
 
   // 결제 성공 페이지로 이동
@@ -154,7 +162,18 @@ const App = () => {
       <Payment 
         bookingData={bookingData}
         onBack={handleBackToBooking}
+        onPaymentComplete={handlePaymentComplete}
         onCheckout={handleCheckout}
+      />
+    );
+  }
+
+  // 결제 완료 페이지 렌더링
+  if (currentPage === 'payment-success') {
+    return (
+      <PaymentSuccess 
+        paymentResult={paymentResult}
+        onHome={handleBackToHome}
       />
     );
   }

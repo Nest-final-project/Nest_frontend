@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, CreditCard, Calendar, Clock, User, Shield, CheckCircle, Gift, X } from 'lucide-react';
 import './Payment.css';
 
-const Payment = ({ bookingData, onBack }) => {
+const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
   const [paymentMethod, setPaymentMethod] = useState('tosspay');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
@@ -100,8 +100,23 @@ const Payment = ({ bookingData, onBack }) => {
     // 토스페이 결제 처리 시뮬레이션
     setTimeout(() => {
       setIsProcessing(false);
-      alert(`토스페이 결제가 완료되었습니다!\n\n멘토: ${bookingData.mentor?.name}\n날짜: ${bookingData.date}\n시간: ${bookingData.startTime} - ${bookingData.endTime}\n서비스: ${bookingData.service}\n결제금액: ${totalPrice.toLocaleString()}원`);
-      // 여기서 결제 완료 페이지로 이동하거나 홈으로 돌아갈 수 있습니다
+      
+      // 결제 완료 데이터 준비
+      const paymentResult = {
+        orderId: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        amount: totalPrice,
+        method: '토스페이',
+        approvedAt: new Date().toISOString(),
+        status: 'DONE',
+        booking: bookingData,
+        selectedCoupon,
+        servicePrice,
+        platformFee,
+        couponDiscount
+      };
+      
+      // 결제 완료 페이지로 이동
+      onPaymentComplete && onPaymentComplete(paymentResult);
     }, 2000);
   };
 
