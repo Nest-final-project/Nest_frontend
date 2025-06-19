@@ -104,6 +104,74 @@
   font-size: 1rem;
 }
 
+/* 에러 메시지 */
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 0.75rem;
+  color: #ef4444;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  animation: slideInError 0.3s ease;
+}
+
+.error-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 로딩 상태 */
+.loading-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 비활성화된 요소 스타일 */
+.login-input:disabled,
+.login-submit:disabled,
+.social-button:disabled,
+.toggle-mode:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-submit:disabled:hover,
+.social-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 /* 폼 스타일 */
 .login-form {
   margin-bottom: 2rem;

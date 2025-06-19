@@ -20,6 +20,8 @@ import ChatRoom from './components/ChatRoom';
 import MyPage from './components/MyPage';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
+import NotificationExample from './components/NotificationExample';
+import useAuth from './hooks/useAuth';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,20 +33,10 @@ const App = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
 
-  // 로그인 상태 관리
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userInfo, setUserInfo] = useState(null);
+  // 새로운 인증 훅 사용
+  const { isLoggedIn, user, login, logout } = useAuth();
 
   useEffect(() => {
-    // 로컬 스토리지에서 로그인 상태 확인
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('userData');
-
-    if (token && userData) {
-      setIsLoggedIn(true);
-      setUserInfo(JSON.parse(userData));
-    }
-
     // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
     const urlParams = new URLSearchParams(window.location.search);
     const needsAdditionalInfo = urlParams.get('additional-info');
@@ -70,23 +62,19 @@ const App = () => {
   }, []);
 
   // 로그인 성공 처리
-  const handleLoginSuccess = (userData) => {
-    setIsLoggedIn(true);
-    setUserInfo(userData);
-    setIsLoginOpen(false);
-
-    // 로컬 스토리지에 저장
-    localStorage.setItem('token', userData.token);
-    localStorage.setItem('userData', JSON.stringify(userData));
+  const handleLoginSuccess = () => {
+    // 로그인 성공 시 처리할 추가 로직이 있다면 여기에
+    console.log('로그인 성공!');
   };
 
   // 로그아웃 처리
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUserInfo(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
-    setCurrentPage('home');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setCurrentPage('home');
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
   };
 
   // 프로필 클릭 시 마이페이지로 이동
@@ -137,6 +125,11 @@ const App = () => {
   const handleChatRoom = (mentor) => {
     setSelectedMentor(mentor);
     setCurrentPage('chat');
+  };
+
+  // 알림 테스트 페이지로 이동 (개발 환경)
+  const handleNotificationTest = () => {
+    setCurrentPage('notification-test');
   };
 
   // 결제 완료 페이지로 이동
@@ -213,6 +206,32 @@ const App = () => {
           onBack={handleBackToHome}
           isLoggedIn={isLoggedIn}
         />
+      </div>
+    );
+  }
+
+  // 알림 테스트 페이지 렌더링 (개발 환경)
+  if (currentPage === 'notification-test' && process.env.NODE_ENV === 'development') {
+    return (
+      <div>
+        <div style={{ padding: '1rem', background: '#f3f4f6' }}>
+          <button 
+            onClick={handleBackToHome}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              marginBottom: '1rem'
+            }}
+          >
+            ← 홈으로 돌아가기
+          </button>
+        </div>
+        <NotificationExample />
+        <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
     );
   }
@@ -304,7 +323,7 @@ const App = () => {
           onCategorySelect={handleCategorySelect}
           onProfileClick={handleProfileClick}
           isLoggedIn={isLoggedIn}
-          userInfo={userInfo}
+          userInfo={user}
           onChatRoom={handleChatRoom}
         />
         <main className="main-content">
@@ -320,6 +339,33 @@ const App = () => {
         />
         {/* 전역 알림 컨테이너 */}
         <NotificationContainer isLoggedIn={isLoggedIn} />
+        
+        {/* 개발 환경에서만 알림 테스트 컴포넌트 표시 */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '20px',
+            zIndex: 10000,
+            background: 'rgba(0,0,0,0.8)',
+            padding: '10px',
+            borderRadius: '8px'
+          }}>
+            <button 
+              onClick={() => setCurrentPage('notification-test')}
+              style={{
+                background: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              알림 테스트
+            </button>
+          </div>
+        )}
       </div>
   );
 };

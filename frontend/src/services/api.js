@@ -1,6 +1,8 @@
+// 기존 axios 기반 API를 유지하면서 새로운 authService와 연동
 import axios from 'axios';
+import authService from './authService';
 
-// API 베이스 URL 설정
+// API 베이스 URL 설정 - 백엔드 서버 주소로 수정
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 // axios 인스턴스 생성
@@ -11,10 +13,10 @@ const api = axios.create({
   },
 });
 
-// 요청 인터셉터 - JWT 토큰 자동 추가
+// 요청 인터셉터 - JWT 토큰 자동 추가 (authService 연동)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = authService.token || localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -25,192 +27,143 @@ api.interceptors.request.use(
   }
 );
 
-// 응답 인터셉터 - 에러 처리
+// 응답 인터셉터 - 에러 처리 (authService 연동)
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // 토큰 만료 시 로그아웃 처리
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      window.location.href = '/login';
+  (response) => {
+    // 백엔드 CommonResponse 구조 처리
+    if (response.data && response.data.data !== undefined) {
+      // CommonResponse 구조인 경우 data 필드를 직접 반환
+      return { ...response, data: response.data.data };
     }
+    return response;
+  },
+  async (error) => {
+    if (error.response?.status === 401) {
+      try {
+        // authService를 통한 토큰 갱신 시도
+        await authService.refreshToken();
+        // 원래 요청 재시도
+        const originalRequest = error.config;
+        originalRequest.headers.Authorization = `Bearer ${authService.token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // 토큰 갱신 실패 시 로그아웃
+        authService.logout();
+        window.location.href = '/login';
+      }
+    }
+    
+    // 백엔드 에러 응답 구조 처리
+    if (error.response?.data?.message) {
+      error.message = error.response.data.message;
+    }
+    
     return Promise.reject(error);
   }
 );
 
 // Auth API
 export const authAPI = {
-  // 로그인
   login: (loginData) => api.post('/api/auth/login', loginData),
-  
-  // 회원가입
   signup: (signupData) => api.post('/api/auth/signup', signupData),
-  
-  // 로그아웃
-  logout: (logoutData) => api.post('/api/auth/logout', logoutData),
-  
-  // 토큰 갱신
-  refresh: (refreshToken) => api.post('/api/auth/refresh', { refreshToken }),
-  
-  // OAuth2 로그인 URL 가져오기
+  logout: (logoutData) => api.delete('/api/auth/logout', { data: logoutData }), // DELETE 메서드로 수정
+  refresh: (refreshToken) => api.post('/api/auth/token/refresh', { refreshToken }), // 엔드포인트 수정
+  validate: () => api.get('/api/auth/validate'),
   getOAuth2LoginUrl: (provider) => api.get(`/api/oauth2/login/${provider}`),
 };
 
 // User API
 export const userAPI = {
-  // 마이페이지 조회
   getUser: () => api.get('/api/users/me'),
-
-  // 사용자 정보 업데이트
   updateUser: (userData) => api.patch('/api/users/me', userData),
-
-  // 비밀번호 수정
   updatePassword: (passwordData) => api.patch('/api/users/me/password', passwordData),
-
-  // 추가정보 입력
   updateExtraInfo: (extraInfoData) => api.patch('/api/users/me/extra-info', extraInfoData),
-
-  // 회원 탈퇴
   deleteUser: (deleteData) => api.delete('/api/users/me', deleteData),
+  getProfile: () => api.get('/api/users/profile'),
+  updateProfile: (data) => api.put('/api/users/profile', data),
 };
 
 // Profile API
 export const profileAPI = {
-
   getAllMentors: () => api.get('/api/mentors/profiles'),
-  // 프로필 생성
   createProfile: (profileData) => api.post('/api/profiles', profileData),
-
-  // 내 프로필 전체 조회
   getMyProfile: () => api.get('/api/profiles/me'),
-
-  // 멘토 상세 조회
   getMentorDetail: (userId, profileId) => api.get(`/api/users/${userId}/profiles/${profileId}`),
-
-  // 키워드로 검색
   searchMentors: (keyword) => api.get('/api/mentors/profiles', { params: { keyword } }),
-
-  // 추천 멘토 프로필 조회
   getRecommendedMentors: (params) => api.get('/api/mentors/recommended-profiles', { params }),
-
-  // 프로필 수정
   updateProfile: (profileId, profileData) => api.patch(`/api/profiles/${profileId}`, profileData),
 };
 
 // Consultation API
 export const consultationAPI = {
-  // 상담 목록 조회
   getConsultations: (params) => api.get('/api/consultations', { params }),
-  
-  // 상담 생성
   createConsultation: (consultationData) => api.post('/api/consultations', consultationData),
-  
-  // 상담 상세 조회
   getConsultationDetail: (consultationId) => api.get(`/api/consultations/${consultationId}`),
-  
-  // 상담 상태 업데이트
   updateConsultationStatus: (consultationId, status) => 
     api.patch(`/api/consultations/${consultationId}/status`, { status }),
 };
 
 // Reservation API
 export const reservationAPI = {
-  // 예약 목록 조회
   getReservations: (params) => api.get('/api/reservations', { params }),
-  
-  // 예약 생성
   createReservation: (reservationData) => api.post('/api/reservations', reservationData),
-  
-  // 예약 취소
   cancelReservation: (reservationId) => api.delete(`/api/reservations/${reservationId}`),
-  
-  // 멘토 가능 시간 조회
   getMentorAvailableSlots: (mentorId, date) => 
     api.get(`/api/reservations/mentors/${mentorId}/slots`, { params: { date } }),
+  extendReservation: (reservationId, data) => api.post(`/api/reservations/${reservationId}/extend`, data),
 };
 
-// Chatroom API
+// Chat API (백엔드 연동 추가)
+export const chatAPI = {
+  getChatRooms: (params) => api.get('/api/chatrooms', { params }),
+  getChatRoom: (chatRoomId) => api.get(`/api/chatrooms/${chatRoomId}`),
+  createChatRoom: (data) => api.post('/api/chatrooms', data),
+  sendMessage: (chatRoomId, message) => api.post(`/api/chatrooms/${chatRoomId}/messages`, message),
+  getMessages: (chatRoomId, params) => api.get(`/api/chatrooms/${chatRoomId}/messages`, { params }),
+  extendChatRoom: (chatRoomId, data) => api.post(`/api/chatrooms/${chatRoomId}/extend`, data)
+};
+
+// Chatroom API (기존 이름 유지)
 export const chatroomAPI = {
-  // 채팅방 목록 조회
   getChatrooms: () => api.get('/api/chatrooms'),
-
-  // 채팅방 생성
-  //createChatroom: (chatroomData) => api.post('/api/chatrooms', chatroomData),
-
-  // 채팅방 입장
-  //joinChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/join`),
-
-  // 채팅방 나가기
-  //leaveChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/leave`),
 };
 
 // Message API
 export const messageAPI = {
-  // 메시지 목록 조회
-  getMessages: (chatroomId, params) =>
-      api.get(`/api/chatrooms/messages/${chatroomId}`, {params}),
-
+  getMessages: (chatroomId, params) => api.get(`/api/chatrooms/messages/${chatroomId}`, {params}),
 };
 
 // Payment API
 export const paymentAPI = {
-  // 결제 요청
   createPayment: (paymentData) => api.post('/api/payments', paymentData),
-  
-  // 토스페이먼츠 결제 승인
   confirmPayment: (confirmData) => api.post('/api/payments/confirm', confirmData),
-  
-  // 결제 확인
   verifyPayment: (paymentId) => api.get(`/api/payments/${paymentId}/verify`),
-  
-  // 결제 취소
   cancelPayment: (paymentId, cancelData) => api.post(`/api/payments/${paymentId}/cancel`, cancelData),
-  
-  // 결제 내역 조회
   getPaymentHistory: (params) => api.get('/api/payments/history', { params }),
-  
-  // 결제 상세 조회
   getPaymentDetail: (paymentId) => api.get(`/api/payments/${paymentId}`),
 };
 
 // Review API
 export const reviewAPI = {
-  // 리뷰 목록 조회
-  getReviews: (mentorId, params) => 
-    api.get(`/api/reviews/mentors/${mentorId}`, { params }),
-  
-  // 리뷰 작성
+  getReviews: (mentorId, params) => api.get(`/api/reviews/mentors/${mentorId}`, { params }),
   createReview: (reviewData) => api.post('/api/reviews', reviewData),
-  
-  // 리뷰 수정
-  updateReview: (reviewId, reviewData) => 
-    api.put(`/api/reviews/${reviewId}`, reviewData),
-  
-  // 리뷰 삭제
+  updateReview: (reviewId, reviewData) => api.put(`/api/reviews/${reviewId}`, reviewData),
   deleteReview: (reviewId) => api.delete(`/api/reviews/${reviewId}`),
 };
 
 // Category API
 export const categoryAPI = {
-  // 카테고리 목록 조회
   getCategories: () => api.get('/api/categories'),
-  
-  // 카테고리별 멘토 조회
   getMentorsByCategory: (categoryId, params) => 
     api.get(`/api/categories/${categoryId}/mentors`, { params }),
 };
 
-// Notification API
+// Notification API (백엔드 연동 추가)
 export const notificationAPI = {
-  // 알림 목록 조회
   getNotifications: (params) => api.get('/api/notifications', { params }),
-  
-  // 알림 읽음 처리
-  markNotificationAsRead: (notificationId) => 
-    api.patch(`/api/notifications/${notificationId}/read`),
-  
-  // 모든 알림 읽음 처리
+  markAsRead: (notificationId) => api.patch(`/api/notifications/${notificationId}/read`),
+  markAllAsRead: () => api.patch('/api/notifications/read-all'),
+  markNotificationAsRead: (notificationId) => api.patch(`/api/notifications/${notificationId}/read`),
   markAllNotificationsAsRead: () => api.patch('/api/notifications/read-all'),
 };
 

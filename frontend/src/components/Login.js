@@ -2,12 +2,16 @@ import React, { useState, useRef } from 'react';
 import { X, Mail, Lock, Eye, EyeOff, User, Phone, UserCheck } from 'lucide-react';
 import './Login.css';
 import logo from '../image/cool.png';
+import { authAPI } from '../services/api';
+import useAuth from '../hooks/useAuth';
 
 const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
   // 회원가입 추가 필드
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,45 +22,156 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   const [phone3, setPhone3] = useState('');
   const [userType, setUserType] = useState('mentee'); // 'mentee' or 'mentor'
 
+  // 인증 훅 사용
+  const { login } = useAuth();
+
   // useRef는 컴포넌트 최상단에서 선언
   const phone2Ref = useRef(null);
   const phone3Ref = useRef(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (isSignUp) {
-      // TODO: 회원가입 로직 구현
-      const phone = `${phone1}-${phone2}-${phone3}`;
-      console.log('Sign Up:', { email, password, confirmPassword, name, nickname, phone, userType });
-    } else {
-      // 임시 로그인 성공 처리 (실제로는 API 호출)
-      const userData = {
-        id: 1,
-        name: name || '테스트 사용자',
-        email: email,
-        profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
-        userType: 'mentee',
-        joinDate: '2024.01.01',
-        token: 'mock-jwt-token'
-      };
-      
-      if (onLoginSuccess) {
-        onLoginSuccess(userData);
-      }
-      console.log('Login:', { email, password });
+  const validateForm = () => {
+    if (!email || !password) {
+      setError('이메일과 비밀번호를 입력해주세요.');
+      return false;
     }
+
+    if (!email.includes('@')) {
+      setError('올바른 이메일 형식을 입력해주세요.');
+      return false;
+    }
+
+    if (isSignUp) {
+      if (password !== confirmPassword) {
+        setError('비밀번호가 일치하지 않습니다.');
+        return false;
+      }
+
+      if (password.length < 6) {
+        setError('비밀번호는 6자 이상이어야 합니다.');
+        return false;
+      }
+
+      if (!name || !nickname) {
+        setError('이름과 닉네임을 입력해주세요.');
+        return false;
+      }
+
+      if (!phone1 || !phone2 || !phone3) {
+        setError('전화번호를 모두 입력해주세요.');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (isSignUp) {
+        // 회원가입 처리
+        const phone = `${phone1}-${phone2}-${phone3}`;
+        const signupData = {
+          email,
+          password,
+          name,
+          nickname,
+          phone,
+          role: userType.toUpperCase() // MENTEE or MENTOR
+        };
+
+        const response = await authAPI.signup(signupData);
+        
+        if (response.status === 200 || response.status === 201) {
+          // 회원가입 성공 후 자동 로그인
+          await handleLogin();
+        }
+      } else {
+        // 로그인 처리
+        await handleLogin();
+      }
+    } catch (error) {
+      console.error('인증 오류:', error);
+      handleAuthError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const credentials = { email, password };
+      await login(credentials);
+      
+      // 로그인 성공
+      onClose();
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
+      
+      // 성공 알림
+      if (window.showNotification) {
+        window.showNotification({
+          type: 'success',
+          title: '로그인 성공',
+          message: `안녕하세요! Nest.dev에 오신 것을 환영합니다.`,
+          autoClose: true,
+          duration: 3000
+        });
+      }
+    } catch (error) {
+      throw error; // 상위에서 에러 처리
+    }
+  };
+
+  const handleAuthError = (error) => {
+    let errorMessage = '알 수 없는 오류가 발생했습니다.';
+    
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+      
+      switch (status) {
+        case 400:
+          errorMessage = data.message || '잘못된 요청입니다.';
+          break;
+        case 401:
+          errorMessage = '이메일 또는 비밀번호가 올바르지 않습니다.';
+          break;
+        case 409:
+          errorMessage = '이미 존재하는 이메일입니다.';
+          break;
+        case 500:
+          errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          break;
+        default:
+          errorMessage = data.message || '인증에 실패했습니다.';
+      }
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    setError(errorMessage);
   };
 
   const handleKakaoLogin = () => {
     // 백엔드 OAuth2 카카오 로그인 URL로 리다이렉트
-    window.location.href = 'http://localhost:8080/oauth2/login/kakao';
+    window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/oauth2/login/kakao`;
   };
 
   const handleNaverLogin = () => {
     // 백엔드 OAuth2 네이버 로그인 URL로 리다이렉트
-    window.location.href = 'http://localhost:8080/oauth2/login/naver';
+    window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:8080'}/oauth2/login/naver`;
   };
 
   const resetForm = () => {
@@ -70,6 +185,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
     setPhone3('');
     setUserType('mentee');
     setShowPassword(false);
+    setError('');
   };
 
   // 전화번호 입력 시 자동 포커스 이동
@@ -99,6 +215,14 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
           </p>
         </div>
 
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div className="error-message">
+            <span className="error-icon">⚠️</span>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="login-form">
           {/* 이메일 */}
           <div className="input-group">
@@ -111,6 +235,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="login-input"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -126,11 +251,13 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="login-input"
                 required
+                disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="password-toggle"
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="icon" /> : <Eye className="icon" />}
               </button>
@@ -151,6 +278,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="login-input"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -166,6 +294,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                     onChange={(e) => setName(e.target.value)}
                     className="login-input"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -181,6 +310,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                     onChange={(e) => setNickname(e.target.value)}
                     className="login-input"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -203,6 +333,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                     className="phone-input"
                     maxLength="3"
                     required
+                    disabled={isLoading}
                   />
                   <span className="phone-divider">-</span>
                   <input
@@ -217,6 +348,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                     className="phone-input"
                     maxLength="4"
                     required
+                    disabled={isLoading}
                   />
                   <span className="phone-divider">-</span>
                   <input
@@ -231,6 +363,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                     className="phone-input"
                     maxLength="4"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -246,6 +379,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                       value="mentee"
                       checked={userType === 'mentee'}
                       onChange={(e) => setUserType(e.target.value)}
+                      disabled={isLoading}
                     />
                     <span className="radio-label">
                       <span className="radio-icon">🐣</span>
@@ -259,6 +393,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                       value="mentor"
                       checked={userType === 'mentor'}
                       onChange={(e) => setUserType(e.target.value)}
+                      disabled={isLoading}
                     />
                     <span className="radio-label">
                       <span className="radio-icon">🦅</span>
@@ -273,7 +408,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
           {!isSignUp && (
             <div className="form-options">
               <label className="remember-me">
-                <input type="checkbox" />
+                <input type="checkbox" disabled={isLoading} />
                 <span>로그인 상태 유지</span>
               </label>
               <a href="#forgot" className="forgot-password">
@@ -282,8 +417,19 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
             </div>
           )}
 
-          <button type="submit" className="login-submit">
-            {isSignUp ? '회원가입' : '로그인'}
+          <button 
+            type="submit" 
+            className="login-submit"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className="loading-text">
+                <span className="loading-spinner"></span>
+                {isSignUp ? '가입 중...' : '로그인 중...'}
+              </span>
+            ) : (
+              isSignUp ? '회원가입' : '로그인'
+            )}
           </button>
         </form>
 
@@ -297,6 +443,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
               <button 
                 onClick={handleKakaoLogin}
                 className="social-button kakao"
+                disabled={isLoading}
               >
                 <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" alt="카카오" />
                 <span>카카오로 시작하기</span>
@@ -305,6 +452,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
               <button 
                 onClick={handleNaverLogin}
                 className="social-button naver"
+                disabled={isLoading}
               >
                 <div className="naver-logo">N</div>
                 <span>네이버로 시작하기</span>
@@ -322,6 +470,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                 resetForm();
               }}
               className="toggle-mode"
+              disabled={isLoading}
             >
               {isSignUp ? '로그인하기' : '회원가입하기'}
             </button>

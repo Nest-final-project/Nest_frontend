@@ -2,11 +2,156 @@
   display: flex;
   height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  position: relative;
+}
+
+/* 태블릿 크기에서 사용할 햄버거 메뉴 버튼 */
+.tablet-menu-button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 110;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tablet-menu-button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+}
+
+.tablet-menu-button:active {
+  transform: scale(0.95);
+}
+
+/* 사이드바 오버레이 */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
 }
 
 .chat-sidebar {
   flex-shrink: 0;
   transition: all 0.3s ease;
+}
+
+/* 태블릿에서 사이드바 표시 */
+.chat-sidebar.show-tablet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100;
+  display: block !important;
+}
+
+/* 로딩 상태 */
+.loading-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 로그인 필요 상태 */
+.login-required {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.login-required-content {
+  text-align: center;
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.login-required-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.6;
+}
+
+.login-required h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 1rem 0;
+}
+
+.login-required p {
+  font-size: 1rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 2rem 0;
+}
+
+.login-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* 사용자 환영 메시지 */
+.user-welcome {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  color: #059669;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .chat-main {
@@ -52,12 +197,27 @@
   margin: 0;
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
+/* 창 크기가 줄어들면 채팅방 목록 숨김 (태블릿 크기) */
+@media (max-width: 1024px) {
   .chat-container {
     position: relative;
   }
 
+  .chat-sidebar {
+    display: none; /* 1024px 이하에서 채팅방 목록 숨김 */
+  }
+
+  .chat-main {
+    width: 100%;
+  }
+
+  .no-chat-selected {
+    display: none;
+  }
+}
+
+/* 모바일에서는 선택적으로 채팅 목록 표시 (슬라이드 방식) */
+@media (max-width: 768px) {
   .chat-sidebar {
     position: absolute;
     top: 0;
@@ -65,21 +225,14 @@
     bottom: 0;
     z-index: 100;
     transform: translateX(0);
+    display: block; /* 모바일에서는 토글 가능하게 다시 표시 */
   }
 
   .chat-sidebar.hidden-mobile {
     transform: translateX(-100%);
   }
 
-  .chat-main {
-    width: 100%;
-  }
-
   .chat-main.hidden-mobile {
-    display: none;
-  }
-
-  .no-chat-selected {
     display: none;
   }
 }
