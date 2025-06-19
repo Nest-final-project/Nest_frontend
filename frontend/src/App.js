@@ -16,6 +16,7 @@ import Checkout from './components/Checkout';
 import Success from './components/Success';
 import Fail from './components/Fail';
 import PaymentSuccess from './components/PaymentSuccess';
+import ChatRoom from './components/ChatRoom';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -91,6 +92,12 @@ const App = () => {
     setCurrentPage('checkout');
   };
 
+  // 채팅방으로 이동
+  const handleChatRoom = (mentor) => {
+    setSelectedMentor(mentor);
+    setCurrentPage('chat');
+  };
+
   // 결제 완료 페이지로 이동
   const handlePaymentComplete = (result) => {
     setPaymentResult(result);
@@ -142,6 +149,16 @@ const App = () => {
           onClose={() => setIsLoginOpen(false)}
         />
       </div>
+    );
+  }
+
+  // 채팅방 페이지 렌더링
+  if (currentPage === 'chat') {
+    return (
+      <ChatRoom 
+        mentor={selectedMentor}
+        onBack={handleBackToHome}
+      />
     );
   }
 
@@ -230,6 +247,7 @@ const App = () => {
           setIsMenuOpen={setIsMenuOpen}
           onLoginClick={() => setIsLoginOpen(true)}
           onCategorySelect={handleCategorySelect}
+          onChatRoom={handleChatRoom}
         />
         <main className="main-content">
           <HeroSection />

@@ -3,7 +3,7 @@ import { Menu, Bell, X } from 'lucide-react';
 import './Header.css';
 import logo from '../image/cool.png';
 
-const Header = ({ onLoginClick, onCategorySelect }) => {
+const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
@@ -146,6 +146,18 @@ const Header = ({ onLoginClick, onCategorySelect }) => {
             <span className="sidebar-link-icon">📧</span>
             문의
           </a>
+          
+          {/* 채팅 메뉴 추가 */}
+          <button 
+            className="sidebar-link chat-button" 
+            onClick={() => {
+              setIsNavOpen(false);
+              onChatRoom && onChatRoom({ name: '김개발' });
+            }}
+          >
+            <span className="sidebar-link-icon">💬</span>
+            멘토와 채팅
+          </button>
         </nav>
         
         <div className="sidebar-footer">
