@@ -4,7 +4,7 @@ import './Header.css';
 import logo from '../image/cool.png';
 import { categoryAPI } from '../services/api';
 
-const Header = ({ onLoginClick, onCategorySelect }) => {
+const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [categories, setCategories] = useState([]);
