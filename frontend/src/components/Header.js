@@ -147,26 +147,31 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, is
             문의
           </a>
           
-          {/* 채팅 메뉴 추가 */}
-          <button 
-            className="sidebar-link chat-button" 
-            onClick={() => {
-              setIsNavOpen(false);
-              onChatRoom && onChatRoom({ name: '김개발' });
-            }}
-          >
-            <span className="sidebar-link-icon">💬</span>
-            멘토와 채팅
-          </button>
+          {/* 채팅 메뉴 - 로그인 상태에서만 표시 */}
+          {isLoggedIn && (
+            <button 
+              className="sidebar-link chat-button" 
+              onClick={() => {
+                setIsNavOpen(false);
+                onChatRoom && onChatRoom({ name: '김개발' });
+              }}
+            >
+              <span className="sidebar-link-icon">💬</span>
+              채팅
+            </button>
+          )}
         </nav>
         
         <div className="sidebar-footer">
-          <button 
-            className="sidebar-login-button"
-            onClick={handleLoginClick}
-          >
-            로그인
-          </button>
+          {/* 로그인되지 않은 상태에서만 로그인 버튼 표시 */}
+          {!isLoggedIn && (
+            <button 
+              className="sidebar-login-button"
+              onClick={handleLoginClick}
+            >
+              로그인
+            </button>
+          )}
         </div>
       </div>
     </>

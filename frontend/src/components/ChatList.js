@@ -9,7 +9,7 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
   const chatRooms = [
     {
       id: 1,
-      mentor: {
+      contact: {
         name: '김개발',
         profileImage: null,
         status: 'online'
@@ -18,15 +18,15 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
         text: '이해하셨다니 다행이네요! 계속 연습하시면 금방 익숙해지실 거예요.',
         timestamp: new Date(Date.now() - 60000 * 2).toISOString(),
         isRead: true,
-        sender: 'mentor'
+        sender: 'other'
       },
       unreadCount: 0,
       isOnline: true,
-      mentorTitle: '시니어 백엔드 개발자'
+      contactTitle: '시니어 백엔드 개발자'
     },
     {
       id: 2,
-      mentor: {
+      contact: {
         name: '박프론트',
         profileImage: null,
         status: 'offline'
@@ -35,15 +35,15 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
         text: 'React 컴포넌트 설계에 대해 더 자세히 알려드릴게요.',
         timestamp: new Date(Date.now() - 60000 * 30).toISOString(),
         isRead: false,
-        sender: 'mentor'
+        sender: 'other'
       },
       unreadCount: 2,
       isOnline: false,
-      mentorTitle: '프론트엔드 전문가'
+      contactTitle: '프론트엔드 전문가'
     },
     {
       id: 3,
-      mentor: {
+      contact: {
         name: '이데이터',
         profileImage: null,
         status: 'online'
@@ -52,15 +52,15 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
         text: '네, 감사합니다! SQL 쿼리 최적화 관련해서 내일 다시 질문드릴게요.',
         timestamp: new Date(Date.now() - 60000 * 120).toISOString(),
         isRead: true,
-        sender: 'mentee'
+        sender: 'user'
       },
       unreadCount: 0,
       isOnline: true,
-      mentorTitle: '데이터 사이언티스트'
+      contactTitle: '데이터 사이언티스트'
     },
     {
       id: 4,
-      mentor: {
+      contact: {
         name: '최모바일',
         profileImage: null,
         status: 'offline'
@@ -69,15 +69,15 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
         text: 'React Native와 Flutter 중 어떤 것을 추천하시나요?',
         timestamp: new Date(Date.now() - 60000 * 180).toISOString(),
         isRead: true,
-        sender: 'mentee'
+        sender: 'user'
       },
       unreadCount: 1,
       isOnline: false,
-      mentorTitle: '모바일 앱 개발자'
+      contactTitle: '모바일 앱 개발자'
     },
     {
       id: 5,
-      mentor: {
+      contact: {
         name: '정클라우드',
         profileImage: null,
         status: 'online'
@@ -86,17 +86,17 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
         text: 'AWS 아키텍처 설계 문서를 공유해드릴게요.',
         timestamp: new Date(Date.now() - 60000 * 300).toISOString(),
         isRead: false,
-        sender: 'mentor'
+        sender: 'other'
       },
       unreadCount: 3,
       isOnline: true,
-      mentorTitle: 'DevOps 엔지니어'
+      contactTitle: 'DevOps 엔지니어'
     }
   ];
 
   // 검색 필터링
   const filteredChatRooms = chatRooms.filter(chat =>
-    chat.mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    chat.contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     chat.lastMessage.text.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -184,8 +184,8 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
             >
               <div className="chat-avatar-container">
                 <div className="chat-avatar">
-                  {chat.mentor.profileImage ? (
-                    <img src={chat.mentor.profileImage} alt={chat.mentor.name} />
+                  {chat.contact.profileImage ? (
+                    <img src={chat.contact.profileImage} alt={chat.contact.name} />
                   ) : (
                     <User className="avatar-icon" />
                   )}
@@ -196,8 +196,8 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
               <div className="chat-info">
                 <div className="chat-header-info">
                   <div className="chat-name-container">
-                    <span className="chat-name">{chat.mentor.name}</span>
-                    <span className="mentor-title">{chat.mentorTitle}</span>
+                    <span className="chat-name">{chat.contact.name}</span>
+                    <span className="contact-title">{chat.contactTitle}</span>
                   </div>
                   <div className="chat-meta">
                     <span className="chat-time">{formatTime(chat.lastMessage.timestamp)}</span>
@@ -212,14 +212,14 @@ const ChatList = ({ onChatSelect, currentChatId, onBack }) => {
                 <div className="last-message-container">
                   <div className="last-message">
                     <span className={`message-sender ${chat.lastMessage.sender}`}>
-                      {chat.lastMessage.sender === 'mentee' ? '나: ' : ''}
+                      {chat.lastMessage.sender === 'user' ? '나: ' : ''}
                     </span>
-                    <span className={`message-text ${!chat.lastMessage.isRead && chat.lastMessage.sender === 'mentor' ? 'unread' : ''}`}>
+                    <span className={`message-text ${!chat.lastMessage.isRead && chat.lastMessage.sender === 'other' ? 'unread' : ''}`}>
                       {truncateMessage(chat.lastMessage.text)}
                     </span>
                   </div>
                   
-                  {!chat.lastMessage.isRead && chat.lastMessage.sender === 'mentor' && (
+                  {!chat.lastMessage.isRead && chat.lastMessage.sender === 'other' && (
                     <div className="new-message-indicator"></div>
                   )}
                 </div>

@@ -45,13 +45,13 @@
   height: 1.5rem;
 }
 
-.mentor-info {
+.contact-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.mentor-avatar {
+.contact-avatar {
   position: relative;
   width: 50px;
   height: 50px;
@@ -63,13 +63,13 @@
   justify-content: center;
 }
 
-.mentor-avatar img {
+.contact-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.mentor-avatar .avatar-icon {
+.contact-avatar .avatar-icon {
   width: 1.5rem;
   height: 1.5rem;
   color: white;
@@ -86,24 +86,24 @@
   border-radius: 50%;
 }
 
-.mentor-details {
+.contact-details {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.mentor-name {
+.contact-name {
   font-size: 1.125rem;
   font-weight: 700;
   color: #2d3748;
   margin: 0;
 }
 
-.mentor-status.session-ended {
+.contact-status.session-ended {
   color: #ef4444;
 }
 
-.mentor-status.session-active {
+.contact-status.session-active {
   color: #10b981;
 }
 
@@ -654,11 +654,11 @@
     gap: 0.5rem;
   }
 
-  .mentor-name {
+  .contact-name {
     font-size: 1rem;
   }
 
-  .mentor-status {
+  .contact-status {
     font-size: 0.8125rem;
   }
 }

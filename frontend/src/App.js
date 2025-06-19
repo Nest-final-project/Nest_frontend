@@ -200,7 +200,7 @@ const App = () => {
           onClose={() => setIsLoginOpen(false)}
           onLoginSuccess={handleLoginSuccess}
         />
-        <NotificationContainer />
+        <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
     );
   }
@@ -211,8 +211,8 @@ const App = () => {
       <div>
         <ChatContainer
           onBack={handleBackToHome}
+          isLoggedIn={isLoggedIn}
         />
-        <NotificationContainer />
       </div>
     );
   }
@@ -319,7 +319,7 @@ const App = () => {
           onLoginSuccess={handleLoginSuccess}
         />
         {/* 전역 알림 컨테이너 */}
-        <NotificationContainer />
+        <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
   );
 };

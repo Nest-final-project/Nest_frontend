@@ -227,7 +227,7 @@
   text-overflow: ellipsis;
 }
 
-.mentor-title {
+.contact-title {
   font-size: 0.75rem;
   color: #64748b;
   font-weight: 500;
@@ -282,11 +282,11 @@
   flex-shrink: 0;
 }
 
-.message-sender.mentee {
+.message-sender.user {
   color: #667eea;
 }
 
-.message-sender.mentor {
+.message-sender.other {
   color: #10b981;
 }
 
@@ -399,7 +399,7 @@
     font-size: 0.9375rem;
   }
 
-  .mentor-title {
+  .contact-title {
     font-size: 0.6875rem;
   }
 

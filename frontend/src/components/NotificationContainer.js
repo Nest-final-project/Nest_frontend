@@ -3,10 +3,17 @@ import NotificationToast from './NotificationToast';
 import notificationService from '../services/notificationService';
 import './NotificationContainer.css';
 
-const NotificationContainer = () => {
+const NotificationContainer = ({ isLoggedIn = false }) => {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
+    // 로그인되지 않은 상태에서는 알림 서비스를 시작하지 않음
+    if (!isLoggedIn) {
+      // 로그아웃 시 모든 알림 제거
+      setNotifications([]);
+      return;
+    }
+
     // 알림 리스너 등록
     const handleNotification = (notification) => {
       addNotification(notification);
@@ -52,7 +59,7 @@ const NotificationContainer = () => {
       notificationService.removeEventListener('connection', handleConnection);
       notificationService.disconnect();
     };
-  }, []);
+  }, [isLoggedIn]); // isLoggedIn이 변경될 때마다 useEffect 재실행
 
   const addNotification = (notification) => {
     setNotifications(prev => [...prev, {
@@ -65,8 +72,13 @@ const NotificationContainer = () => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
   };
 
-  // 전역 알림 함수 (다른 컴포넌트에서 사용할 수 있도록)
-  window.showNotification = addNotification;
+  // 전역 알림 함수 (다른 컴포넌트에서 사용할 수 있도록, 로그인된 상태에서만)
+  if (isLoggedIn) {
+    window.showNotification = addNotification;
+  } else {
+    // 로그아웃 상태에서는 전역 알림 함수 제거
+    delete window.showNotification;
+  }
 
   return (
     <div className="notification-container">

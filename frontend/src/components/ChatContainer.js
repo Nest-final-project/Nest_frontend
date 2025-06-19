@@ -4,7 +4,7 @@ import ChatRoom from './ChatRoom';
 import NotificationContainer from './NotificationContainer';
 import './ChatContainer.css';
 
-const ChatContainer = ({ onBack }) => {
+const ChatContainer = ({ onBack, isLoggedIn = true }) => {
   const [selectedChat, setSelectedChat] = useState(null);
 
   const handleChatSelect = (chat) => {
@@ -35,7 +35,7 @@ const ChatContainer = ({ onBack }) => {
       <div className={`chat-main ${!selectedChat ? 'hidden-mobile' : ''}`}>
         {selectedChat ? (
           <ChatRoom 
-            mentor={selectedChat.mentor}
+            contact={selectedChat.contact}
             chatId={selectedChat.id}
             onBack={handleBackToList}
             onBackToHome={onBack}
@@ -53,8 +53,8 @@ const ChatContainer = ({ onBack }) => {
         )}
       </div>
       
-      {/* 채팅 화면에서도 알림 표시 */}
-      <NotificationContainer />
+      {/* 채팅 화면에서도 알림 표시 - 로그인 상태에서만 */}
+      <NotificationContainer isLoggedIn={isLoggedIn} />
     </div>
   );
 };
