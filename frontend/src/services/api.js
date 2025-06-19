@@ -214,4 +214,22 @@ export const notificationAPI = {
   markAllNotificationsAsRead: () => api.patch('/api/notifications/read-all'),
 };
 
+// Ticket API
+export const ticketAPI = {
+  // 티켓 목록 조회
+  getTickets: (ticketId, params) =>
+      api.get(`/api/ticket`, { params }),
+
+  // 타캣 작성
+  createTicket: (ticketData) => api.post('/api/admin/ticket', ticketData),
+
+  // 리뷰 수정
+  updateTicket: (ticketId, ticketData) =>
+      api.patch(`/api/admin/ticket/${ticketId}`, ticketData),
+
+  // 리뷰 삭제
+  deleteReview: (ticketId) => api.delete(`/api/admin/ticket/${ticketId}`),
+};
+
+
 export default api;
