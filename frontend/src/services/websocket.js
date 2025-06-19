@@ -1,9 +1,9 @@
-import SockJS from 'sockjs-client';
 import {Client} from '@stomp/stompjs';
-import {tokenAPI} from "@/api/socketTokenAPI";
+
 
 class WebSocketService {
   constructor() {
+    this.stompClient = null;
     this.connected = false;
     this.reconnectInterval = 5000;
     this.maxReconnectAttempts = 5;
