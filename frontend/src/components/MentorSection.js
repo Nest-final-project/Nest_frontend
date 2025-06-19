@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import './MentorSection.css';
 
-const MentorSection = () => {
+const MentorSection = ({ onCategorySelect }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -131,6 +131,14 @@ const MentorSection = () => {
     }
   ];
 
+  const handleCategoryClick = (categoryId) => {
+    if (onCategorySelect) {
+      onCategorySelect(categoryId);
+    } else {
+      setSelectedCategory(categoryId);
+    }
+  };
+
   // 카테고리에 따른 멘토 필터링
   const filteredMentors = selectedCategory === 'all' 
     ? allMentors 
@@ -179,7 +187,7 @@ const MentorSection = () => {
             <button
               key={category.id}
               className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => handleCategoryClick(category.id)}
             >
               {category.name}
             </button>
