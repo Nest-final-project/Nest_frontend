@@ -11,6 +11,10 @@ import SocialSignup from './components/SocialSignup';
 import MentorList from './components/MentorList';
 import MentorProfile from './components/MentorProfile';
 import Booking from './components/Booking';
+import Payment from './components/Payment';
+import Checkout from './components/Checkout';
+import Success from './components/Success';
+import Fail from './components/Fail';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,14 +22,31 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedMentor, setSelectedMentor] = useState(null);
+  const [bookingData, setBookingData] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
 
   useEffect(() => {
     // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
     const urlParams = new URLSearchParams(window.location.search);
     const needsAdditionalInfo = urlParams.get('additional-info');
     
+    // 토스페이먼츠 결제 결과 처리
+    const paymentKey = urlParams.get('paymentKey');
+    const orderId = urlParams.get('orderId');
+    const amount = urlParams.get('amount');
+    
+    // 결제 실패 처리
+    const errorCode = urlParams.get('code');
+    const errorMessage = urlParams.get('message');
+    
     if (needsAdditionalInfo === 'true') {
       setCurrentPage('social-signup');
+    } else if (paymentKey && orderId && amount) {
+      // 결제 성공
+      setCurrentPage('success');
+    } else if (errorCode && errorMessage) {
+      // 결제 실패
+      setCurrentPage('fail');
     }
   }, []);
 
@@ -54,6 +75,38 @@ const App = () => {
   // 예약 페이지로 이동
   const handleBooking = () => {
     setCurrentPage('booking');
+  };
+
+  // 결제 페이지로 이동
+  const handlePayment = (data) => {
+    setBookingData(data);
+    setCurrentPage('payment');
+  };
+
+  // 토스페이 체크아웃 페이지로 이동
+  const handleCheckout = (data) => {
+    setPaymentData(data);
+    setCurrentPage('checkout');
+  };
+
+  // 결제 성공 페이지로 이동
+  const handlePaymentSuccess = () => {
+    setCurrentPage('success');
+  };
+
+  // 결제 실패 페이지로 이동
+  const handlePaymentFail = () => {
+    setCurrentPage('fail');
+  };
+
+  // 예약 페이지로 돌아가기
+  const handleBackToBooking = () => {
+    setCurrentPage('booking');
+  };
+
+  // 결제 페이지로 돌아가기
+  const handleBackToPayment = () => {
+    setCurrentPage('payment');
   };
 
   // 멘토 프로필로 돌아가기
@@ -90,6 +143,50 @@ const App = () => {
       <Booking 
         mentor={selectedMentor}
         onBack={handleBackToProfile}
+        onBooking={handlePayment}
+      />
+    );
+  }
+
+  // 결제 페이지 렌더링
+  if (currentPage === 'payment') {
+    return (
+      <Payment 
+        bookingData={bookingData}
+        onBack={handleBackToBooking}
+        onCheckout={handleCheckout}
+      />
+    );
+  }
+
+  // 토스페이 체크아웃 페이지 렌더링
+  if (currentPage === 'checkout') {
+    return (
+      <Checkout 
+        paymentData={paymentData}
+        onBack={handleBackToPayment}
+        onSuccess={handlePaymentSuccess}
+        onFail={handlePaymentFail}
+      />
+    );
+  }
+
+  // 결제 성공 페이지 렌더링
+  if (currentPage === 'success') {
+    return (
+      <Success 
+        paymentData={paymentData}
+        onHome={handleBackToHome}
+      />
+    );
+  }
+
+  // 결제 실패 페이지 렌더링
+  if (currentPage === 'fail') {
+    return (
+      <Fail 
+        onBack={handleBackToPayment}
+        onHome={handleBackToHome}
       />
     );
   }
