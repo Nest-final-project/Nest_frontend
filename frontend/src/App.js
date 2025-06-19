@@ -215,7 +215,7 @@ const App = () => {
         <main className="main-content">
           <HeroSection />
           <StatsSection />
-          <MentorSection onCategorySelect={handleCategorySelect} />
+          <MentorSection />
           <CTASection />
         </main>
         <Login 

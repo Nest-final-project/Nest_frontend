@@ -210,16 +210,6 @@ const MentorSection = ({ onCategorySelect }) => {
                     <p className="mentor-profileTitle">{mentor.title}</p>
                     <p className="mentor-categoryName">{mentor.categoryName}</p>
                     
-                    <div className="mentor-stats">
-                      <div className="mentor-stat">
-                        <Star className="star-icon" />
-                        <span>{mentor.rating}</span>
-                      </div>
-                      <div className="mentor-stat">
-                        <span>{mentor.sessions}회</span>
-                      </div>
-                    </div>
-                    
                     <div className="mentor-tags">
                       {mentor.tags && Array.isArray(mentor.tags) && mentor.tags.map((tag, tagIndex) => (
                         <span key={tagIndex} className="mentor-tag">
