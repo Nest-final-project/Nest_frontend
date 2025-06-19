@@ -163,11 +163,20 @@ export const paymentAPI = {
   // 결제 요청
   createPayment: (paymentData) => api.post('/api/payments', paymentData),
   
+  // 토스페이먼츠 결제 승인
+  confirmPayment: (confirmData) => api.post('/api/payments/confirm', confirmData),
+  
   // 결제 확인
   verifyPayment: (paymentId) => api.get(`/api/payments/${paymentId}/verify`),
   
+  // 결제 취소
+  cancelPayment: (paymentId, cancelData) => api.post(`/api/payments/${paymentId}/cancel`, cancelData),
+  
   // 결제 내역 조회
   getPaymentHistory: (params) => api.get('/api/payments/history', { params }),
+  
+  // 결제 상세 조회
+  getPaymentDetail: (paymentId) => api.get(`/api/payments/${paymentId}`),
 };
 
 // Review API
