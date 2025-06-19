@@ -13,6 +13,14 @@ const MentorSection = ({ onCategorySelect }) => {
   const [loadingCategories, setLoadingCategories] = useState(true); // 카테고리 로딩 상태
   const [error, setError] = useState(null); // 에러 상태
 
+  const handleCategoryClick = (categoryId) => {
+    if (onCategorySelect) {
+      onCategorySelect(categoryId);
+    } else {
+      setSelectedCategory(categoryId);
+    }
+  };
+
   // 카테고리 불러오기
   useEffect(() => {
     const fetchCategories = async () => {
@@ -20,8 +28,8 @@ const MentorSection = ({ onCategorySelect }) => {
       setError(null);
       try {
         const response = await categoryAPI.getCategories(); // 카테고리 목록 호출
-        if (response.data && response.data.data) {
-          const fetchedCats = response.data.data.map(category => ({
+        if (response.data && response.data.data && Array.isArray(response.data.data.content)) {
+          const fetchedCats = response.data.data.content.map(category => ({
             id: String(category.id), // 프론트 내부에서 사용할 고유 ID
             name: category.name,
             apiId: category.id // 백엔드에 넘겨줄 categoryId (Long 타입)
@@ -46,61 +54,52 @@ const MentorSection = ({ onCategorySelect }) => {
 
   // 추천 멘토 불러오기
   useEffect(() => {
-    const fetchMentors = async () => {
-      // 카테고리 목록이 로딩 중이거나 설정이 아직이라면 대기
-      if (loadingCategories || selectedCategory === null) {
-        return;
-      }
+    if (!loadingCategories && selectedCategory !== null && categories.length > 0) {
+      const fetchMentors = async () => {
 
-      setLoadingMentors(true);  // 로딩 시작
-      setError(null);            // 이전 에러 초기화
+        setLoadingMentors(true);  // 로딩 시작
+        setError(null);            // 이전 에러 초기화
 
-      try {
-        // 선택한 카테고리의 apiId 찾기
-        const selectedCategoryObj = categories.find(category => category.id === selectedCategory);
+        try {
+          // 선택한 카테고리의 apiId 찾기
+          const selectedCategoryObj = categories.find(category => category.id === selectedCategory);
 
-        if (!selectedCategoryObj) {
-          setError("일치하는 카테고리가 없습니다.");
-          setLoadingMentors(false);
-          setMentors([]);
-          return;
-        }
+          if (!selectedCategoryObj) {
+            setError("일치하는 카테고리가 없습니다.");
+            setLoadingMentors(false);
+            setMentors([]);
+            return;
+          }
 
-        const categoryId = selectedCategoryObj.apiId;
+          const categoryId = selectedCategoryObj.apiId;
 
-        // recommendedProfiles 호출
-        const response = await profileAPI.getRecommendedMentors({categoryId});
+          // recommendedProfiles 호출
+          const response = await profileAPI.getRecommendedMentors({categoryId});
 
-  const handleCategoryClick = (categoryId) => {
-    if (onCategorySelect) {
-      onCategorySelect(categoryId);
-    } else {
-      setSelectedCategory(categoryId);
-    }
-  };
-
-        if (response.data && response.data.data) {
-          const fetchedMentors = response.data.data.map(profile => ({
+          const fetchedMentors = response.data && response.data.data && Array.isArray(response.data.data) ? response.data.data.map(profile => ({
             id: profile.profileId,
             name: profile.userName,
             title: profile.profileTitle,
             categoryName: profile.categoryName,
             tags: profile.keywords ? profile.keywords.map(keyword => keyword.name) : [],
             avatar: profile.userName ? profile.userName.charAt(0) : 'M' // 이름의 첫 글자를 아바타로 사용
-          }));
+          })) : [];
           setMentors(fetchedMentors);
-        } else {
-          setMentors([]); // 데이터 없으면 빈 배열 반환
+        } catch (error) {
+          console.error("추천 멘토 정보를 불러오는 데 실패했습니다. : ", error);
+          setError('추천 멘토 정보를 불러오는 중 오류가 발생했습니다.');
+          setMentors([]); // 에러 발생 시 프로필 배열 비우기
+        } finally {
+          setLoadingMentors(false); // 프로필 로딩 상태 종료
         }
-      } catch (error) {
-        console.error("추천 멘토 정보를 불러오는 데 실패했습니다. : ", error);
-        setError('추천 멘토 정보를 불러오는 중 오류가 발생했습니다.');
-        setMentors([]); // 에러 발생 시 프로필 배열 비우기
-      } finally {
-        setLoadingMentors(false); // 프로필 로딩 상태 종료
+      };
+      fetchMentors(); // 함수 호출
+    } else {
+      if (loadingMentors) {
+        setLoadingMentors(false);
       }
-    };
-    fetchMentors(); // 함수 호출
+    }
+
   }, [selectedCategory, categories, loadingCategories]);
 
   // 3초마다 자동 슬라이드
@@ -172,7 +171,7 @@ const MentorSection = ({ onCategorySelect }) => {
             <button
               key={category.id}
               className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() => handleCategoryClick(category.id)}
             >
               {category.name}
             </button>

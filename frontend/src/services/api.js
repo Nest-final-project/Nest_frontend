@@ -90,7 +90,7 @@ export const profileAPI = {
   searchMentors: (keyword) => api.get('/api/mentors/profiles', { params: { keyword } }),
 
   // 추천 멘토 프로필 조회
-  getRecommendedMentors: (categoryId) => api.get('/api/mentors/recommended-profiles', { params: { categoryId } }),
+  getRecommendedMentors: (params) => api.get('/api/mentors/recommended-profiles', { params }),
 
   // 프로필 수정
   updateProfile: (profileId, profileData) => api.patch(`/api/profiles/${profileId}`, profileData),
