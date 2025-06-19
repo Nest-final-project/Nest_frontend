@@ -4,9 +4,10 @@ import './Header.css';
 import logo from '../image/cool.png';
 import { categoryAPI } from '../services/api';
 
-const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
+const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, isLoggedIn, userInfo }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [hasNotifications, setHasNotifications] = useState(true); // 알림 상태
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
@@ -30,6 +31,12 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
     onLoginClick();
   };
 
+  const handleProfileClick = () => {
+    if (onProfileClick) {
+      onProfileClick();
+    }
+  };
+
   const handleCategoryClick = (categoryName) => {
     setIsNavOpen(false);
     setIsCategoryOpen(false);
@@ -37,77 +44,131 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom }) => {
   };
 
   return (
-      <>
-        <header className="header">
-          <div className="header-content">
-            <div className="logo-section">
-              <button onClick={toggleSidebar} className="nav-menu-button">
-                <Menu className="icon" />
-              </button>
-              <div className="logo-icon">
-                <img src={logo} alt="Cool Chick" />
-              </div>
-              <h1 className="logo-text gradient-text">Nest.dev</h1>
-            </div>
-            <div className="header-actions">
-              <button className="login-button glass-effect" onClick={onLoginClick}>로그인</button>
-              <button className="notification-button">
-                <Bell className="icon" />
-                <div className="notification-dot" />
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <div className={`sidebar-overlay ${isNavOpen ? 'open' : ''}`} onClick={toggleSidebar} />
-        <div className={`sidebar-nav ${isNavOpen ? 'open' : ''}`}>
-          <div className="sidebar-header">
-            <div className="sidebar-logo">
-              <img src={logo} alt="Cool Chick" />
-              <h2>Nest.dev</h2>
-            </div>
-            <button onClick={toggleSidebar} className="sidebar-close-button">
-              <X className="icon" />
+    <>
+      <header className="header">
+        <div className="header-content">
+          <div className="logo-section">
+            {/* 햄버거 메뉴 버튼 - 병아리 아이콘 왼쪽에 위치 */}
+            <button
+                onClick={toggleSidebar}
+              className="nav-menu-button"
+            >
+              <Menu className="icon" />
             </button>
-          </div>
-
-          <nav className="sidebar-content">
-            <a href="#home" className="sidebar-link" onClick={toggleSidebar}>
-              <span className="sidebar-link-icon">🏠</span>홈
-            </a>
-            <a href="#about" className="sidebar-link" onClick={toggleSidebar}>
-              <span className="sidebar-link-icon">📖</span>소개
-            </a>
-
-            <div className="sidebar-category-section">
-              <button className={`sidebar-category-toggle ${isCategoryOpen ? 'open' : ''}`} onClick={toggleCategory}>
-                <span className="sidebar-link-icon">📂</span>카테고리
-                <span className={`category-arrow ${isCategoryOpen ? 'rotated' : ''}`}>▼</span>
-              </button>
-              <div className={`sidebar-subcategories ${isCategoryOpen ? 'open' : ''}`}>
-                {/*<button className="sidebar-sublink" onClick={() => handleCategoryClick(null)}>전체 멘토</button>*/}
-                {categories.map(cat => (
-                    <button
-                        key={cat.id}
-                        className="sidebar-sublink"
-                        onClick={() => handleCategoryClick(cat.name)}  // ✅ 여기
-                    >
-                      {cat.name}
-                    </button>
-                ))}
-              </div>
+            
+            <div className="logo-icon">
+              <img src={logo} alt="Cool Chick"/>
             </div>
-
-            <a href="#contact" className="sidebar-link" onClick={toggleSidebar}>
-              <span className="sidebar-link-icon">📧</span>문의
-            </a>
-          </nav>
-
-          <div className="sidebar-footer">
-            <button className="sidebar-login-button" onClick={handleLoginClick}>로그인</button>
+            <h1 className="logo-text gradient-text">Nest.dev</h1>
+          </div>
+          
+          <div className="header-actions">
+            {/* 로그인 상태에 따른 조건부 렌더링 */}
+            {isLoggedIn ? (
+                // 로그인된 상태: 알림 + 프로필 사진
+                <>
+                  <button className="notification-button">
+                    <Bell className="icon" />
+                    {hasNotifications && <div className="notification-dot"></div>}
+                  </button>
+                  <button className="profile-button" onClick={handleProfileClick}>
+                    <img
+                        src={userInfo?.profileImage || '/default-profile.svg'}
+                        alt="프로필"
+                        className="profile-image"
+                        onError={(e) => {
+                          e.target.src = '/default-profile.svg';
+                        }}
+                    />
+                  </button>
+                </>
+            ) : (
+                // 로그인되지 않은 상태: 로그인 버튼만
+                <button
+                    className="login-button glass-effect"
+                    onClick={onLoginClick}
+                >
+                  로그인
+                </button>
+            )}
           </div>
         </div>
-      </>
+      </header>
+
+      {/* 사이드바 네비게이션 */}
+      <div className={`sidebar-overlay ${isNavOpen ? 'open' : ''}`} onClick={() => setIsNavOpen(false)} />
+      <div className={`sidebar-nav ${isNavOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <img src={logo} alt="Cool Chick"/>
+            <h2>Nest.dev</h2>
+          </div>
+          <button onClick={toggleSidebar} className="sidebar-close-button">
+            <X className="icon" />
+          </button>
+        </div>
+
+        <nav className="sidebar-content">
+          <a href="#home" className="sidebar-link" onClick={toggleSidebar}>
+            <span className="sidebar-link-icon">🏠</span>홈
+          </a>
+          <a href="#about" className="sidebar-link" onClick={toggleSidebar}>
+            <span className="sidebar-link-icon">📖</span>소개
+          </a>
+          
+          {/* 카테고리 드롭다운 섹션 */}
+          <div className="sidebar-category-section">
+            <button 
+              className={`sidebar-category-toggle ${isCategoryOpen ? 'open' : ''}`}
+              onClick={toggleCategory}
+            >
+              <span className="sidebar-link-icon">📂</span>
+              카테고리
+              <span className={`category-arrow ${isCategoryOpen ? 'rotated' : ''}`}>
+                ▼
+              </span>
+            </button>
+            <div className={`sidebar-subcategories ${isCategoryOpen ? 'open' : ''}`}>
+              {categories.map(cat => (
+                  <button
+                      key={cat.id}
+                      className="sidebar-sublink"
+                      onClick={() => handleCategoryClick(cat.name)}  // ✅ 여기
+                  >
+                    {cat.name}
+                  </button>
+              ))}
+            </div>
+          </div>
+          
+          <a href="#contact" className="sidebar-link" onClick={toggleSidebar}>
+            <span className="sidebar-link-icon">📧</span>
+            문의
+          </a>
+          
+          {/* 채팅 메뉴 추가 */}
+          <button 
+            className="sidebar-link chat-button" 
+            onClick={() => {
+              setIsNavOpen(false);
+              onChatRoom && onChatRoom({ name: '김개발' });
+            }}
+          >
+            <span className="sidebar-link-icon">💬</span>
+            멘토와 채팅
+          </button>
+        </nav>
+        
+        <div className="sidebar-footer">
+          <button 
+            className="sidebar-login-button"
+            onClick={handleLoginClick}
+          >
+            로그인
+          </button>
+        </div>
+      </div>
+    </>
   );
 };
 
