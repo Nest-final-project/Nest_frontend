@@ -99,10 +99,176 @@
   margin: 0;
 }
 
-.mentor-status {
-  font-size: 0.875rem;
+.mentor-status.session-ended {
+  color: #ef4444;
+}
+
+.mentor-status.session-active {
   color: #10b981;
+}
+
+/* 시스템 메시지 스타일 */
+.message.system {
+  align-self: center;
+  max-width: 80%;
+  margin: 1rem 0;
+}
+
+.message.system .message-bubble {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  text-align: center;
+  padding: 1rem;
+  border-radius: 12px;
   font-weight: 500;
+}
+
+.system-message-text {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* 세션 종료된 입력 영역 */
+.message-input-container.session-ended {
+  background: rgba(239, 68, 68, 0.05);
+  border-top: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+.session-ended-notice {
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+}
+
+.close-notice-button {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-notice-button:hover {
+  background: rgba(239, 68, 68, 0.2);
+  transform: scale(1.1);
+}
+
+.close-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* 축소된 세션 종료 표시 */
+.session-ended-minimal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: rgba(239, 68, 68, 0.05);
+  border-top: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+.session-ended-text {
+  color: #ef4444;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.show-notice-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.show-notice-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.session-ended-content h3 {
+  color: #ef4444;
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem 0;
+}
+
+.session-ended-content p {
+  color: #64748b;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+}
+
+.session-ended-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.extend-session-button,
+.new-session-button {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.extend-session-button {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.extend-session-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+}
+
+.new-session-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.new-session-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+/* 비활성화된 입력 요소들 */
+.message-input-container.session-ended .attachment-button,
+.message-input-container.session-ended .emoji-button,
+.message-input-container.session-ended .send-button {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.message-input-container.session-ended .message-textarea {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.message-input-container.session-ended .text-input-container {
+  border-color: #e2e8f0;
+  opacity: 0.7;
 }
 
 .chat-header-actions {
@@ -463,6 +629,11 @@
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
+  .chat-room-container {
+    position: relative;
+    z-index: 50;
+  }
+
   .chat-header {
     padding: 1rem;
   }

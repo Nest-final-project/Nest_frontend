@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, Bell, X } from 'lucide-react';
+import notificationService from '../services/notificationService';
 import './Header.css';
 import logo from '../image/cool.png';
 

@@ -17,6 +17,8 @@ import Success from './components/Success';
 import Fail from './components/Fail';
 import PaymentSuccess from './components/PaymentSuccess';
 import ChatRoom from './components/ChatRoom';
+import ChatContainer from './components/ChatContainer';
+import NotificationContainer from './components/NotificationContainer';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -148,6 +150,7 @@ const App = () => {
           isOpen={isLoginOpen} 
           onClose={() => setIsLoginOpen(false)}
         />
+        <NotificationContainer />
       </div>
     );
   }
@@ -155,10 +158,12 @@ const App = () => {
   // 채팅방 페이지 렌더링
   if (currentPage === 'chat') {
     return (
-      <ChatRoom 
-        mentor={selectedMentor}
-        onBack={handleBackToHome}
-      />
+      <div>
+        <ChatContainer 
+          onBack={handleBackToHome}
+        />
+        <NotificationContainer />
+      </div>
     );
   }
 
@@ -259,6 +264,8 @@ const App = () => {
           isOpen={isLoginOpen} 
           onClose={() => setIsLoginOpen(false)}
         />
+        {/* 전역 알림 컨테이너 */}
+        <NotificationContainer />
       </div>
   );
 };

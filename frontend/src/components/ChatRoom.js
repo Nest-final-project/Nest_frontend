@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Paperclip, Smile, Phone, Video, MoreVertical, User } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Smile, Phone, Video, MoreVertical, User, Home, X } from 'lucide-react';
 import './ChatRoom.css';
 
-const ChatRoom = ({ mentor, onBack }) => {
+const ChatRoom = ({ mentor, chatId, onBack, onBackToHome }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([
     {
@@ -49,8 +49,52 @@ const ChatRoom = ({ mentor, onBack }) => {
     }
   ]);
   const [typing, setTyping] = useState(false);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [sessionEndTime, setSessionEndTime] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState('');
+  const [showEndNotice, setShowEndNotice] = useState(true);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // 메시지가 추가될 때마다 스크롤을 맨 아래로
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // 세션 종료 시간 설정 및 타이머 시작
+  useEffect(() => {
+    // 실제로는 예약 정보에서 종료 시간을 가져올 것
+    // 테스트용으로 현재 시간에서 30초 후로 설정
+    const endTime = new Date(Date.now() + 30000); // 30초 후
+    setSessionEndTime(endTime);
+
+    const timer = setInterval(() => {
+      const now = new Date();
+      const timeDiff = endTime - now;
+
+      if (timeDiff <= 0) {
+        setSessionEnded(true);
+        setTimeRemaining('세션 종료됨');
+        clearInterval(timer);
+        
+        // 세션 종료 메시지 추가
+        const endMessage = {
+          id: Date.now(),
+          text: '예약된 멘토링 시간이 종료되었습니다. 채팅 기록은 계속 확인하실 수 있습니다.',
+          sender: 'system',
+          timestamp: new Date().toISOString(),
+          status: 'system'
+        };
+        setMessages(prev => [...prev, endMessage]);
+      } else {
+        const minutes = Math.floor(timeDiff / 60000);
+        const seconds = Math.floor((timeDiff % 60000) / 1000);
+        setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // 메시지가 추가될 때마다 스크롤을 맨 아래로
   useEffect(() => {
@@ -62,6 +106,12 @@ const ChatRoom = ({ mentor, onBack }) => {
   };
 
   const handleSendMessage = () => {
+    // 세션이 종료되었으면 메시지 전송 불가
+    if (sessionEnded) {
+      alert('세션이 종료되어 더 이상 메시지를 보낼 수 없습니다.');
+      return;
+    }
+
     if (message.trim()) {
       const newMessage = {
         id: messages.length + 1,
@@ -106,6 +156,8 @@ const ChatRoom = ({ mentor, onBack }) => {
   };
 
   const handleKeyPress = (e) => {
+    if (sessionEnded) return; // 세션 종료 시 키 입력 무시
+    
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -113,6 +165,8 @@ const ChatRoom = ({ mentor, onBack }) => {
   };
 
   const handleTextareaChange = (e) => {
+    if (sessionEnded) return; // 세션 종료 시 텍스트 입력 불가
+    
     setMessage(e.target.value);
     
     // 텍스트 영역 높이 자동 조절
@@ -130,7 +184,12 @@ const ChatRoom = ({ mentor, onBack }) => {
     });
   };
 
-  const formatMessageText = (text) => {
+  const formatMessageText = (text, messageType = 'normal') => {
+    // 시스템 메시지는 특별 처리
+    if (messageType === 'system') {
+      return [{ type: 'system', content: text }];
+    }
+
     // 코드 블록 처리
     const codeBlockRegex = /```(\w+)?\n?([\s\S]*?)```/g;
     const parts = [];
@@ -186,7 +245,9 @@ const ChatRoom = ({ mentor, onBack }) => {
             </div>
             <div className="mentor-details">
               <h3 className="mentor-name">{mentor?.name || '김개발'}</h3>
-              <span className="mentor-status">온라인</span>
+              <span className={`mentor-status ${sessionEnded ? 'session-ended' : 'session-active'}`}>
+                {sessionEnded ? '세션 종료됨' : `세션 진행 중 (${timeRemaining} 남음)`}
+              </span>
             </div>
           </div>
         </div>
@@ -197,6 +258,9 @@ const ChatRoom = ({ mentor, onBack }) => {
           </button>
           <button className="action-button">
             <Video className="icon" />
+          </button>
+          <button className="action-button" onClick={onBackToHome}>
+            <Home className="icon" />
           </button>
           <button className="action-button">
             <MoreVertical className="icon" />
@@ -210,7 +274,10 @@ const ChatRoom = ({ mentor, onBack }) => {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`message ${msg.sender === 'mentee' ? 'sent' : 'received'}`}
+              className={`message ${
+                msg.sender === 'system' ? 'system' : 
+                msg.sender === 'mentee' ? 'sent' : 'received'
+              }`}
             >
               {msg.sender === 'mentor' && (
                 <div className="message-avatar">
@@ -224,9 +291,11 @@ const ChatRoom = ({ mentor, onBack }) => {
               
               <div className="message-content">
                 <div className="message-bubble">
-                  {formatMessageText(msg.text).map((part, index) => (
+                  {formatMessageText(msg.text, msg.sender).map((part, index) => (
                     <div key={index}>
-                      {part.type === 'text' ? (
+                      {part.type === 'system' ? (
+                        <span className="system-message-text">{part.content}</span>
+                      ) : part.type === 'text' ? (
                         <span style={{ whiteSpace: 'pre-wrap' }}>{part.content}</span>
                       ) : (
                         <div className="code-block">
@@ -240,16 +309,18 @@ const ChatRoom = ({ mentor, onBack }) => {
                   ))}
                 </div>
                 
-                <div className="message-info">
-                  <span className="message-time">{formatTime(msg.timestamp)}</span>
-                  {msg.sender === 'mentee' && (
-                    <span className={`message-status ${msg.status}`}>
-                      {msg.status === 'sent' && '✓'}
-                      {msg.status === 'delivered' && '✓✓'}
-                      {msg.status === 'read' && '✓✓'}
-                    </span>
-                  )}
-                </div>
+                {msg.sender !== 'system' && (
+                  <div className="message-info">
+                    <span className="message-time">{formatTime(msg.timestamp)}</span>
+                    {msg.sender === 'mentee' && (
+                      <span className={`message-status ${msg.status}`}>
+                        {msg.status === 'sent' && '✓'}
+                        {msg.status === 'delivered' && '✓✓'}
+                        {msg.status === 'read' && '✓✓'}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -281,35 +352,92 @@ const ChatRoom = ({ mentor, onBack }) => {
       </div>
 
       {/* 메시지 입력 영역 */}
-      <div className="message-input-container">
-        <div className="message-input-wrapper">
-          <button className="attachment-button">
-            <Paperclip className="icon" />
-          </button>
-          
-          <div className="text-input-container">
-            <textarea
-              ref={textareaRef}
-              value={message}
-              onChange={handleTextareaChange}
-              onKeyPress={handleKeyPress}
-              placeholder="메시지를 입력하세요..."
-              className="message-textarea"
-              rows="1"
-            />
-            <button className="emoji-button">
-              <Smile className="icon" />
+      <div className={`message-input-container ${sessionEnded ? 'session-ended' : ''}`}>
+        {sessionEnded && showEndNotice ? (
+          <div className="session-ended-notice">
+            <button 
+              className="close-notice-button"
+              onClick={() => setShowEndNotice(false)}
+              title="알림 닫기"
+            >
+              <X className="close-icon" />
+            </button>
+            <div className="session-ended-content">
+              <h3>세션이 종료되었습니다</h3>
+              <p>예약된 멘토링 시간이 종료되어 더 이상 메시지를 보낼 수 없습니다.<br />
+                 채팅 기록은 계속 확인하실 수 있습니다.</p>
+              <div className="session-ended-actions">
+                <button 
+                  className="extend-session-button"
+                  onClick={() => {
+                    // 세션 연장 요청 로직
+                    if (window.showNotification) {
+                      window.showNotification({
+                        type: 'info',
+                        title: '연장 요청 전송',
+                        message: '멘토에게 세션 연장 요청을 보냈습니다.',
+                        timestamp: new Date().toISOString()
+                      });
+                    } else {
+                      alert('멘토에게 세션 연장 요청을 보냈습니다.');
+                    }
+                  }}
+                >
+                  세션 연장 요청
+                </button>
+                <button 
+                  className="new-session-button"
+                  onClick={() => {
+                    // 새 세션 예약 페이지로 이동
+                    onBackToHome();
+                  }}
+                >
+                  새 세션 예약
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : sessionEnded ? (
+          <div className="session-ended-minimal">
+            <span className="session-ended-text">세션이 종료되어 메시지를 보낼 수 없습니다.</span>
+            <button 
+              className="show-notice-button"
+              onClick={() => setShowEndNotice(true)}
+            >
+              옵션 보기
             </button>
           </div>
-          
-          <button
-            className={`send-button ${message.trim() ? 'active' : ''}`}
-            onClick={handleSendMessage}
-            disabled={!message.trim()}
-          >
-            <Send className="icon" />
-          </button>
-        </div>
+        ) : (
+          <div className="message-input-wrapper">
+            <button className="attachment-button" disabled={sessionEnded}>
+              <Paperclip className="icon" />
+            </button>
+            
+            <div className="text-input-container">
+              <textarea
+                ref={textareaRef}
+                value={message}
+                onChange={handleTextareaChange}
+                onKeyPress={handleKeyPress}
+                placeholder={sessionEnded ? "세션이 종료되었습니다" : "메시지를 입력하세요..."}
+                className="message-textarea"
+                rows="1"
+                disabled={sessionEnded}
+              />
+              <button className="emoji-button" disabled={sessionEnded}>
+                <Smile className="icon" />
+              </button>
+            </div>
+            
+            <button
+              className={`send-button ${message.trim() && !sessionEnded ? 'active' : ''}`}
+              onClick={handleSendMessage}
+              disabled={!message.trim() || sessionEnded}
+            >
+              <Send className="icon" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
