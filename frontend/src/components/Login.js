@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { X, Mail, Lock, Eye, EyeOff, User, Phone, UserCheck } from 'lucide-react';
 import './Login.css';
 import logo from '../image/cool.png';
 
@@ -8,29 +8,68 @@ const Login = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  
+  // 회원가입 추가 필드
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [phone1, setPhone1] = useState('');
+  const [phone2, setPhone2] = useState('');
+  const [phone3, setPhone3] = useState('');
+  const [userType, setUserType] = useState('mentee'); // 'mentee' or 'mentor'
+
+  // useRef는 컴포넌트 최상단에서 선언
+  const phone2Ref = useRef(null);
+  const phone3Ref = useRef(null);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: 로그인/회원가입 로직 구현
-    console.log('Submit:', { email, password });
+    if (isSignUp) {
+      // TODO: 회원가입 로직 구현
+      const phone = `${phone1}-${phone2}-${phone3}`;
+      console.log('Sign Up:', { email, password, confirmPassword, name, nickname, phone, userType });
+    } else {
+      // TODO: 로그인 로직 구현
+      console.log('Login:', { email, password });
+    }
   };
 
   const handleKakaoLogin = () => {
-    // TODO: 카카오 로그인 구현
-    console.log('Kakao login');
+    // 백엔드 OAuth2 카카오 로그인 URL로 리다이렉트
+    window.location.href = 'http://localhost:8080/oauth2/login/kakao';
   };
 
   const handleNaverLogin = () => {
-    // TODO: 네이버 로그인 구현
-    console.log('Naver login');
+    // 백엔드 OAuth2 네이버 로그인 URL로 리다이렉트
+    window.location.href = 'http://localhost:8080/oauth2/login/naver';
+  };
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setName('');
+    setNickname('');
+    setPhone1('');
+    setPhone2('');
+    setPhone3('');
+    setUserType('mentee');
+    setShowPassword(false);
+  };
+
+  // 전화번호 입력 시 자동 포커스 이동
+  const handlePhoneInput = (value, setter, nextRef) => {
+    setter(value);
+    if (value.length === 3 && nextRef) {
+      nextRef.current?.focus();
+    }
   };
 
   return (
     <div className="login-overlay" onClick={onClose}>
-      <div className="login-modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`login-modal ${isSignUp ? 'signup-mode' : ''}`} onClick={(e) => e.stopPropagation()}>
         <button className="login-close" onClick={onClose}>
           <X className="icon" />
         </button>
@@ -48,6 +87,7 @@ const Login = ({ isOpen, onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
+          {/* 이메일 */}
           <div className="input-group">
             <div className="input-wrapper">
               <Mail className="input-icon" />
@@ -62,6 +102,7 @@ const Login = ({ isOpen, onClose }) => {
             </div>
           </div>
 
+          {/* 비밀번호 */}
           <div className="input-group">
             <div className="input-wrapper">
               <Lock className="input-icon" />
@@ -83,20 +124,137 @@ const Login = ({ isOpen, onClose }) => {
             </div>
           </div>
 
+          {/* 회원가입 추가 필드들 */}
           {isSignUp && (
-            <div className="input-group">
-              <div className="input-wrapper">
-                <Lock className="input-icon" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="비밀번호 확인"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="login-input"
-                  required
-                />
+            <>
+              {/* 비밀번호 확인 */}
+              <div className="input-group">
+                <div className="input-wrapper">
+                  <Lock className="input-icon" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="비밀번호 확인"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="login-input"
+                    required
+                  />
+                </div>
               </div>
-            </div>
+
+              {/* 이름 */}
+              <div className="input-group">
+                <div className="input-wrapper">
+                  <User className="input-icon" />
+                  <input
+                    type="text"
+                    placeholder="이름"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="login-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* 닉네임 */}
+              <div className="input-group">
+                <div className="input-wrapper">
+                  <UserCheck className="input-icon" />
+                  <input
+                    type="text"
+                    placeholder="닉네임"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    className="login-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* 전화번호 */}
+              <div className="input-group">
+                <label className="input-label">
+                  <Phone className="label-icon" />
+                  전화번호
+                </label>
+                <div className="phone-input-wrapper">
+                  <input
+                    type="tel"
+                    placeholder="010"
+                    value={phone1}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 3);
+                      handlePhoneInput(value, setPhone1, phone2Ref);
+                    }}
+                    className="phone-input"
+                    maxLength="3"
+                    required
+                  />
+                  <span className="phone-divider">-</span>
+                  <input
+                    ref={phone2Ref}
+                    type="tel"
+                    placeholder="0000"
+                    value={phone2}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      handlePhoneInput(value, setPhone2, phone3Ref);
+                    }}
+                    className="phone-input"
+                    maxLength="4"
+                    required
+                  />
+                  <span className="phone-divider">-</span>
+                  <input
+                    ref={phone3Ref}
+                    type="tel"
+                    placeholder="0000"
+                    value={phone3}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      setPhone3(value);
+                    }}
+                    className="phone-input"
+                    maxLength="4"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* 사용자 유형 선택 */}
+              <div className="user-type-group">
+                <label className="user-type-label">가입 유형</label>
+                <div className="user-type-options">
+                  <label className="radio-option">
+                    <input
+                      type="radio"
+                      name="userType"
+                      value="mentee"
+                      checked={userType === 'mentee'}
+                      onChange={(e) => setUserType(e.target.value)}
+                    />
+                    <span className="radio-label">
+                      <span className="radio-icon">🐣</span>
+                      멘티로 가입
+                    </span>
+                  </label>
+                  <label className="radio-option">
+                    <input
+                      type="radio"
+                      name="userType"
+                      value="mentor"
+                      checked={userType === 'mentor'}
+                      onChange={(e) => setUserType(e.target.value)}
+                    />
+                    <span className="radio-label">
+                      <span className="radio-icon">🦅</span>
+                      멘토로 가입
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </>
           )}
 
           {!isSignUp && (
@@ -116,29 +274,31 @@ const Login = ({ isOpen, onClose }) => {
           </button>
         </form>
 
-        <div className="social-login">
-          <div className="divider">
-            <span>간편 로그인</span>
-          </div>
+        {!isSignUp && (
+          <div className="social-login">
+            <div className="divider">
+              <span>간편 로그인</span>
+            </div>
 
-          <div className="social-buttons">
-            <button 
-              onClick={handleKakaoLogin}
-              className="social-button kakao"
-            >
-              <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" alt="카카오" />
-              <span>카카오로 시작하기</span>
-            </button>
+            <div className="social-buttons">
+              <button 
+                onClick={handleKakaoLogin}
+                className="social-button kakao"
+              >
+                <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" alt="카카오" />
+                <span>카카오로 시작하기</span>
+              </button>
 
-            <button 
-              onClick={handleNaverLogin}
-              className="social-button naver"
-            >
-              <div className="naver-logo">N</div>
-              <span>네이버로 시작하기</span>
-            </button>
+              <button 
+                onClick={handleNaverLogin}
+                className="social-button naver"
+              >
+                <div className="naver-logo">N</div>
+                <span>네이버로 시작하기</span>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="login-footer">
           <p>
@@ -146,9 +306,7 @@ const Login = ({ isOpen, onClose }) => {
             <button 
               onClick={() => {
                 setIsSignUp(!isSignUp);
-                setEmail('');
-                setPassword('');
-                setConfirmPassword('');
+                resetForm();
               }}
               className="toggle-mode"
             >
