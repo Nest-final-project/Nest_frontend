@@ -8,11 +8,15 @@ import CTASection from './components/CTASection';
 import ParticleBackground from './components/ParticleBackground';
 import Login from './components/Login';
 import SocialSignup from './components/SocialSignup';
+import MentorList from './components/MentorList';
+import MentorProfile from './components/MentorProfile';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedMentor, setSelectedMentor] = useState(null);
 
   useEffect(() => {
     // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
@@ -24,9 +28,66 @@ const App = () => {
     }
   }, []);
 
+  // 카테고리별 멘토 리스트 페이지로 이동
+  const handleCategorySelect = (category) => {
+    setSelectedCategory(category);
+    setCurrentPage('mentor-list');
+  };
+
+  // 멘토 프로필 페이지로 이동
+  const handleMentorSelect = (mentor) => {
+    setSelectedMentor(mentor);
+    setCurrentPage('mentor-profile');
+  };
+
+  // 홈으로 돌아가기
+  const handleBackToHome = () => {
+    setCurrentPage('home');
+  };
+
+  // 멘토 리스트로 돌아가기
+  const handleBackToList = () => {
+    setCurrentPage('mentor-list');
+  };
+
   // 소셜 회원가입 페이지 렌더링
   if (currentPage === 'social-signup') {
     return <SocialSignup />;
+  }
+
+  // 멘토 리스트 페이지 렌더링
+  if (currentPage === 'mentor-list') {
+    return (
+      <div className="app">
+        <ParticleBackground />
+        <MentorList 
+          category={selectedCategory} 
+          onBack={handleBackToHome}
+          onMentorSelect={handleMentorSelect}
+        />
+        <Login 
+          isOpen={isLoginOpen} 
+          onClose={() => setIsLoginOpen(false)}
+        />
+      </div>
+    );
+  }
+
+  // 멘토 프로필 페이지 렌더링
+  if (currentPage === 'mentor-profile') {
+    return (
+      <div className="app">
+        <ParticleBackground />
+        <MentorProfile 
+          mentor={selectedMentor}
+          onBack={handleBackToList}
+        />
+        <Login 
+          isOpen={isLoginOpen} 
+          onClose={() => setIsLoginOpen(false)}
+        />
+      </div>
+    );
   }
 
   // 메인 페이지 렌더링
@@ -37,11 +98,12 @@ const App = () => {
           isMenuOpen={isMenuOpen} 
           setIsMenuOpen={setIsMenuOpen}
           onLoginClick={() => setIsLoginOpen(true)}
+          onCategorySelect={handleCategorySelect}
         />
         <main className="main-content">
           <HeroSection />
           <StatsSection />
-          <MentorSection />
+          <MentorSection onCategorySelect={handleCategorySelect} />
           <CTASection />
         </main>
         <Login 

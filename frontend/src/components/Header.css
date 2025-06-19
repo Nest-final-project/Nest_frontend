@@ -176,6 +176,113 @@
   font-size: 1.25rem;
 }
 
+/* 카테고리 드롭다운 섹션 스타일 */
+.sidebar-category-section {
+  margin: 0.5rem 0;
+}
+
+.sidebar-category-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  color: rgba(0, 0, 0, 0.8);
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-align: left;
+}
+
+.sidebar-category-toggle:hover {
+  background: rgb(73, 198, 136);
+  color: white;
+  padding-left: 2rem;
+}
+
+.sidebar-category-toggle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+.sidebar-category-toggle:hover::before {
+  transform: scaleY(1);
+}
+
+.sidebar-category-toggle.open {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.category-arrow {
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+  margin-left: auto;
+}
+
+.category-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+.sidebar-subcategories {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.sidebar-subcategories.open {
+  max-height: 300px;
+  opacity: 1;
+  padding: 0.5rem 0;
+}
+
+.sidebar-sublink {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.5rem 0.75rem 3rem;
+  color: rgba(0, 0, 0, 0.7);
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.sidebar-sublink:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  padding-left: 3.5rem;
+}
+
+.sidebar-sublink::before {
+  content: '•';
+  position: absolute;
+  left: 2.25rem;
+  color: rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.sidebar-sublink:hover::before {
+  color: #667eea;
+  left: 2.75rem;
+}
+
 /* 사이드바 푸터 */
 .sidebar-footer {
   padding: 1.5rem;
