@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { Star, ArrowLeft, Calendar, Award, Users, MapPin, Mail, Phone, Globe, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react'; // 필요한 아이콘만 임포트하는 것이 좋습니다.
 import './MentorProfile.css';
 
 const MentorProfile = ({ mentor, onBack, onBooking }) => {
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(''); // 현재 코드에서는 사용되지 않지만, 더미 데이터와 연결되어 있습니다.
   const [showCareer, setShowCareer] = useState(false);
-  const [showServices, setShowServices] = useState(false);
+  const [showServices, setShowServices] = useState(false); // 현재 코드에서는 사용되지 않지만, 더미 데이터와 연결되어 있습니다.
 
   // 더미 데이터 - 실제로는 props나 API에서 받아올 데이터
   const mentorDetails = {
     ...mentor,
-    profileImage: mentor.avatar,
-    introduction: `초기 스타트업부터 네카라쿠배까지 모바일 개발로 시작해서 백엔드까지\n\n다양한 경험과 일년에도 수십건 이상의 번역 경험을 가진 현직 번역관입니다.\n\n다양한 실제 사례를 접으며 같은 경험의 기획가 주어졌다라도 어떻게 대응하고 해석해야 자신만의 강점이되고 진정한 경험이 될지에 대해 잘 이해하고 있습니다.`,
+    profileImage: mentor.avatar, // mentor.avatar가 텍스트인지 이미지 URL인지에 따라 img 태그 사용 여부가 결정됩니다.
+    introduction: `초기 스타트업부터 네카라쿠배까지 모바일 개발로 시작해서 백엔드까지\n\n다양한 경험과 일년에도 수십건 이상의 번역 경험을 가진 현직 번역관입니다.\n\n다양한 실제 사례를 접하며 같은 경험의 기획이 주어졌다라도 어떻게 대응하고 해석해야 자신만의 강점이 되고 진정한 경험이 될지에 대해 잘 이해하고 있습니다.`,
     hashtags: ['네카라쿠배', '현직15년'],
     career: [
       {
@@ -51,7 +51,7 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
         title: '모의면접',
         duration: ['40분', '50분', '60분'],
         description: '모의 + 실시간 피드백 + 한국 피드백 포함',
-        detail: '실접차별 면습하고 개선점을 파악해 볼 수 있어요!',
+        detail: '실전 면접을 연습하고 개선점을 파악해 볼 수 있어요!',
         price: '29,900원 ~',
         popular: true
       },
@@ -79,9 +79,10 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
     ]
   };
 
+  // 이 함수는 현재 UI에서 호출되지 않지만, 더미 데이터와 함께 제공되었습니다.
   const handleBookSession = () => {
     if (selectedTimeSlot) {
-      alert(`${mentorDetails.name} 멘토와의 세션이 예약되었습니다!\n일시: ${selectedTimeSlot}`);
+      alert(`${mentorDetails.name || '멘토'}님과의 세션이 예약되었습니다!\n일시: ${selectedTimeSlot}`);
     } else {
       alert('세션 시간을 선택해주세요.');
     }
@@ -102,7 +103,11 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
           {/* 프로필 헤로 섹션 */}
           <div className="profile-hero">
             <div className={`profile-avatar gradient-bg-${mentor.id}`}>
+              {/* mentor.avatar가 텍스트("ab" 등)인 경우 아래와 같이 그대로 둡니다. */}
               {mentor.avatar}
+              {/* 만약 mentor.avatar가 이미지 URL이라면 아래와 같이 <img> 태그를 사용해야 합니다.
+            <img src={mentor.avatar} alt="멘토 프로필" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            이 경우 profile-avatar의 CSS background 속성은 제거하거나 조정해야 합니다. */}
             </div>
             <div className="profile-info">
               <div className="mentor-username">abraxas</div>
@@ -139,6 +144,7 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
             {showCareer && (
                 <div className="career-content">
                   <div className="career-table">
+                    {/* 데스크톱에서만 보이는 헤더 */}
                     <div className="career-header">
                       <div className="career-col">회사명</div>
                       <div className="career-col">회사규모</div>
@@ -147,10 +153,11 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
                     </div>
                     {mentorDetails.career.map((item, index) => (
                         <div key={index} className="career-row">
-                          <div className="career-col company-name">{item.company}</div>
-                          <div className="career-col">{item.position}</div>
-                          <div className="career-col">{item.period}</div>
-                          <div className="career-col">{item.description}</div>
+                          {/* 모바일에서 data-label을 사용하여 헤더 역할을 합니다. */}
+                          <div className="career-col company-name" data-label="회사명">{item.company}</div>
+                          <div className="career-col" data-label="회사규모">{item.position}</div>
+                          <div className="career-col" data-label="근무기간">{item.period}</div>
+                          <div className="career-col" data-label="회사의 업계">{item.description}</div>
                         </div>
                     ))}
                   </div>
