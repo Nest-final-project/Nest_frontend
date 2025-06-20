@@ -1,5 +1,7 @@
 // 디버깅 유틸리티
 
+import api from "../services/api.js";
+
 /**
  * 현재 인증 상태를 콘솔에 출력
  */
@@ -60,7 +62,7 @@ export const debugAPIHeaders = () => {
  * 테스트용 API 요청 함수
  */
 export const testAPICall = async () => {
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+  const API_BASE_URL = api.API_BASE_URL;
   
   try {
     console.log('🧪 테스트 API 호출 시작...');

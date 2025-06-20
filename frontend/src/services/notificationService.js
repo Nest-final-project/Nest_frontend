@@ -232,7 +232,7 @@ class NotificationService {
 
   // 테스트용 알림 생성 (개발 환경에서만)
   createTestNotifications() {
-    if (process.env.NODE_ENV !== 'development') return;
+    if ('development') return;
 
     // 5초 후 세션 종료 알림
     setTimeout(() => {
