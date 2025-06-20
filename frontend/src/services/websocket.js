@@ -1,4 +1,6 @@
-import {Client} from '@stomp/stompjs';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import { authAPI } from './api';
 
 
 class WebSocketService {
@@ -14,9 +16,17 @@ class WebSocketService {
 
   async connect() {
     try {
-      const res = await tokenAPI.getSocketToken();
-      const socketToken = res.data.token;
-      const socket = new SockJS(`/ws-nest?token=${socketToken}`);
+      // 토큰 API가 있다면 사용, 없으면 기본 연결
+      let socketToken = '';
+      try {
+        const res = await authAPI.refresh(); // 또는 적절한 토큰 획득 API
+        socketToken = res.data.token;
+      } catch (error) {
+        console.warn('Could not get socket token, using direct connection');
+      }
+
+      const socketUrl = socketToken ? `/ws-nest?token=${socketToken}` : '/ws-nest';
+      const socket = new SockJS(socketUrl);
 
       this.stompClient = new Client({
         webSocketFactory: () => socket,

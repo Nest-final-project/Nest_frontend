@@ -1,0 +1,237 @@
+.notification-toast {
+  position: relative;
+  width: 380px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.notification-toast.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.notification-toast.exiting {
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s ease-in;
+}
+
+/* 알림 타입별 스타일 */
+.notification-toast.warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.notification-toast.warning .notification-icon {
+  color: #f59e0b;
+}
+
+.notification-toast.error {
+  border-left: 4px solid #ef4444;
+}
+
+.notification-toast.error .notification-icon {
+  color: #ef4444;
+}
+
+.notification-toast.success {
+  border-left: 4px solid #10b981;
+}
+
+.notification-toast.success .notification-icon {
+  color: #10b981;
+}
+
+.notification-toast.info {
+  border-left: 4px solid #3b82f6;
+}
+
+.notification-toast.info .notification-icon {
+  color: #3b82f6;
+}
+
+.notification-toast.chat {
+  border-left: 4px solid #8b5cf6;
+}
+
+.notification-toast.chat .notification-icon {
+  color: #8b5cf6;
+}
+
+.notification-toast.session {
+  border-left: 4px solid #f97316;
+}
+
+.notification-toast.session .notification-icon {
+  color: #f97316;
+}
+
+.notification-content {
+  padding: 1.25rem;
+}
+
+.notification-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.notification-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.notification-title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.close-button:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #374151;
+}
+
+.close-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.notification-body {
+  margin-left: 2rem;
+}
+
+.notification-message {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin: 0 0 0.5rem 0;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.notification-actions {
+  margin-top: 1rem;
+  margin-left: 2rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.notification-action {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.notification-action.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.notification-action.primary:hover {
+  background: #2563eb;
+}
+
+.notification-action.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.notification-action.secondary:hover {
+  background: #e5e7eb;
+}
+
+.notification-action.danger {
+  background: #ef4444;
+  color: white;
+}
+
+.notification-action.danger:hover {
+  background: #dc2626;
+}
+
+/* 진행 바 */
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  width: 100%;
+  transform: translateX(-100%);
+  animation: progress linear forwards;
+}
+
+@keyframes progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .notification-toast {
+    width: calc(100vw - 2rem);
+    margin: 0 1rem 0.75rem;
+  }
+
+  .notification-content {
+    padding: 1rem;
+  }
+
+  .notification-body {
+    margin-left: 1.75rem;
+  }
+
+  .notification-actions {
+    margin-left: 1.75rem;
+    flex-direction: column;
+  }
+
+  .notification-action {
+    width: 100%;
+    justify-content: center;
+  }
+}
