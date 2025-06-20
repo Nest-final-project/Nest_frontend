@@ -2,12 +2,16 @@ import React, { useState, useRef } from 'react';
 import { X, Mail, Lock, Eye, EyeOff, User, Phone, UserCheck } from 'lucide-react';
 import './Login.css';
 import logo from '../image/cool.png';
+import { authAPI } from '../services/api';
+import { authUtils } from '../utils/tokenUtils';
 
 const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   
   // 회원가입 추가 필드
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,7 +20,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   const [phone1, setPhone1] = useState('');
   const [phone2, setPhone2] = useState('');
   const [phone3, setPhone3] = useState('');
-  const [userType, setUserType] = useState('mentee'); // 'mentee' or 'mentor'
+  const [userStatus, setUserStatus] = useState('mentee'); // 'mentee' or 'mentor'
 
   // useRef는 컴포넌트 최상단에서 선언
   const phone2Ref = useRef(null);
@@ -24,28 +28,222 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSignUp) {
-      // TODO: 회원가입 로직 구현
-      const phone = `${phone1}-${phone2}-${phone3}`;
-      console.log('Sign Up:', { email, password, confirmPassword, name, nickname, phone, userType });
-    } else {
-      // 임시 로그인 성공 처리 (실제로는 API 호출)
-      const userData = {
-        id: 1,
-        name: name || '테스트 사용자',
-        email: email,
-        profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face',
-        userType: 'mentee',
-        joinDate: '2024.01.01',
-        token: 'mock-jwt-token'
-      };
-      
-      if (onLoginSuccess) {
-        onLoginSuccess(userData);
+    setError('');
+    setIsLoading(true);
+
+    try {
+      if (isSignUp) {
+        // 입력값 유효성 검사
+        if (!email.trim()) {
+          setError('이메일을 입력해주세요.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (!email.includes('@') || !email.includes('.')) {
+          setError('올바른 이메일 형식이 아닙니다.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (!password) {
+          setError('비밀번호를 입력해주세요.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (password.length < 8) {
+          setError('비밀번호는 8자 이상이어야 합니다.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          setError('비밀번호가 일치하지 않습니다.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (!name.trim()) {
+          setError('이름을 입력해주세요.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (!nickname.trim()) {
+          setError('닉네임을 입력해주세요.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (!phone1 || !phone2 || !phone3) {
+          setError('전화번호를 모두 입력해주세요.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (phone1.length !== 3 || phone2.length < 3 || phone3.length < 4) {
+          setError('올바른 전화번호 형식이 아닙니다.');
+          setIsLoading(false);
+          return;
+        }
+
+        // AuthRequestDto 형태로 데이터 구성 (백엔드 필드명에 맞춤)
+        const signupData = {
+          email: email.trim(),
+          password: password,
+          name: name.trim(),
+          nickName: nickname.trim(), // 백엔드는 nickName을 기대
+          phoneNumber: `${phone1}-${phone2}-${phone3}`,
+          userRole: userStatus.toUpperCase() // 백엔드는 userRole을 기대 (MENTEE 또는 MENTOR)
+        };
+
+        console.log('회원가입 요청 데이터:', signupData);
+        console.log('전송할 필드들 확인:');
+        console.log('- email:', signupData.email);
+        console.log('- password:', signupData.password ? '***' : 'null');
+        console.log('- name:', signupData.name);
+        console.log('- nickName:', signupData.nickName);
+        console.log('- phoneNumber:', signupData.phoneNumber);
+        console.log('- userRole:', signupData.userRole);
+        console.log('API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
+
+        // 회원가입 API 호출
+        const response = await authAPI.signup(signupData);
+        
+        console.log('회원가입 API 응답:', response);
+        console.log('회원가입 성공 데이터:', response.data);
+        
+        // 회원가입 성공 시 로그인 모드로 전환
+        setIsSignUp(false);
+        resetForm();
+        alert('회원가입이 완료되었습니다. 로그인해주세요.');
+        
+      } else {
+        // 로그인 입력값 유효성 검사
+        if (!email.trim()) {
+          setError('이메일을 입력해주세요.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (!password) {
+          setError('비밀번호를 입력해주세요.');
+          setIsLoading(false);
+          return;
+        }
+
+        // LoginRequestDto 형태로 데이터 구성
+        const loginData = {
+          email: email.trim(),
+          password: password
+        };
+
+        console.log('로그인 요청 데이터:', loginData);
+        console.log('전송할 필드들 확인:');
+        console.log('- email:', loginData.email);
+        console.log('- password:', loginData.password ? '***' : 'null');
+        console.log('API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
+
+        try {
+          // 실제 로그인 API 호출
+          const response = await authAPI.login(loginData);
+          console.log('로그인 API 응답:', response);
+          console.log('로그인 성공 데이터:', response.data);
+          
+          // 백엔드에서 받은 사용자 데이터 처리
+          const responseData = response.data.data || response.data;
+          console.log('📋 로그인 응답 데이터:', responseData);
+          
+          // 토큰 추출
+          const accessToken = responseData.accessToken || responseData.token;
+          const refreshToken = responseData.refreshToken;
+          
+          if (!accessToken) {
+            console.error('❌ accessToken이 응답에 없습니다');
+            setError('인증 토큰을 받을 수 없습니다.');
+            return;
+          }
+          
+          console.log('🔑 토큰 추출 성공:', {
+            accessToken: accessToken ? '있음' : '없음',
+            refreshToken: refreshToken ? '있음' : '없음'
+          });
+          
+          // 사용자 정보 구성
+          const userInfo = {
+            id: responseData.userId || responseData.id || responseData.user?.id,
+            name: responseData.name || responseData.userName || responseData.user?.name || '사용자',
+            email: responseData.email || responseData.user?.email || email,
+            profileImage: responseData.profileImage || responseData.user?.profileImage || '/default-profile.svg',
+            userRole: responseData.userRole || responseData.user?.userRole || 'mentee',
+            joinDate: responseData.joinDate || responseData.createdAt || responseData.user?.createdAt || '2024.01.01',
+            token: accessToken
+          };
+          
+          // 토큰 저장 (authUtils 사용)
+          console.log('💾 토큰 저장 시작...');
+          authUtils.setAuthData(accessToken, refreshToken, userInfo);
+          
+          // 저장 확인
+          const savedToken = sessionStorage.getItem('accessToken');
+          const savedUser = sessionStorage.getItem('userData');
+          
+          console.log('🔍 저장된 토큰 확인:', savedToken ? `있음 (${savedToken.length}자)` : '없음');
+          console.log('🔍 저장된 사용자 정보:', savedUser ? '있음' : '없음');
+          
+          if (savedToken && savedUser) {
+            console.log('✅ 저장 확인 성공');
+            console.log('🔑 저장된 토큰 값:', savedToken);
+            if (onLoginSuccess) {
+              onLoginSuccess(userInfo);
+            }
+          } else {
+            console.error('❌ 저장 확인 실패');
+            setError('로그인 정보 저장에 실패했습니다.');
+          }
+          
+        } catch (loginError) {
+          console.error('로그인 실패:', loginError);
+          console.error('로그인 에러 응답:', loginError.response);
+          
+          if (loginError.response?.status === 401) {
+            setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+          } else if (loginError.response?.status === 404) {
+            setError('존재하지 않는 사용자입니다.');
+          } else if (loginError.response?.data?.message) {
+            setError(loginError.response.data.message);
+          } else if (loginError.message.includes('Network Error') || loginError.code === 'ERR_NETWORK') {
+            setError('서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
+          } else {
+            setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+          }
+          throw loginError; // 외부 catch에서 처리하도록
+        }
       }
-      console.log('Login:', { email, password });
+    } catch (error) {
+      console.error('API 요청 실패:', error);
+      console.error('에러 응답:', error.response);
+      console.error('에러 메시지:', error.message);
+      
+      // 에러 메시지 처리
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else if (error.response?.data?.error) {
+        setError(error.response.data.error);
+      } else if (error.response?.status === 409) {
+        setError('이미 가입된 이메일입니다.');
+      } else if (error.response?.status === 400) {
+        setError('입력 정보를 다시 확인해주세요.');
+      } else if (error.message.includes('Network Error') || error.code === 'ERR_NETWORK') {
+        setError('서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
+      } else {
+        setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,8 +266,9 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
     setPhone1('');
     setPhone2('');
     setPhone3('');
-    setUserType('mentee');
+    setUserStatus('mentee');
     setShowPassword(false);
+    setError('');
   };
 
   // 전화번호 입력 시 자동 포커스 이동
@@ -100,6 +299,13 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
+          {/* 에러 메시지 표시 */}
+          {error && (
+            <div className="error-message">
+              <span>{error}</span>
+            </div>
+          )}
+
           {/* 이메일 */}
           <div className="input-group">
             <div className="input-wrapper">
@@ -244,8 +450,8 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                       type="radio"
                       name="userType"
                       value="mentee"
-                      checked={userType === 'mentee'}
-                      onChange={(e) => setUserType(e.target.value)}
+                      checked={userStatus === 'mentee'}
+                      onChange={(e) => setUserStatus(e.target.value)}
                     />
                     <span className="radio-label">
                       <span className="radio-icon">🐣</span>
@@ -257,8 +463,8 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                       type="radio"
                       name="userType"
                       value="mentor"
-                      checked={userType === 'mentor'}
-                      onChange={(e) => setUserType(e.target.value)}
+                      checked={userStatus === 'mentor'}
+                      onChange={(e) => setUserStatus(e.target.value)}
                     />
                     <span className="radio-label">
                       <span className="radio-icon">🦅</span>
@@ -282,8 +488,15 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
             </div>
           )}
 
-          <button type="submit" className="login-submit">
-            {isSignUp ? '회원가입' : '로그인'}
+          <button type="submit" className="login-submit" disabled={isLoading}>
+            {isLoading ? (
+              <span className="loading-spinner">
+                <span className="spinner"></span>
+                {isSignUp ? '가입 중...' : '로그인 중...'}
+              </span>
+            ) : (
+              isSignUp ? '회원가입' : '로그인'
+            )}
           </button>
         </form>
 
