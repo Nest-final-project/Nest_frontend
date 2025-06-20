@@ -20,6 +20,7 @@ import ChatRoom from './components/ChatRoom';
 import MyPage from './components/MyPage';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
+import Inquiry from './components/Inquiry';
 import { authUtils, userInfoUtils } from './utils/tokenUtils';
 
 const App = () => {
@@ -31,6 +32,7 @@ const App = () => {
   const [bookingData, setBookingData] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
+  const [inquiryTab, setInquiryTab] = useState('inquiries');
 
   // 로그인 상태 관리
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -189,6 +191,22 @@ const App = () => {
     setCurrentPage('mentor-profile');
   };
 
+  // 문의 페이지로 이동
+  const handleInquiry = (tabType = 'inquiries') => {
+    setInquiryTab(tabType);
+    setCurrentPage('inquiry');
+  };
+
+  // 문의 페이지 렌더링
+  if (currentPage === 'inquiry') {
+    return (
+      <Inquiry 
+        onBack={handleBackToHome} 
+        initialTab={inquiryTab}
+      />
+    );
+  }
+
   // 소셜 회원가입 페이지 렌더링
   if (currentPage === 'social-signup') {
     return <SocialSignup />;
@@ -215,6 +233,7 @@ const App = () => {
           onLoginClick={() => setIsLoginOpen(true)}
           onCategorySelect={handleCategorySelect}
           onProfileClick={handleProfileClick}
+          onInquiry={handleInquiry}
           isLoggedIn={isLoggedIn}
           userInfo={userInfo}
           onChatRoom={handleChatRoom}
@@ -332,6 +351,7 @@ const App = () => {
           onLoginClick={() => setIsLoginOpen(true)}
           onCategorySelect={handleCategorySelect}
           onProfileClick={handleProfileClick}
+          onInquiry={handleInquiry}
           isLoggedIn={isLoggedIn}
           userInfo={userInfo}
           onChatRoom={handleChatRoom}

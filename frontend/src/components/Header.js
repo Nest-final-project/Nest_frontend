@@ -6,9 +6,10 @@ import logo from '../image/cool.png';
 import { categoryAPI, authAPI } from '../services/api';
 import { accessTokenUtils, refreshTokenUtils } from '../utils/tokenUtils';
 
-const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, isLoggedIn, userInfo, onLogout }) => {
+const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, onInquiry, isLoggedIn, userInfo, onLogout }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [hasNotifications, setHasNotifications] = useState(true); // 알림 상태
   const [categories, setCategories] = useState([]);
 
@@ -27,6 +28,7 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, is
 
   const toggleSidebar = () => setIsNavOpen(!isNavOpen);
   const toggleCategory = () => setIsCategoryOpen(!isCategoryOpen);
+  const toggleInquiry = () => setIsInquiryOpen(!isInquiryOpen);
 
   const handleLoginClick = () => {
     setIsNavOpen(false);
@@ -175,10 +177,61 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, is
             </div>
           </div>
           
-          <a href="#contact" className="sidebar-link" onClick={toggleSidebar}>
-            <span className="sidebar-link-icon">📧</span>
-            문의
-          </a>
+          {/* 고객센터 드롭다운 섹션 */}
+          <div className="sidebar-category-section">
+            <button 
+              className={`sidebar-category-toggle ${isInquiryOpen ? 'open' : ''}`}
+              onClick={toggleInquiry}
+            >
+              <span className="sidebar-link-icon">🏠</span>
+              고객센터
+              <span className={`category-arrow ${isInquiryOpen ? 'rotated' : ''}`}>
+                ▼
+              </span>
+            </button>
+            <div className={`sidebar-subcategories ${isInquiryOpen ? 'open' : ''}`}>
+              <button
+                className="sidebar-sublink"
+                onClick={() => {
+                  setIsNavOpen(false);
+                  setIsInquiryOpen(false);
+                  // 자주 묻는 질문 페이지로 이동 (추후 구현)
+                }}
+              >
+                자주 묻는 질문
+              </button>
+              <button
+                className="sidebar-sublink"
+                onClick={() => {
+                  setIsNavOpen(false);
+                  setIsInquiryOpen(false);
+                  onInquiry && onInquiry('inquiries'); // 문의 사항 탭으로
+                }}
+              >
+                문의 사항
+              </button>
+              <button
+                className="sidebar-sublink"
+                onClick={() => {
+                  setIsNavOpen(false);
+                  setIsInquiryOpen(false);
+                  onInquiry && onInquiry('create'); // 문의하기 탭으로
+                }}
+              >
+                문의하기
+              </button>
+              <button
+                className="sidebar-sublink"
+                onClick={() => {
+                  setIsNavOpen(false);
+                  setIsInquiryOpen(false);
+                  // 공지사항 페이지로 이동 (추후 구현)
+                }}
+              >
+                공지사항
+              </button>
+            </div>
+          </div>
           
           {/* 채팅 메뉴 - 로그인 상태에서만 표시 */}
           {isLoggedIn && (
