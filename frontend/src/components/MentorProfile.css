@@ -1,7 +1,7 @@
 .mentor-profile-container {
   min-height: 100vh;
-  background: #f8f9fa !important;
-  padding-bottom: 80px;
+  background: #f5f7fa !important;
+  padding: 0 1rem 100px 1rem;
   position: relative;
   z-index: 1;
 }
@@ -9,21 +9,31 @@
 .profile-header {
   display: flex;
   align-items: center;
-  padding: 1rem 1.5rem;
-  background: white !important;
-  border-bottom: 1px solid #e9ecef;
+  padding: 1rem 0;
+  background: transparent !important;
+  border: none;
   position: sticky;
   top: 0;
   z-index: 10;
+  margin-bottom: 1rem;
 }
 
 .back-button {
-  background: none;
+  background: white;
   border: none;
-  padding: 0.5rem;
+  padding: 0.75rem;
   margin-right: 1rem;
   cursor: pointer;
   color: #666;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: #f8f9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .back-button .icon {
@@ -32,94 +42,134 @@
 }
 
 .header-category {
+  background: white;
   color: #666;
   font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  font-weight: 500;
 }
 
 .profile-content {
-  background: white !important;
-  margin: 0;
+  background: transparent !important;
   position: relative;
   z-index: 1;
 }
 
-/* 프로필 헤로 섹션 */
+/* 프로필 헤로 섹션 - 박스 형태 */
 .profile-hero {
-  padding: 2rem 1.5rem;
-  border-bottom: 8px solid #f8f9fa;
   background: white !important;
-  display: block !important;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid rgba(255,255,255,0.8);
   position: relative;
+  overflow: hidden;
+}
+
+.profile-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff6b8a, #6c63ff, #20bf6b);
 }
 
 .profile-avatar {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ff6b8a, #ff8a8a);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
   color: white;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
 .mentor-username {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  color: #666;
   margin-bottom: 0.5rem;
+  opacity: 0.8;
 }
 
 .profile-title {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: #333;
-  margin: 0 0 1rem 0;
+  margin: 0 0 1.5rem 0;
   line-height: 1.3;
 }
 
 .hashtags {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
 .hashtag {
   color: #007bff;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 600;
+  background: #f0f8ff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid #e3f2fd;
 }
 
-/* 콘텐츠 섹션들 */
+/* 콘텐츠 섹션들 - 박스 형태 */
 .content-section {
-  padding: 2rem 1.5rem;
-  border-bottom: 8px solid #f8f9fa;
   background: white !important;
-  display: block !important;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid rgba(255,255,255,0.8);
   position: relative;
+  overflow: hidden;
 }
 
 .section-title {
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: #333 !important;
   margin-bottom: 1.5rem;
-  display: block !important;
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 1.5rem;
+  background: linear-gradient(45deg, #007bff, #20bf6b);
+  border-radius: 2px;
 }
 
 /* 소개 섹션 */
 .intro-content {
-  line-height: 1.6;
+  line-height: 1.7;
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border-left: 4px solid #007bff;
 }
 
 .intro-paragraph {
   color: #333;
   margin-bottom: 1rem;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .intro-paragraph:last-child {
@@ -132,15 +182,22 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  background: none;
-  border: none;
-  padding: 0;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  padding: 1rem 1.5rem;
   margin-bottom: 1.5rem;
   cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.section-toggle:hover {
+  background: #e9ecef;
+  border-color: #007bff;
 }
 
 .toggle-title {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #333;
 }
@@ -149,10 +206,15 @@
   width: 1.5rem;
   height: 1.5rem;
   color: #666;
+  transition: transform 0.3s ease;
 }
 
 .career-content {
   animation: slideDown 0.3s ease-out;
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid #e9ecef;
 }
 
 @keyframes slideDown {
@@ -173,20 +235,33 @@
 .career-header,
 .career-row {
   display: grid;
-  grid-template-columns: 1fr 0.8fr 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr 1fr 1.5fr;
   gap: 1rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid #e9ecef;
+  padding: 1rem;
   align-items: center;
 }
 
 .career-header {
-  background: #f8f9fa;
-  padding: 1rem;
-  margin: 0 -1rem;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
   font-weight: 600;
   color: #666;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.career-row {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.career-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
 
 .career-col {
@@ -199,123 +274,298 @@
   font-weight: 600;
 }
 
-/* 서비스 섹션 */
-.services-section {
-  border-bottom: 8px solid #f8f9fa;
-}
-
+/* 서비스 소개 섹션 */
 .service-intro {
-  margin-bottom: 0;
+  background: linear-gradient(135deg, #f8fcff 0%, #e3f2fd 100%);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid #e3f2fd;
 }
 
 .service-intro-text {
   font-weight: 600;
   color: #333;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  font-size: 1.05rem;
 }
 
 .service-points {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .service-point {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.95rem;
   color: #333;
+  line-height: 1.5;
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
 }
 
-.point-marker {
-  color: #ffc107;
+.service-point:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.service-point::before {
+  content: '✓';
+  color: #28a745;
   font-weight: bold;
+  font-size: 1.2rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
 }
 
-/* 서비스 항목 섹션 */
+/* 서비스 선택 섹션 */
 .service-items-section {
-  padding-top: 2rem;
+  background: linear-gradient(135deg, #fff8f0 0%, #f0f8ff 100%);
+  border: 2px solid #e3f2fd;
+}
+
+.services-content {
+  animation: slideDown 0.3s ease-out;
 }
 
 .services-grid {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .service-card {
   border: 2px solid #e9ecef;
-  border-radius: 12px;
-  padding: 1.5rem;
-  transition: all 0.2s ease;
+  border-radius: 20px;
+  padding: 2rem;
+  transition: all 0.3s ease;
   position: relative;
+  cursor: pointer;
+  background: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #e9ecef, #e9ecef);
+  transition: all 0.3s ease;
+}
+
+.service-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 8px 24px rgba(0,123,255,0.15);
+  transform: translateY(-4px);
+}
+
+.service-card:hover::before {
+  background: linear-gradient(90deg, #007bff, #20bf6b);
+}
+
+.service-card.selected {
+  border-color: #007bff;
+  background: #f8fcff;
+  box-shadow: 0 8px 24px rgba(0,123,255,0.2);
+  transform: translateY(-2px);
+}
+
+.service-card.selected::before {
+  background: linear-gradient(90deg, #007bff, #20bf6b);
 }
 
 .service-card.popular {
+  border-color: #28a745;
+  background: #f8fff9;
+}
+
+.service-card.popular::before {
+  background: linear-gradient(90deg, #28a745, #20bf6b);
+}
+
+.service-card.popular.selected {
   border-color: #007bff;
   background: #f8fcff;
 }
 
-.service-card.popular::before {
-  content: '인기';
+.popular-badge {
   position: absolute;
   top: -1px;
-  right: 1rem;
-  background: #007bff;
+  right: 2rem;
+  background: linear-gradient(135deg, #28a745, #20bf6b);
   color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 0 0 8px 8px;
-  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0 0 12px 12px;
+  font-size: 0.8rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  box-shadow: 0 2px 8px rgba(40,167,69,0.3);
+}
+
+.star-icon {
+  width: 0.9rem;
+  height: 0.9rem;
 }
 
 .service-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .service-name {
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #333;
   margin: 0;
+  line-height: 1.3;
 }
 
 .service-duration {
   display: flex;
   gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: 1rem;
 }
 
 .duration-tag {
-  background: #e9ecef;
+  background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
   color: #007bff;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
   font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid #e3f2fd;
 }
 
 .service-description {
   color: #666;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  line-height: 1.4;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 12px;
+  border-left: 4px solid #007bff;
 }
 
 .service-detail {
   color: #333;
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.7;
+}
+
+.detail-line {
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.detail-line::before {
+  content: '•';
+  color: #007bff;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.service-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 2px solid #f8f9fa;
 }
 
 .service-price {
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   font-weight: 700;
+  color: #007bff;
+  background: linear-gradient(135deg, #007bff, #20bf6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.selected-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #007bff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #f0f8ff;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid #e3f2fd;
+}
+
+.check-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* 선택 요약 섹션 */
+.selection-summary {
+  background: linear-gradient(135deg, #f8fcff, #e3f2fd);
+  border: 2px solid #007bff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0,123,255,0.1);
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.summary-service {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.summary-service strong {
+  font-size: 1.1rem;
   color: #333;
+}
+
+.summary-price {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #007bff;
+}
+
+.summary-duration {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+  text-align: center;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 8px;
 }
 
 /* 고정 하단 버튼 */
@@ -324,27 +574,46 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 1rem 1.5rem;
-  background: white;
-  border-top: 1px solid #e9ecef;
+  padding: 1rem 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(233, 236, 239, 0.8);
   z-index: 10;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
 }
 
 .contact-button {
   width: 100%;
-  padding: 1rem;
-  background: #dc3545;
+  padding: 1.2rem;
+  background: linear-gradient(135deg, #dc3545, #c82333);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: 16px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.3s ease;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 16px rgba(220,53,69,0.3);
 }
 
 .contact-button:hover {
-  background: #c82333;
+  background: linear-gradient(135deg, #c82333, #a71e2a);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220,53,69,0.4);
+}
+
+.contact-button.with-selection {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  box-shadow: 0 4px 16px rgba(0,123,255,0.3);
+}
+
+.contact-button.with-selection:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  box-shadow: 0 6px 20px rgba(0,123,255,0.4);
 }
 
 /* Gradient backgrounds for avatars */
@@ -361,10 +630,20 @@
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
+  .mentor-profile-container {
+    padding: 0 0.75rem 100px 0.75rem;
+  }
+  
+  .profile-hero,
+  .content-section {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
   .career-header,
   .career-row {
     grid-template-columns: 1fr;
-    gap: 0.5rem;
+    gap: 0.75rem;
     text-align: left;
   }
   
@@ -373,11 +652,11 @@
   }
   
   .career-row {
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
     margin-bottom: 1rem;
-    background: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
   
   .career-col::before {
@@ -385,31 +664,79 @@
     font-weight: 600;
     color: #666;
     display: block;
-    margin-bottom: 0.25rem;
-    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
   }
   
   .service-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .profile-hero {
-    padding: 1.5rem 1rem;
+    gap: 1rem;
   }
   
-  .content-section {
-    padding: 1.5rem 1rem;
+  .service-duration {
+    margin-left: 0;
+  }
+  
+  .services-grid {
+    gap: 1rem;
+  }
+  
+  .service-card {
+    padding: 1.5rem;
+  }
+  
+  .selection-summary {
+    padding: 1rem;
+  }
+  
+  .summary-service {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
   
   .fixed-bottom {
     padding: 1rem;
   }
+}
+
+@media (max-width: 480px) {
+  .mentor-profile-container {
+    padding: 0 0.5rem 100px 0.5rem;
+  }
+  
+  .profile-hero,
+  .content-section {
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
   
   .service-card {
+    padding: 1.25rem;
+  }
+  
+  .contact-button {
+    font-size: 1rem;
     padding: 1rem;
+    border-radius: 12px;
+  }
+  
+  .service-name {
+    font-size: 1.1rem;
+  }
+  
+  .service-price {
+    font-size: 1.2rem;
+  }
+  
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+  
+  .section-title {
+    font-size: 1.2rem;
   }
 }

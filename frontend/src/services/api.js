@@ -227,6 +227,12 @@ export const profileAPI = {
 
   // 프로필 수정
   updateProfile: (profileId, profileData) => api.patch(`/api/profiles/${profileId}`, profileData),
+
+  // 프로필 경력 조회
+  getCareerList: (profileId) => api.get(`/api/profiles/${profileId}/careers`),
+
+  // 티켓 조회
+  getTicketList: () => api.get('/api/ticket'),
 };
 
 // Consultation API
