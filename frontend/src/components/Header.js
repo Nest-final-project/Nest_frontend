@@ -3,9 +3,10 @@ import { Menu, Bell, X } from 'lucide-react';
 import notificationService from '../services/notificationService';
 import './Header.css';
 import logo from '../image/cool.png';
-import { categoryAPI } from '../services/api';
+import { categoryAPI, authAPI } from '../services/api';
+import { accessTokenUtils, refreshTokenUtils } from '../utils/tokenUtils';
 
-const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, isLoggedIn, userInfo }) => {
+const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, isLoggedIn, userInfo, onLogout }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [hasNotifications, setHasNotifications] = useState(true); // 알림 상태
@@ -30,6 +31,38 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, is
   const handleLoginClick = () => {
     setIsNavOpen(false);
     onLoginClick();
+  };
+
+  const handleLogoutClick = async () => {
+    try {
+      // 백엔드 로그아웃 API 호출
+      await authAPI.logout();
+
+      // 로컬 토큰 제거
+      accessTokenUtils.removeAccessToken();
+      refreshTokenUtils.removeRefreshToken();
+
+      // 부모 컴포넌트에 로그아웃 알림
+      if (onLogout) {
+        onLogout();
+      }
+
+      setIsNavOpen(false);
+
+      console.log('✅ 로그아웃 완료');
+    } catch (error) {
+      console.error('❌ 로그아웃 중 오류 발생:', error);
+
+      // 로그아웃 API가 실패해도 로컬 토큰은 제거
+      accessTokenUtils.removeAccessToken();
+      refreshTokenUtils.removeRefreshToken();
+
+      if (onLogout) {
+        onLogout();
+      }
+
+      setIsNavOpen(false);
+    }
   };
 
   const handleProfileClick = () => {
@@ -149,8 +182,8 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, is
           
           {/* 채팅 메뉴 - 로그인 상태에서만 표시 */}
           {isLoggedIn && (
-            <button 
-              className="sidebar-link chat-button" 
+            <button
+              className="sidebar-link chat-button"
               onClick={() => {
                 setIsNavOpen(false);
                 onChatRoom && onChatRoom({ name: '김개발' });
@@ -163,9 +196,15 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, is
         </nav>
         
         <div className="sidebar-footer">
-          {/* 로그인되지 않은 상태에서만 로그인 버튼 표시 */}
-          {!isLoggedIn && (
-            <button 
+          {isLoggedIn ? (
+            <button
+              className="sidebar-logout-button"
+              onClick={handleLogoutClick}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <button
               className="sidebar-login-button"
               onClick={handleLoginClick}
             >

@@ -20,6 +20,7 @@ import ChatRoom from './components/ChatRoom';
 import MyPage from './components/MyPage';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
+import { authUtils, userInfoUtils } from './utils/tokenUtils';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,14 +37,32 @@ const App = () => {
   const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
-    // 로컬 스토리지에서 로그인 상태 확인
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('userData');
+    // 로그인 상태 확인 (Session Storage에서)
+    const isLoggedIn = authUtils.isLoggedIn();
+    const userData = userInfoUtils.getUserInfo();
 
-    if (token && userData) {
+    if (isLoggedIn && userData) {
       setIsLoggedIn(true);
-      setUserInfo(JSON.parse(userData));
+      setUserInfo(userData);
+      console.log('세션에서 로그인 상태 복원됨:', userData);
     }
+
+    // 개발용: 전역 디버깅 함수 추가
+    window.checkAuth = () => {
+      console.group('🔍 현재 인증 상태');
+      console.log('sessionStorage accessToken:', sessionStorage.getItem('accessToken') ? '존재' : '없음');
+      console.log('sessionStorage userData:', sessionStorage.getItem('userData') ? '존재' : '없음');
+      console.log('localStorage refreshToken:', localStorage.getItem('refreshToken') ? '존재' : '없음');
+      console.log('React isLoggedIn 상태:', isLoggedIn);
+      console.groupEnd();
+    };
+
+    console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
+
+    return () => {
+      // cleanup
+      delete window.checkAuth;
+    };
 
     // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
     const urlParams = new URLSearchParams(window.location.search);
@@ -75,18 +94,18 @@ const App = () => {
     setUserInfo(userData);
     setIsLoginOpen(false);
 
-    // 로컬 스토리지에 저장
-    localStorage.setItem('token', userData.token);
-    localStorage.setItem('userData', JSON.stringify(userData));
+    console.log('로그인 성공, App 상태 업데이트됨');
   };
 
   // 로그아웃 처리
   const handleLogout = () => {
+    // 백엔드 로그아웃은 Header 컴포넌트에서 처리됨
+    // 여기서는 클라이언트 측 상태만 정리
+    authUtils.clearAllAuthData();
     setIsLoggedIn(false);
     setUserInfo(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
     setCurrentPage('home');
+    console.log('클라이언트 로그아웃 완료 - 모든 토큰과 사용자 정보 삭제됨');
   };
 
   // 프로필 클릭 시 마이페이지로 이동
@@ -190,7 +209,18 @@ const App = () => {
     return (
       <div className="app">
         <ParticleBackground />
-        <MentorList 
+        <Header
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          onLoginClick={() => setIsLoginOpen(true)}
+          onCategorySelect={handleCategorySelect}
+          onProfileClick={handleProfileClick}
+          isLoggedIn={isLoggedIn}
+          userInfo={userInfo}
+          onChatRoom={handleChatRoom}
+          onLogout={handleLogout}
+        />
+        <MentorList
           category={selectedCategory} 
           onBack={handleBackToHome}
           onMentorSelect={handleMentorSelect}
@@ -200,7 +230,6 @@ const App = () => {
           onClose={() => setIsLoginOpen(false)}
           onLoginSuccess={handleLoginSuccess}
         />
-        <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
     );
   }
@@ -306,6 +335,7 @@ const App = () => {
           isLoggedIn={isLoggedIn}
           userInfo={userInfo}
           onChatRoom={handleChatRoom}
+          onLogout={handleLogout}
         />
         <main className="main-content">
           <HeroSection />
@@ -318,8 +348,6 @@ const App = () => {
           onClose={() => setIsLoginOpen(false)}
           onLoginSuccess={handleLoginSuccess}
         />
-        {/* 전역 알림 컨테이너 */}
-        <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
   );
 };
