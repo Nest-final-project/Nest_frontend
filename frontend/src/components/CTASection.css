@@ -7,7 +7,7 @@
 .cta-background {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(147, 51, 234, 0.2), rgba(236, 72, 153, 0.2), rgba(59, 130, 246, 0.2));
+  background: linear-gradient(to right, rgb(191, 255, 0), rgb(164, 218, 54), rgb(73, 198, 160));
 }
 
 .cta-gradient-1 {

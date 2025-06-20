@@ -27,9 +27,8 @@ const Booking = ({ mentor, onBack, onBooking }) => {
   // 1. 티켓(이용권) 목록 불러오기
   useEffect(() => {
     setLoading(true);
-    ticketAPI.getTickets()
+    ticketAPI.getTickets() // ticketAPI에서 id 파라미터 없이 전체 목록 조회
     .then(res => {
-      // res.data.data 구조 확인 필수 (콘솔로도 한 번 찍어보세요)
       setServiceOptions(res.data.data);
       setLoading(false);
     })
@@ -39,21 +38,52 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     });
   }, []);
 
+
+
+  useEffect(() => {
+    console.log("Booking mentor prop:", mentor); // <- id/userId가 실제로 찍히는지 확인
+    // ...
+  }, [mentor]);
+
   // 2. 날짜 선택 시 해당 날짜의 상담 가능 시간 조회
   useEffect(() => {
-    if (!selectedDate || !mentor?.id) return;
-    // 예시: userId=멘토id, date=yyyy-MM-dd
-    consultationAPI.getConsultations({ userId: mentor.id, date: selectedDate })
+    if (!selectedDate || !mentor?.userId) return;
+    consultationAPI.getAvailableConsultations(mentor.userId)
     .then(res => {
-      const consultation = res.data.data && res.data.data.length > 0 ? res.data.data[0] : null;
-      setConsultationStartAt(consultation?.start_at || null);
-      setConsultationEndAt(consultation?.end_at || null);
-    })
-    .catch(() => {
-      setConsultationStartAt(null);
-      setConsultationEndAt(null);
+      console.log("🔵 [API 응답 전체]", res.data.data);
+      const slots = res.data.data;
+      if (slots.length > 0) {
+        slots.forEach(slot => {
+          console.log("🟢 slot.availableStartAt:", slot.availableStartAt, "selectedDate:", selectedDate);
+          if (slot.availableStartAt) {
+            const slotDate = slot.availableStartAt.split(' ')[0].split('T')[0];
+            console.log("🟡 비교 결과:", slotDate === selectedDate, " (slotDate:",
+                slotDate, ")");
+          }
+        });
+      }
+      const selectedSlots = slots.filter(slot => {
+        if (!slot.availableStartAt) return false;
+        const slotDate = slot.availableStartAt.split(' ')[0].split('T')[0];
+        return slotDate === selectedDate;
+      });
+      console.log("🟣 필터링된 슬롯:", selectedSlots);
+      // 아래 부분만 통째로 바꾸세요
+      if (selectedSlots.length > 0) {
+        const startTimes = selectedSlots.map(slot => slot.availableStartAt);
+        const endTimes = selectedSlots.map(slot => slot.availableEndAt);
+        const minStart = startTimes.reduce((a, b) => (a < b ? a : b));
+        const maxEnd = endTimes.reduce((a, b) => (a > b ? a : b));
+        setConsultationStartAt(minStart);
+        setConsultationEndAt(maxEnd);
+      } else {
+        setConsultationStartAt(null);
+        setConsultationEndAt(null);
+      }
     });
-  }, [mentor?.id, selectedDate]);
+  }, [mentor?.userId, selectedDate]);
+
+
 
   // 3. 10분 단위 구간으로 분할
   useEffect(() => {
@@ -70,13 +100,12 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     const result = [];
     let start = new Date(startAt);
     let end = new Date(endAt);
-    while (start < end) {
-      let slotEnd = new Date(start.getTime() + 10 * 60000);
-      if (slotEnd > end) slotEnd = end;
-      // '09:00', '09:10' ... 스타일
+
+    // 기존: while (start < end)
+    while (start <= end) {
       const format = date => date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
       result.push(format(start));
-      start = slotEnd;
+      start = new Date(start.getTime() + 10 * 60000);
     }
     return result;
   }
@@ -151,13 +180,34 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         date: selectedDate,
         startTime: selectedStartTime,
         endTime: selectedEndTime,
-        ticketId: selectedService
+        ticketId: selectedService     // 👈 반드시 포함!
       };
+      console.log('예약 데이터:', bookingData); // 이 값이 그대로 부모로 전달됨
       if (onBooking) onBooking(bookingData);
     } else {
       alert('모든 항목을 선택해주세요.');
     }
   };
+
+  /*const handleBooking = () => {
+    if (selectedDate && selectedStartTime && selectedEndTime && selectedService) {
+      // 1. 선택한 ticketId로 티켓 상세 객체 찾기
+      const selectedTicket = serviceOptions.find(option => option.id === selectedService);
+
+      const bookingData = {
+        mentor: mentor,
+        date: selectedDate,
+        startTime: selectedStartTime,
+        endTime: selectedEndTime,
+        ticketId: selectedService,
+        ticket: selectedTicket, // 👈 상세 데이터도 같이 전달!
+      };
+      console.log('예약 데이터:', bookingData);
+      if (onBooking) onBooking(bookingData);
+    } else {
+      alert('모든 항목을 선택해주세요.');
+    }
+  };*/
 
   return (
       <div className="booking-container">
@@ -223,7 +273,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
 
           {/* 시간 구간 선택 */}
           <div className="booking-section">
-            <h3>가능한 시간 범위(최소 10분)를 선택해주세요.</h3>
+            <h3>가능한 시간 범위(최소 20분)를 선택해주세요.</h3>
             <div className="time-selector">
               <div className="time-dropdown">
                 <select
