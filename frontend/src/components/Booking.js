@@ -50,25 +50,12 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     if (!selectedDate || !mentor?.userId) return;
     consultationAPI.getAvailableConsultations(mentor.userId)
     .then(res => {
-      console.log("🔵 [API 응답 전체]", res.data.data);
       const slots = res.data.data;
-      if (slots.length > 0) {
-        slots.forEach(slot => {
-          console.log("🟢 slot.availableStartAt:", slot.availableStartAt, "selectedDate:", selectedDate);
-          if (slot.availableStartAt) {
-            const slotDate = slot.availableStartAt.split(' ')[0].split('T')[0];
-            console.log("🟡 비교 결과:", slotDate === selectedDate, " (slotDate:",
-                slotDate, ")");
-          }
-        });
-      }
       const selectedSlots = slots.filter(slot => {
         if (!slot.availableStartAt) return false;
         const slotDate = slot.availableStartAt.split(' ')[0].split('T')[0];
         return slotDate === selectedDate;
       });
-      console.log("🟣 필터링된 슬롯:", selectedSlots);
-      // 아래 부분만 통째로 바꾸세요
       if (selectedSlots.length > 0) {
         const startTimes = selectedSlots.map(slot => slot.availableStartAt);
         const endTimes = selectedSlots.map(slot => slot.availableEndAt);
