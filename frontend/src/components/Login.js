@@ -272,9 +272,16 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   };
 
   // 전화번호 입력 시 자동 포커스 이동
-  const handlePhoneInput = (value, setter, nextRef) => {
+ /* const handlePhoneInput = (value, setter, nextRef) => {
     setter(value);
     if (value.length === 3 && nextRef) {
+      nextRef.current?.focus();
+    }
+  };
+*/
+  const handlePhoneInput = (value, setter, nextRef, maxLen) => {
+    setter(value);
+    if (value.length === maxLen && nextRef) {
       nextRef.current?.focus();
     }
   };
@@ -399,44 +406,44 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
                 </label>
                 <div className="phone-input-wrapper">
                   <input
-                    type="tel"
-                    placeholder="010"
-                    value={phone1}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 3);
-                      handlePhoneInput(value, setPhone1, phone2Ref);
-                    }}
-                    className="phone-input"
-                    maxLength="3"
-                    required
+                      type="tel"
+                      placeholder="010"
+                      value={phone1}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 3);
+                        handlePhoneInput(value, setPhone1, phone2Ref, 3); // 첫 번째는 3자리
+                      }}
+                      className="phone-input"
+                      maxLength="3"
+                      required
                   />
                   <span className="phone-divider">-</span>
                   <input
-                    ref={phone2Ref}
-                    type="tel"
-                    placeholder="0000"
-                    value={phone2}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                      handlePhoneInput(value, setPhone2, phone3Ref);
-                    }}
-                    className="phone-input"
-                    maxLength="4"
-                    required
+                      ref={phone2Ref}
+                      type="tel"
+                      placeholder="0000"
+                      value={phone2}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        handlePhoneInput(value, setPhone2, phone3Ref, 4); // 두 번째는 4자리
+                      }}
+                      className="phone-input"
+                      maxLength="4"
+                      required
                   />
                   <span className="phone-divider">-</span>
                   <input
-                    ref={phone3Ref}
-                    type="tel"
-                    placeholder="0000"
-                    value={phone3}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                      setPhone3(value);
-                    }}
-                    className="phone-input"
-                    maxLength="4"
-                    required
+                      ref={phone3Ref}
+                      type="tel"
+                      placeholder="0000"
+                      value={phone3}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        setPhone3(value);
+                      }}
+                      className="phone-input"
+                      maxLength="4"
+                      required
                   />
                 </div>
               </div>
