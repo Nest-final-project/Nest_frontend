@@ -272,13 +272,6 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   };
 
   // 전화번호 입력 시 자동 포커스 이동
- /* const handlePhoneInput = (value, setter, nextRef) => {
-    setter(value);
-    if (value.length === 3 && nextRef) {
-      nextRef.current?.focus();
-    }
-  };
-*/
   const handlePhoneInput = (value, setter, nextRef, maxLen) => {
     setter(value);
     if (value.length === maxLen && nextRef) {
