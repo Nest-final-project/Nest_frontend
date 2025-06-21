@@ -245,7 +245,10 @@ export const consultationAPI = {
   
   // 상담 상세 조회
   getConsultationDetail: (consultationId) => api.get(`/api/consultations/${consultationId}`),
-  
+
+  getAvailableConsultations: (mentorId) =>
+      api.get(`/api/mentor/${mentorId}/availableConsultations`),
+
   // 상담 상태 업데이트
   updateConsultationStatus: (consultationId, status) => 
     api.patch(`/api/consultations/${consultationId}/status`, { status }),
