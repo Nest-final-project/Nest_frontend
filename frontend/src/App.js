@@ -21,6 +21,7 @@ import MyPage from './components/MyPage';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
 import SSEExample from './components/SSEExample.js';
+import Inquiry from './components/Inquiry';
 import { authUtils, userInfoUtils } from './utils/tokenUtils';
 
 const App = () => {
@@ -32,6 +33,7 @@ const App = () => {
   const [bookingData, setBookingData] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
+  const [inquiryTab, setInquiryTab] = useState('inquiries');
 
   // 로그인 상태 관리
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -190,6 +192,22 @@ const App = () => {
     setCurrentPage('mentor-profile');
   };
 
+  // 문의 페이지로 이동
+  const handleInquiry = (tabType = 'inquiries') => {
+    setInquiryTab(tabType);
+    setCurrentPage('inquiry');
+  };
+
+  // 문의 페이지 렌더링
+  if (currentPage === 'inquiry') {
+    return (
+      <Inquiry
+        onBack={handleBackToHome}
+        initialTab={inquiryTab}
+      />
+    );
+  }
+
   // SSE 데모 페이지로 이동
   const handleSSEDemo = () => {
     setCurrentPage('sse-demo');
@@ -212,8 +230,8 @@ const App = () => {
           onSSEDemo={handleSSEDemo}
         />
         <SSEExample />
-        <Login 
-          isOpen={isLoginOpen} 
+        <Login
+          isOpen={isLoginOpen}
           onClose={() => setIsLoginOpen(false)}
           onLoginSuccess={handleLoginSuccess}
         />
@@ -247,6 +265,7 @@ const App = () => {
           onLoginClick={() => setIsLoginOpen(true)}
           onCategorySelect={handleCategorySelect}
           onProfileClick={handleProfileClick}
+          onInquiry={handleInquiry}
           isLoggedIn={isLoggedIn}
           userInfo={userInfo}
           onChatRoom={handleChatRoom}
@@ -365,6 +384,7 @@ const App = () => {
           onLoginClick={() => setIsLoginOpen(true)}
           onCategorySelect={handleCategorySelect}
           onProfileClick={handleProfileClick}
+          onInquiry={handleInquiry}
           isLoggedIn={isLoggedIn}
           userInfo={userInfo}
           onChatRoom={handleChatRoom}

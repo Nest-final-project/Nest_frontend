@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { X, Mail, Lock, Eye, EyeOff, User, Phone, UserCheck } from 'lucide-react';
 import './Login.css';
 import logo from '../image/cool.png';
-import { authAPI } from '../services/api';
+import api, { authAPI } from '../services/api';
 import { authUtils } from '../utils/tokenUtils';
 
 const Login = ({ isOpen, onClose, onLoginSuccess }) => {
@@ -108,7 +108,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
         console.log('- nickName:', signupData.nickName);
         console.log('- phoneNumber:', signupData.phoneNumber);
         console.log('- userRole:', signupData.userRole);
-        console.log('API URL:', import.meta.env.VITE_API_URL || 'http://localhost:8080');
+        console.log('API URL:', api.API_BASE_URL);
 
         // 회원가입 API 호출
         const response = await authAPI.signup(signupData);
@@ -145,7 +145,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
         console.log('전송할 필드들 확인:');
         console.log('- email:', loginData.email);
         console.log('- password:', loginData.password ? '***' : 'null');
-        console.log('API URL:', import.meta.env.VITE_API_URL || 'http://localhost:8080');
+        console.log('API URL:', api.API_BASE_URL);
 
         try {
           // 실제 로그인 API 호출
@@ -175,11 +175,11 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
           // 사용자 정보 구성
           const userInfo = {
             id: responseData.userId || responseData.id || responseData.user?.id,
-            name: responseData.name || responseData.userName || responseData.user?.name || '사용자',
+            name: responseData.name || responseData.userName || responseData.user?.name,
             email: responseData.email || responseData.user?.email || email,
-            profileImage: responseData.profileImage || responseData.user?.profileImage || '/default-profile.svg',
-            userRole: responseData.userRole || responseData.user?.userRole || 'mentee',
-            joinDate: responseData.joinDate || responseData.createdAt || responseData.user?.createdAt || '2024.01.01',
+            profileImage: responseData.profileImage || responseData.user?.profileImage,
+            userRole: responseData.userRole || responseData.user?.userRole,
+            joinDate: responseData.joinDate || responseData.createdAt || responseData.user?.createdAt,
             token: accessToken
           };
           
