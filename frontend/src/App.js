@@ -23,6 +23,7 @@ import NotificationContainer from './components/NotificationContainer';
 import SSEExample from './components/SSEExample.js';
 import Inquiry from './components/Inquiry';
 import { authUtils, userInfoUtils } from './utils/tokenUtils';
+import { registerDebugFunctions } from './utils/websocketDebug';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -61,6 +62,11 @@ const App = () => {
     };
 
     console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
+
+    // WebSocket 디버깅 함수 등록 (개발 환경에서만)
+    if (import.meta.env.VITE_NODE_ENV === 'development') {
+      registerDebugFunctions();
+    }
 
     return () => {
       // cleanup

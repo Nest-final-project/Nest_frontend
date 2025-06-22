@@ -25,7 +25,7 @@ class WebSocketService {
         console.warn('Could not get socket token, using direct connection');
       }
 
-      const socketUrl = socketToken ? `/ws-nest?token=${socketToken}` : '/ws-nest';
+      const socketUrl = 'ws://localhost:8080/ws-nest';
       const socket = new SockJS(socketUrl);
 
       this.stompClient = new Client({

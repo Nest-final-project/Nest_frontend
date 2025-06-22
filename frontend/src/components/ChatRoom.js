@@ -14,8 +14,20 @@ import {
 import './ChatRoom.css';
 import axios from 'axios';
 import { accessTokenUtils } from '../utils/tokenUtils';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 const ChatRoom = ({contact, chatRoomId, onBack, onBackToHome, userId, reservationId}) => {
+  // Props 디버깅
+  useEffect(() => {
+    console.log('🔍 ChatRoom Props 확인:', {
+      contact,
+      chatRoomId,
+      userId,
+      reservationId,
+      chatRoomIdType: typeof chatRoomId,
+      chatRoomIdValue: chatRoomId
+    });
+  }, [contact, chatRoomId, userId, reservationId]);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [lastMessageId, setLastMessageId] = useState(null);
@@ -31,6 +43,15 @@ const ChatRoom = ({contact, chatRoomId, onBack, onBackToHome, userId, reservatio
   const textareaRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const timerRef = useRef(null);
+
+  // WebSocket 훅 사용
+  const { 
+    isConnected, 
+    connectionError, 
+    connect, 
+    sendMessage: wsSendMessage, 
+    onMessage 
+  } = useWebSocket();
 
   // 메시지 불러오기 함수
   const fetchMessages = async (cursor = null, append = false) => {
@@ -141,6 +162,75 @@ const ChatRoom = ({contact, chatRoomId, onBack, onBackToHome, userId, reservatio
     }
   };
 
+  // WebSocket 연결 및 메시지 수신 처리
+  useEffect(() => {
+    // WebSocket 연결
+    if (!isConnected) {
+      console.log('WebSocket 연결 시도 중...');
+      connect();
+    }
+
+    // 메시지 수신 리스너 등록
+    const unsubscribe = onMessage((messageData) => {
+      console.log('📨 WebSocket 메시지 수신:', messageData);
+      console.log('🔍 현재 채팅방 정보:', {
+        currentChatRoomId: chatRoomId,
+        currentUserId: userId,
+        contactId: contact?.id,
+        contactName: contact?.name
+      });
+      
+      // 수신된 메시지가 현재 채팅방의 메시지인지 확인
+      if (messageData.chatRoomId && messageData.chatRoomId.toString() === chatRoomId.toString()) {
+        // 메시지 발신자 확인 (내가 보낸 메시지인지 상대방이 보낸 메시지인지)
+        const senderId = messageData.senderId ? messageData.senderId.toString() : null;
+        const currentUserId = userId ? userId.toString() : null;
+        const contactId = contact?.id ? contact.id.toString() : null;
+        
+        console.log('🔍 메시지 발신자 확인:', {
+          senderId,
+          currentUserId,
+          contactId,
+          isMyMessage: senderId === currentUserId,
+          isContactMessage: senderId === contactId
+        });
+        
+        const newMessage = {
+          id: messageData.messageId || `ws-${Date.now()}`,
+          text: messageData.content,
+          sender: senderId === currentUserId ? 'user' : 'other',
+          timestamp: messageData.sentAt || new Date().toISOString(),
+          status: 'received'
+        };
+        
+        console.log('✅ 새 메시지 생성:', newMessage);
+        
+        setMessages(prev => {
+          // 중복 메시지 방지
+          const exists = prev.some(msg => msg.id === newMessage.id);
+          if (!exists) {
+            console.log('📝 메시지 목록에 추가');
+            return [...prev, newMessage];
+          } else {
+            console.log('⚠️ 중복 메시지로 인해 추가하지 않음');
+            return prev;
+          }
+        });
+      } else {
+        console.log('⚠️ 다른 채팅방의 메시지이므로 무시:', {
+          receivedChatRoomId: messageData.chatRoomId,
+          currentChatRoomId: chatRoomId
+        });
+      }
+    });
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [isConnected, connect, onMessage, chatRoomId, userId]);
+
   // 초기 데이터 로드
   useEffect(() => {
     if (chatRoomId) {
@@ -177,9 +267,28 @@ const ChatRoom = ({contact, chatRoomId, onBack, onBackToHome, userId, reservatio
   };
 
   const handleSendMessage = async () => {
+    console.log('🚀 메시지 전송 시작 - 디버깅:', {
+      sessionEnded,
+      message: message.trim(),
+      chatRoomId,
+      chatRoomIdType: typeof chatRoomId,
+      isConnected
+    });
+
     // 세션이 종료되었으면 메시지 전송 불가
     if (sessionEnded) {
       alert('세션이 종료되어 더 이상 메시지를 보낼 수 없습니다.');
+      return;
+    }
+
+    // chatRoomId 검증
+    if (!chatRoomId) {
+      console.error('❌ chatRoomId가 없습니다:', {
+        chatRoomId,
+        type: typeof chatRoomId,
+        props: {contact, chatRoomId, userId, reservationId}
+      });
+      alert('채팅방 정보가 없습니다. 페이지를 새로고침해주세요.');
       return;
     }
 
@@ -192,39 +301,102 @@ const ChatRoom = ({contact, chatRoomId, onBack, onBackToHome, userId, reservatio
         textareaRef.current.style.height = 'auto';
       }
 
+      console.log('📤 메시지 전송 데이터:', {
+        chatRoomId,
+        content: messageContent,
+        wsConnected: isConnected
+      });
+
+      // 낙관적 업데이트: UI에 즉시 메시지 추가
+      const optimisticMessage = {
+        id: `temp-${Date.now()}`,
+        text: messageContent,
+        sender: 'user',
+        timestamp: new Date().toISOString(),
+        status: 'sending'
+      };
+      setMessages(prev => [...prev, optimisticMessage]);
+
       try {
-        // 백엔드로 메시지 전송
-        const response = await axios.post(
-            `/api/chat_rooms/${chatRoomId}/messages`,
-            {
-              content: messageContent
-            },
-            {
-              headers: {
-                'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`,
-                'Content-Type': 'application/json'
-              }
-            }
-        );
+        // WebSocket을 통한 메시지 전송 시도
+        if (isConnected) {
+          console.log('📡 WebSocket으로 메시지 전송 시도...');
+          const wsSuccess = await wsSendMessage(chatRoomId, messageContent);
+          
+          if (wsSuccess) {
+            console.log('✅ WebSocket으로 메시지 전송 성공');
+            // WebSocket 전송 성공 시 상태 업데이트
+            setMessages(prev => 
+              prev.map(msg => 
+                msg.id === optimisticMessage.id 
+                  ? { ...msg, status: 'sent' }
+                  : msg
+              )
+            );
+            return; // 성공했으므로 HTTP API 호출하지 않음
+          } else {
+            console.log('⚠️ WebSocket 전송 실패, HTTP API 사용');
+          }
+        } else {
+          console.log('⚠️ WebSocket 연결 안됨, HTTP API 사용');
+        }
 
-        // 전송된 메시지를 UI에 즉시 추가
-        const newMessage = {
-          id: response.data.messageId,
-          text: messageContent,
-          sender: 'user',
-          timestamp: response.data.sentAt || new Date().toISOString(),
-          status: 'sent'
-        };
-
-        setMessages(prev => [...prev, newMessage]);
+        // WebSocket 전송 실패 시 HTTP API 사용
+        await sendMessageViaHttp(messageContent, optimisticMessage.id);
 
       } catch (error) {
-        console.error('메시지 전송 실패:', error);
-        // 전송 실패 시 사용자에게 알림
-        alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
-        // 메시지를 다시 입력창에 복원
-        setMessage(messageContent);
+        console.error('💥 메시지 전송 실패:', error);
+        
+        // 전송 실패 시 HTTP API로 재시도
+        try {
+          await sendMessageViaHttp(messageContent, optimisticMessage.id);
+        } catch (httpError) {
+          console.error('HTTP API 전송도 실패:', httpError);
+          
+          // 완전 실패 시 메시지 제거 및 알림
+          setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+          alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+          setMessage(messageContent); // 메시지를 다시 입력창에 복원
+        }
       }
+    }
+  };
+
+  // HTTP API를 통한 메시지 전송 (백업 방법)
+  const sendMessageViaHttp = async (messageContent, tempId) => {
+    try {
+      const response = await axios.post(
+          `/api/chat_rooms/${chatRoomId}/messages`,
+          {
+            content: messageContent
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`,
+              'Content-Type': 'application/json'
+            }
+          }
+      );
+
+      // HTTP 응답으로 받은 실제 메시지로 임시 메시지 교체
+      const actualMessage = {
+        id: response.data.messageId,
+        text: messageContent,
+        sender: 'user',
+        timestamp: response.data.sentAt || new Date().toISOString(),
+        status: 'sent'
+      };
+
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempId ? actualMessage : msg
+        )
+      );
+
+      console.log('✅ HTTP API로 메시지 전송 성공');
+    } catch (error) {
+      console.error('HTTP API 메시지 전송 실패:', error);
+      throw error; // 상위로 에러 전파
     }
   };
 
@@ -342,7 +514,7 @@ const ChatRoom = ({contact, chatRoomId, onBack, onBackToHome, userId, reservatio
                 ) : (
                     <User className="avatar-icon"/>
                 )}
-                <div className="online-indicator"></div>
+                <div className={`online-indicator ${isConnected ? 'connected' : 'disconnected'}`}></div>
               </div>
               <div className="contact-details">
                 <h3 className="contact-name">{contact?.name || '김밤'}</h3>
@@ -351,6 +523,17 @@ const ChatRoom = ({contact, chatRoomId, onBack, onBackToHome, userId, reservatio
                         : 'session-active'}`}>
                   {sessionEnded ? '세션 종료됨' : `대화 중 (${timeRemaining} 남음)`}
                 </span>
+                {/* WebSocket 연결 상태 표시 */}
+                <div className="connection-status">
+                  <span className={`ws-status ${isConnected ? 'connected' : 'disconnected'}`}>
+                    {isConnected ? '🟢 실시간 연결됨' : '🔴 연결 끊김'}
+                  </span>
+                  {connectionError && (
+                    <span className="connection-error" title={connectionError}>
+                      ⚠️ 연결 오류
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -432,7 +615,8 @@ const ChatRoom = ({contact, chatRoomId, onBack, onBackToHome, userId, reservatio
                                 msg.timestamp)}</span>
                           {msg.sender === 'user' && (
                               <span className={`message-status ${msg.status}`}>
-                          {msg.status === 'sent' && '✓'}
+                          {msg.status === 'sending' && '⏳'}
+                                {msg.status === 'sent' && '✓'}
                                 {msg.status === 'delivered' && '✓✓'}
                                 {msg.status === 'read' && '✓✓'}
                         </span>

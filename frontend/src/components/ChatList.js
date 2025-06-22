@@ -86,19 +86,27 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
       console.log('API 응답 성공:', response.data);
 
       const fetchedRooms = response.data.content.map(room => {
-        const currentUserId = getCurrentUserId();
+        console.log('🔍 ChatList - 백엔드에서 받은 room 데이터:', room);
+        
+        const currentUserId = parseInt(getCurrentUserId()); // 문자열을 숫자로 변환
 
         // 현재 사용자가 멘토인지 멘티인지 판단 (JWT 토큰의 사용자 ID 기준)
         const isCurrentUserMentor = currentUserId === room.mentorId;
-        const contactId = isCurrentUserMentor ? room.menteeId : room.mentorId;
+        
+        // 상대방 정보 설정
+        const contactInfo = isCurrentUserMentor ? {
+          id: room.menteeId,
+          name: room.menteeName,
+          profileImage: null // 추후 백엔드에서 프로필 이미지도 제공할 수 있음
+        } : {
+          id: room.mentorId,
+          name: room.mentorName,
+          profileImage: null
+        };
 
-        return {
-          id: room.chatroomId,
-          contact: {
-            id: contactId,
-            name: `사용자 ${contactId}`, // 백엔드에서 이름을 제공하지 않으므로 임시
-            profileImage: null // 백엔드에서 프로필 이미지를 제공하지 않으므로 null
-          },
+        const chatData = {
+          id: room.roomId,
+          contact: contactInfo,
           contactTitle: isCurrentUserMentor ? '멘티' : '멘토',
           lastMessage: {
             id: null,
@@ -111,8 +119,22 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
           // 실제 백엔드 데이터
           mentorId: room.mentorId,
           menteeId: room.menteeId,
-          isCurrentUserMentor
+          isCurrentUserMentor,
+          // 디버깅용 추가 정보
+          currentUserId,
+          mentorName: room.mentorName,
+          menteeName: room.menteeName
         };
+
+        console.log('🔍 ChatList - 생성된 chat 데이터:', chatData);
+        console.log('🔍 현재 사용자 정보:', {
+          currentUserId,
+          isCurrentUserMentor,
+          contactName: contactInfo.name,
+          contactId: contactInfo.id
+        });
+        
+        return chatData;
       });
 
       if (reset) {
@@ -259,6 +281,11 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
   };
 
   const handleChatClick = (chat) => {
+    console.log('🔍 ChatList - 채팅방 클릭:', {
+      chat,
+      chatId: chat?.id,
+      chatroomId: chat?.id
+    });
     onChatSelect(chat);
   };
 
