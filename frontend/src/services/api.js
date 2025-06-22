@@ -238,7 +238,7 @@ export const profileAPI = {
 // Consultation API
 export const consultationAPI = {
   // 상담 목록 조회
-  getConsultations: (params) => api.get('/api/consultations', { params }),
+  getConsultations: (params) => api.get('/api/mentor/consultations', { params }),
   
   // 상담 생성
   createConsultation: (consultationData) => api.post('/api/consultations', consultationData),

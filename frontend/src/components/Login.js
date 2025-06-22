@@ -108,7 +108,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
         console.log('- nickName:', signupData.nickName);
         console.log('- phoneNumber:', signupData.phoneNumber);
         console.log('- userRole:', signupData.userRole);
-        console.log('API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
+        console.log('API URL:', import.meta.env.VITE_API_URL || 'http://localhost:8080');
 
         // 회원가입 API 호출
         const response = await authAPI.signup(signupData);
@@ -145,7 +145,7 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
         console.log('전송할 필드들 확인:');
         console.log('- email:', loginData.email);
         console.log('- password:', loginData.password ? '***' : 'null');
-        console.log('API URL:', process.env.REACT_APP_API_URL || 'http://localhost:8080');
+        console.log('API URL:', import.meta.env.VITE_API_URL || 'http://localhost:8080');
 
         try {
           // 실제 로그인 API 호출

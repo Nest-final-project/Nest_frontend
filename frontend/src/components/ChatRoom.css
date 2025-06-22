@@ -546,6 +546,7 @@
 }
 
 .message-textarea {
+  color:#000000;
   flex: 1;
   background: transparent;
   border: none;

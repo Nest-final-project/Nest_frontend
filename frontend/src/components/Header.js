@@ -6,7 +6,7 @@ import logo from '../image/cool.png';
 import { categoryAPI, authAPI } from '../services/api';
 import { accessTokenUtils, refreshTokenUtils } from '../utils/tokenUtils';
 
-const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, isLoggedIn, userInfo, onLogout }) => {
+const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, isLoggedIn, userInfo, onLogout, onSSEDemo }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [hasNotifications, setHasNotifications] = useState(true); // 알림 상태
@@ -182,16 +182,30 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, is
           
           {/* 채팅 메뉴 - 로그인 상태에서만 표시 */}
           {isLoggedIn && (
-            <button
-              className="sidebar-link chat-button"
-              onClick={() => {
-                setIsNavOpen(false);
-                onChatRoom && onChatRoom({ name: '김개발' });
-              }}
-            >
-              <span className="sidebar-link-icon">💬</span>
-              채팅
-            </button>
+            <>
+              <button
+                className="sidebar-link chat-button"
+                onClick={() => {
+                  setIsNavOpen(false);
+                  onChatRoom && onChatRoom({ name: '김개발' });
+                }}
+              >
+                <span className="sidebar-link-icon">💬</span>
+                채팅
+              </button>
+              
+              {/* SSE 데모 메뉴 */}
+              <button
+                className="sidebar-link sse-demo-button"
+                onClick={() => {
+                  setIsNavOpen(false);
+                  onSSEDemo && onSSEDemo();
+                }}
+              >
+                <span className="sidebar-link-icon">🔔</span>
+                SSE 알림 데모
+              </button>
+            </>
           )}
         </nav>
         

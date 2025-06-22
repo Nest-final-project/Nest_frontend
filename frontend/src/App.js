@@ -20,6 +20,7 @@ import ChatRoom from './components/ChatRoom';
 import MyPage from './components/MyPage';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
+import SSEExample from './components/SSEExample.js';
 import { authUtils, userInfoUtils } from './utils/tokenUtils';
 
 const App = () => {
@@ -189,6 +190,37 @@ const App = () => {
     setCurrentPage('mentor-profile');
   };
 
+  // SSE 데모 페이지로 이동
+  const handleSSEDemo = () => {
+    setCurrentPage('sse-demo');
+  };
+
+  // SSE 데모 페이지 렌더링
+  if (currentPage === 'sse-demo') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          onLoginClick={() => setIsLoginOpen(true)}
+          onCategorySelect={handleCategorySelect}
+          onProfileClick={handleProfileClick}
+          isLoggedIn={isLoggedIn}
+          userInfo={userInfo}
+          onChatRoom={handleChatRoom}
+          onLogout={handleLogout}
+          onSSEDemo={handleSSEDemo}
+        />
+        <SSEExample />
+        <Login 
+          isOpen={isLoginOpen} 
+          onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      </div>
+    );
+  }
+
   // 소셜 회원가입 페이지 렌더링
   if (currentPage === 'social-signup') {
     return <SocialSignup />;
@@ -219,6 +251,7 @@ const App = () => {
           userInfo={userInfo}
           onChatRoom={handleChatRoom}
           onLogout={handleLogout}
+          onSSEDemo={handleSSEDemo}
         />
         <MentorList
           category={selectedCategory} 
@@ -336,6 +369,7 @@ const App = () => {
           userInfo={userInfo}
           onChatRoom={handleChatRoom}
           onLogout={handleLogout}
+          onSSEDemo={handleSSEDemo}
         />
         <main className="main-content">
           <HeroSection />
