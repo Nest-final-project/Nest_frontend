@@ -270,7 +270,7 @@ export const reservationAPI = {
 // Chatroom API
 export const chatroomAPI = {
   // 채팅방 목록 조회
-  getChatrooms: () => api.get('/api/chatrooms'),
+  getChatrooms: () => api.get('/api/chat_rooms'),
 
   // 채팅방 생성
   //createChatroom: (chatroomData) => api.post('/api/chatrooms', chatroomData),
@@ -286,7 +286,7 @@ export const chatroomAPI = {
 export const messageAPI = {
   // 메시지 목록 조회
   getMessages: (chatroomId, params) =>
-      api.get(`/api/chatrooms/messages/${chatroomId}`, {params}),
+      api.get(`/api/chat_rooms/${chatroomId}/messages`, {params}),
 
 };
 

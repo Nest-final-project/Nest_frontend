@@ -35,66 +35,72 @@ const App = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
   const [inquiryTab, setInquiryTab] = useState('inquiries');
+  const [appError, setAppError] = useState(null);
 
   // 로그인 상태 관리
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
-    // 로그인 상태 확인 (Session Storage에서)
-    const isLoggedIn = authUtils.isLoggedIn();
-    const userData = userInfoUtils.getUserInfo();
+    try {
+      // 로그인 상태 확인 (Session Storage에서)
+      const isLoggedIn = authUtils.isLoggedIn();
+      const userData = userInfoUtils.getUserInfo();
 
-    if (isLoggedIn && userData) {
-      setIsLoggedIn(true);
-      setUserInfo(userData);
-      console.log('세션에서 로그인 상태 복원됨:', userData);
-    }
+      if (isLoggedIn && userData) {
+        setIsLoggedIn(true);
+        setUserInfo(userData);
+        console.log('세션에서 로그인 상태 복원됨:', userData);
+      }
 
-    // 개발용: 전역 디버깅 함수 추가
-    window.checkAuth = () => {
-      console.group('🔍 현재 인증 상태');
-      console.log('sessionStorage accessToken:', sessionStorage.getItem('accessToken') ? '존재' : '없음');
-      console.log('sessionStorage userData:', sessionStorage.getItem('userData') ? '존재' : '없음');
-      console.log('localStorage refreshToken:', localStorage.getItem('refreshToken') ? '존재' : '없음');
-      console.log('React isLoggedIn 상태:', isLoggedIn);
-      console.groupEnd();
-    };
+      // 개발용: 전역 디버깅 함수 추가
+      window.checkAuth = () => {
+        console.group('🔍 현재 인증 상태');
+        console.log('sessionStorage accessToken:', sessionStorage.getItem('accessToken') ? '존재' : '없음');
+        console.log('sessionStorage userData:', sessionStorage.getItem('userData') ? '존재' : '없음');
+        console.log('localStorage refreshToken:', localStorage.getItem('refreshToken') ? '존재' : '없음');
+        console.log('React isLoggedIn 상태:', isLoggedIn);
+        console.groupEnd();
+      };
 
-    console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
+      console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
 
-    // WebSocket 디버깅 함수 등록 (개발 환경에서만)
-    if (import.meta.env.VITE_NODE_ENV === 'development') {
-      registerDebugFunctions();
+      // WebSocket 디버깅 함수 등록 (개발 환경에서만)
+      if (import.meta.env.VITE_NODE_ENV === 'development') {
+        registerDebugFunctions();
+      }
+
+      // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
+      const urlParams = new URLSearchParams(window.location.search);
+      const needsAdditionalInfo = urlParams.get('additional-info');
+      
+      // 토스페이먼츠 결제 결과 처리
+      const paymentKey = urlParams.get('paymentKey');
+      const orderId = urlParams.get('orderId');
+      const amount = urlParams.get('amount');
+      
+      // 결제 실패 처리
+      const errorCode = urlParams.get('code');
+      const errorMessage = urlParams.get('message');
+      
+      if (needsAdditionalInfo === 'true') {
+        setCurrentPage('social-signup');
+      } else if (paymentKey && orderId && amount) {
+        // 결제 성공
+        setCurrentPage('success');
+      } else if (errorCode && errorMessage) {
+        // 결제 실패
+        setCurrentPage('fail');
+      }
+    } catch (error) {
+      console.error('App 초기화 에러:', error);
+      setAppError(`애플리케이션 초기화 실패: ${error.message}`);
     }
 
     return () => {
       // cleanup
       delete window.checkAuth;
     };
-
-    // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
-    const urlParams = new URLSearchParams(window.location.search);
-    const needsAdditionalInfo = urlParams.get('additional-info');
-    
-    // 토스페이먼츠 결제 결과 처리
-    const paymentKey = urlParams.get('paymentKey');
-    const orderId = urlParams.get('orderId');
-    const amount = urlParams.get('amount');
-    
-    // 결제 실패 처리
-    const errorCode = urlParams.get('code');
-    const errorMessage = urlParams.get('message');
-    
-    if (needsAdditionalInfo === 'true') {
-      setCurrentPage('social-signup');
-    } else if (paymentKey && orderId && amount) {
-      // 결제 성공
-      setCurrentPage('success');
-    } else if (errorCode && errorMessage) {
-      // 결제 실패
-      setCurrentPage('fail');
-    }
   }, []);
 
   // 로그인 성공 처리
@@ -198,6 +204,64 @@ const App = () => {
     setCurrentPage('mentor-profile');
   };
 
+  // 앱 에러 상태 표시
+  if (appError) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        padding: '20px',
+        textAlign: 'center',
+        backgroundColor: '#f9fafb'
+      }}>
+        <div style={{ fontSize: '64px', marginBottom: '24px' }}>💥</div>
+        <h1 style={{ color: '#ef4444', marginBottom: '16px', fontSize: '24px' }}>
+          애플리케이션 오류
+        </h1>
+        <p style={{ color: '#6b7280', marginBottom: '24px', maxWidth: '500px' }}>
+          {appError}
+        </p>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            페이지 새로고침
+          </button>
+          <button 
+            onClick={() => {
+              localStorage.clear();
+              sessionStorage.clear();
+              window.location.reload();
+            }} 
+            style={{
+              backgroundColor: '#ef4444',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            모든 데이터 초기화
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // 문의 페이지로 이동
   const handleInquiry = (tabType = 'inquiries') => {
     setInquiryTab(tabType);
@@ -288,6 +352,9 @@ const App = () => {
           onClose={() => setIsLoginOpen(false)}
           onLoginSuccess={handleLoginSuccess}
         />
+        
+        {/* 알림 컨테이너 - 로그인된 사용자만 */}
+        <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
     );
   }
@@ -408,6 +475,9 @@ const App = () => {
           onClose={() => setIsLoginOpen(false)}
           onLoginSuccess={handleLoginSuccess}
         />
+        
+        {/* 알림 컨테이너 - 로그인된 사용자만 */}
+        <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
   );
 };

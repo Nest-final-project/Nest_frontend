@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import ChatList from './ChatList';
 import ChatRoom from './ChatRoom';
 import NotificationContainer from './NotificationContainer';
-import { accessTokenUtils } from '../utils/tokenUtils';
+import {accessTokenUtils} from '../utils/tokenUtils';
 import './ChatContainer.css';
 
 const ChatContainer = ({onBack, isLoggedIn = true}) => {
@@ -27,8 +27,9 @@ const ChatContainer = ({onBack, isLoggedIn = true}) => {
 
   const handleChatSelect = (chat) => {
     console.log('🔍 ChatContainer - 채팅 선택:', {
+      previousChatId: selectedChat?.id,
+      newChatId: chat?.id,
       chat,
-      chatId: chat?.id,
       chatIdType: typeof chat?.id
     });
     setSelectedChat(chat);
