@@ -366,6 +366,38 @@ export const ticketAPI = {
 
   // 리뷰 삭제
   deleteReview: (ticketId) => api.delete(`/api/admin/ticket/${ticketId}`),
+}
+
+// Inquiry API (문의 API)
+export const inquiryAPI = {
+  // [사용자] 문의 생성
+  createInquiry: (inquiryData) => api.post('/api/complaints', inquiryData),
+
+  // [사용자] 내 문의 목록 조회
+  getUserInquiries: (params) => api.get('/api/complaints/me', { params }),
+
+  // [사용자] 내 문의 상세 조회
+  getUserInquiryDetail: (complaintId) => api.get(`/api/complaints/me/${complaintId}`),
+
+  // [사용자] 내 문의 삭제
+  deleteUserInquiry: (complaintId) => api.delete(`/api/complaints/me/${complaintId}`),
+
+  // [관리자] 전체 문의 목록 조회
+  getAllInquiries: (params) => api.get('/api/admin/complaints', { params }),
+
+  // [관리자] 문의 상세 조회
+  getInquiryDetail: (complaintId) => api.get(`/api/admin/complaints/${complaintId}`),
+
+  // [관리자] 문의 답변 등록
+  createInquiryAnswer: (complaintId, answerData) =>
+      api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
+
+  // [관리자] 문의 삭제
+  deleteInquiry: (complaintId) => api.delete(`/api/admin/complaints/${complaintId}`),
+
+  // [관리자] 문의 상태 변경
+  updateInquiryStatus: (complaintId, status) =>
+      api.patch(`/api/admin/complaints/${complaintId}/status`, { status }),
 };
 
 
