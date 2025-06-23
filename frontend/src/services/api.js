@@ -427,5 +427,11 @@ export const careerAPI = {
 
 }
 
+// Keyword API
+export const keywordAPI = {
+  // 키워드 조회
+  getKeywords: () => api.get('/api/keywords'),
+}
+
 
 export default api;

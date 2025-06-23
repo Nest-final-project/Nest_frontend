@@ -17,7 +17,7 @@ import Success from './components/Success';
 import Fail from './components/Fail';
 import PaymentSuccess from './components/PaymentSuccess';
 import ChatRoom from './components/ChatRoom';
-import MyPage from './components/MyPage';
+import MyPage from './components/MyPage.js';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
 import SSEExample from './components/SSEExample.js';
