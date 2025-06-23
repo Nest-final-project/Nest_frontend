@@ -211,6 +211,16 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, on
                 문의 사항
               </button>
               <button
+                  className="sidebar-sublink"
+                  onClick={() => {
+                    setIsNavOpen(false);
+                    setIsInquiryOpen(false);
+                    onInquiry && onInquiry('myInquiries'); // 내 문의 내역 탭으로 이동
+                  }}
+              >
+                내 문의 내역
+              </button>
+              <button
                 className="sidebar-sublink"
                 onClick={() => {
                   setIsNavOpen(false);
