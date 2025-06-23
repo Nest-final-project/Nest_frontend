@@ -238,14 +238,17 @@ export const profileAPI = {
 // Consultation API
 export const consultationAPI = {
   // 상담 목록 조회
-  getConsultations: (params) => api.get('/api/consultations', { params }),
+  getConsultations: (params) => api.get('/api/mentor/consultations', { params }),
   
   // 상담 생성
   createConsultation: (consultationData) => api.post('/api/consultations', consultationData),
   
   // 상담 상세 조회
   getConsultationDetail: (consultationId) => api.get(`/api/consultations/${consultationId}`),
-  
+
+  getAvailableConsultations: (mentorId) =>
+      api.get(`/api/mentor/${mentorId}/availableConsultations`),
+
   // 상담 상태 업데이트
   updateConsultationStatus: (consultationId, status) => 
     api.patch(`/api/consultations/${consultationId}/status`, { status }),
@@ -270,7 +273,7 @@ export const reservationAPI = {
 // Chatroom API
 export const chatroomAPI = {
   // 채팅방 목록 조회
-  getChatrooms: () => api.get('/api/chatrooms'),
+  getChatrooms: () => api.get('/api/chat_rooms'),
 
   // 채팅방 생성
   //createChatroom: (chatroomData) => api.post('/api/chatrooms', chatroomData),
@@ -286,7 +289,7 @@ export const chatroomAPI = {
 export const messageAPI = {
   // 메시지 목록 조회
   getMessages: (chatroomId, params) =>
-      api.get(`/api/chatrooms/messages/${chatroomId}`, {params}),
+      api.get(`/api/chat_rooms/${chatroomId}/messages`, {params}),
 
 };
 
