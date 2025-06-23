@@ -245,7 +245,10 @@ export const consultationAPI = {
   
   // 상담 상세 조회
   getConsultationDetail: (consultationId) => api.get(`/api/consultations/${consultationId}`),
-  
+
+  getAvailableConsultations: (mentorId) =>
+      api.get(`/api/mentor/${mentorId}/availableConsultations`),
+
   // 상담 상태 업데이트
   updateConsultationStatus: (consultationId, status) => 
     api.patch(`/api/consultations/${consultationId}/status`, { status }),
@@ -366,6 +369,38 @@ export const ticketAPI = {
 
   // 리뷰 삭제
   deleteReview: (ticketId) => api.delete(`/api/admin/ticket/${ticketId}`),
+}
+
+// Inquiry API (문의 API)
+export const inquiryAPI = {
+  // [사용자] 문의 생성
+  createInquiry: (inquiryData) => api.post('/api/complaints', inquiryData),
+
+  // [사용자] 전체 문의 목록 조회
+  getAllComplaints: (params) => api.get('/api/complaints', {params}),
+
+  // [사용자] 내 문의 목록 조회
+  getUserInquiries: (params) => api.get('/api/complaints/myComplaints', { params }),
+
+  // [사용자] 내 문의 상세 조회
+  getUserInquiryDetail: (complaintId) => api.get(`/api/complaints/${complaintId}`),
+
+  // [관리자] 전체 문의 목록 조회
+  getAllInquiries: (params) => api.get('/api/admin/complaints', { params }),
+
+  // [관리자] 문의 상세 조회
+  getInquiryDetail: (complaintId) => api.get(`/api/admin/complaints/${complaintId}`),
+
+  // [관리자] 문의 답변 등록
+  createInquiryAnswer: (complaintId, answerData) =>
+      api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
+
+  // [관리자] 문의 삭제
+  deleteInquiry: (complaintId) => api.delete(`/api/admin/complaints/${complaintId}`),
+
+  // [관리자] 문의 답변 수정
+  updateInquiryStatus: (complaintId, status) =>
+      api.patch(`/api/admin/answers/{answerId}`, { status }),
 };
 
 
