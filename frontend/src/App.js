@@ -24,6 +24,8 @@ import SSEExample from './components/SSEExample.js';
 import Inquiry from './components/Inquiry';
 import { authUtils, userInfoUtils } from './utils/tokenUtils';
 import { registerDebugFunctions } from './utils/websocketDebug';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import MentorProfilePage from './components/MentorProfilePage';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -73,16 +75,16 @@ const App = () => {
       // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
       const urlParams = new URLSearchParams(window.location.search);
       const needsAdditionalInfo = urlParams.get('additional-info');
-      
+
       // 토스페이먼츠 결제 결과 처리
       const paymentKey = urlParams.get('paymentKey');
       const orderId = urlParams.get('orderId');
       const amount = urlParams.get('amount');
-      
+
       // 결제 실패 처리
       const errorCode = urlParams.get('code');
       const errorMessage = urlParams.get('message');
-      
+
       if (needsAdditionalInfo === 'true') {
         setCurrentPage('social-signup');
       } else if (paymentKey && orderId && amount) {
@@ -207,58 +209,58 @@ const App = () => {
   // 앱 에러 상태 표시
   if (appError) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        padding: '20px',
-        textAlign: 'center',
-        backgroundColor: '#f9fafb'
-      }}>
-        <div style={{ fontSize: '64px', marginBottom: '24px' }}>💥</div>
-        <h1 style={{ color: '#ef4444', marginBottom: '16px', fontSize: '24px' }}>
-          애플리케이션 오류
-        </h1>
-        <p style={{ color: '#6b7280', marginBottom: '24px', maxWidth: '500px' }}>
-          {appError}
-        </p>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={() => window.location.reload()} 
-            style={{
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            페이지 새로고침
-          </button>
-          <button 
-            onClick={() => {
-              localStorage.clear();
-              sessionStorage.clear();
-              window.location.reload();
-            }} 
-            style={{
-              backgroundColor: '#ef4444',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            모든 데이터 초기화
-          </button>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          padding: '20px',
+          textAlign: 'center',
+          backgroundColor: '#f9fafb'
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '24px' }}>💥</div>
+          <h1 style={{ color: '#ef4444', marginBottom: '16px', fontSize: '24px' }}>
+            애플리케이션 오류
+          </h1>
+          <p style={{ color: '#6b7280', marginBottom: '24px', maxWidth: '500px' }}>
+            {appError}
+          </p>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+                onClick={() => window.location.reload()}
+                style={{
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+            >
+              페이지 새로고침
+            </button>
+            <button
+                onClick={() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.reload();
+                }}
+                style={{
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+            >
+              모든 데이터 초기화
+            </button>
+          </div>
         </div>
-      </div>
     );
   }
 
@@ -271,10 +273,10 @@ const App = () => {
   // 문의 페이지 렌더링
   if (currentPage === 'inquiry') {
     return (
-      <Inquiry
-        onBack={handleBackToHome}
-        initialTab={inquiryTab}
-      />
+        <Inquiry
+            onBack={handleBackToHome}
+            initialTab={inquiryTab}
+        />
     );
   }
 
@@ -286,26 +288,26 @@ const App = () => {
   // SSE 데모 페이지 렌더링
   if (currentPage === 'sse-demo') {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          onLoginClick={() => setIsLoginOpen(true)}
-          onCategorySelect={handleCategorySelect}
-          onProfileClick={handleProfileClick}
-          isLoggedIn={isLoggedIn}
-          userInfo={userInfo}
-          onChatRoom={handleChatRoom}
-          onLogout={handleLogout}
-          onSSEDemo={handleSSEDemo}
-        />
-        <SSEExample />
-        <Login
-          isOpen={isLoginOpen}
-          onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-      </div>
+        <div className="min-h-screen bg-gray-50">
+          <Header
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onLoginClick={() => setIsLoginOpen(true)}
+              onCategorySelect={handleCategorySelect}
+              onProfileClick={handleProfileClick}
+              isLoggedIn={isLoggedIn}
+              userInfo={userInfo}
+              onChatRoom={handleChatRoom}
+              onLogout={handleLogout}
+              onSSEDemo={handleSSEDemo}
+          />
+          <SSEExample />
+          <Login
+              isOpen={isLoginOpen}
+              onClose={() => setIsLoginOpen(false)}
+              onLoginSuccess={handleLoginSuccess}
+          />
+        </div>
     );
   }
 
@@ -317,168 +319,181 @@ const App = () => {
   // 마이페이지 렌더링
   if (currentPage === 'mypage') {
     return (
-      <MyPage
-        onBack={handleBackToHome}
-        onLogout={handleLogout}
-      />
+        <MyPage
+            onBack={handleBackToHome}
+            onLogout={handleLogout}
+        />
     );
   }
 
   // 멘토 리스트 페이지 렌더링
   if (currentPage === 'mentor-list') {
     return (
-      <div className="app">
-        <ParticleBackground />
-        <Header
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          onLoginClick={() => setIsLoginOpen(true)}
-          onCategorySelect={handleCategorySelect}
-          onProfileClick={handleProfileClick}
-          onInquiry={handleInquiry}
-          isLoggedIn={isLoggedIn}
-          userInfo={userInfo}
-          onChatRoom={handleChatRoom}
-          onLogout={handleLogout}
-          onSSEDemo={handleSSEDemo}
-        />
-        <MentorList
-          category={selectedCategory} 
-          onBack={handleBackToHome}
-          onMentorSelect={handleMentorSelect}
-        />
-        <Login 
-          isOpen={isLoginOpen} 
-          onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-        
-        {/* 알림 컨테이너 - 로그인된 사용자만 */}
-        <NotificationContainer isLoggedIn={isLoggedIn} />
-      </div>
+        <div className="app">
+          <ParticleBackground />
+          <Header
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onLoginClick={() => setIsLoginOpen(true)}
+              onCategorySelect={handleCategorySelect}
+              onProfileClick={handleProfileClick}
+              onInquiry={handleInquiry}
+              isLoggedIn={isLoggedIn}
+              userInfo={userInfo}
+              onChatRoom={handleChatRoom}
+              onLogout={handleLogout}
+              onSSEDemo={handleSSEDemo}
+          />
+          <MentorList
+              category={selectedCategory}
+              onBack={handleBackToHome}
+              onMentorSelect={handleMentorSelect}
+          />
+          <Login
+              isOpen={isLoginOpen}
+              onClose={() => setIsLoginOpen(false)}
+              onLoginSuccess={handleLoginSuccess}
+          />
+
+          {/* 알림 컨테이너 - 로그인된 사용자만 */}
+          <NotificationContainer isLoggedIn={isLoggedIn} />
+        </div>
     );
   }
 
   // 채팅방 페이지 렌더링
   if (currentPage === 'chat') {
     return (
-      <div>
-        <ChatContainer
-          onBack={handleBackToHome}
-          isLoggedIn={isLoggedIn}
-        />
-      </div>
+        <div>
+          <ChatContainer
+              onBack={handleBackToHome}
+              isLoggedIn={isLoggedIn}
+          />
+        </div>
     );
   }
 
   // 예약 페이지 렌더링
   if (currentPage === 'booking') {
     return (
-      <Booking 
-        mentor={selectedMentor}
-        onBack={handleBackToProfile}
-        onBooking={handlePayment}
-      />
+        <Booking
+            mentor={selectedMentor}
+            onBack={handleBackToProfile}
+            onBooking={handlePayment}
+        />
     );
   }
 
   // 결제 페이지 렌더링
   if (currentPage === 'payment') {
     return (
-      <Payment 
-        bookingData={bookingData}
-        onBack={handleBackToBooking}
-        onPaymentComplete={handlePaymentComplete}
-        onCheckout={handleCheckout}
-      />
+        <Payment
+            bookingData={bookingData}
+            onBack={handleBackToBooking}
+            onPaymentComplete={handlePaymentComplete}
+            onCheckout={handleCheckout}
+        />
     );
   }
 
   // 결제 완료 페이지 렌더링
   if (currentPage === 'payment-success') {
     return (
-      <PaymentSuccess 
-        paymentResult={paymentResult}
-        onHome={handleBackToHome}
-      />
+        <PaymentSuccess
+            paymentResult={paymentResult}
+            onHome={handleBackToHome}
+        />
     );
   }
 
   // 토스페이 체크아웃 페이지 렌더링
   if (currentPage === 'checkout') {
     return (
-      <Checkout 
-        paymentData={paymentData}
-        onBack={handleBackToPayment}
-        onSuccess={handlePaymentSuccess}
-        onFail={handlePaymentFail}
-      />
+        <Checkout
+            paymentData={paymentData}
+            onBack={handleBackToPayment}
+            onSuccess={handlePaymentSuccess}
+            onFail={handlePaymentFail}
+        />
     );
   }
 
   // 결제 성공 페이지 렌더링
   if (currentPage === 'success') {
     return (
-      <Success 
-        paymentData={paymentData}
-        onHome={handleBackToHome}
-      />
+        <Success
+            paymentData={paymentData}
+            onHome={handleBackToHome}
+        />
     );
   }
 
   // 결제 실패 페이지 렌더링
   if (currentPage === 'fail') {
     return (
-      <Fail 
-        onBack={handleBackToPayment}
-        onHome={handleBackToHome}
-      />
+        <Fail
+            onBack={handleBackToPayment}
+            onHome={handleBackToHome}
+        />
     );
   }
 
   // 멘토 프로필 페이지 렌더링
   if (currentPage === 'mentor-profile') {
     return (
-      <MentorProfile 
-        mentor={selectedMentor}
-        onBack={handleBackToList}
-        onBooking={handleBooking}
-      />
+        <MentorProfile
+            mentor={selectedMentor}
+            onBack={handleBackToList}
+            onBooking={handleBooking}
+        />
     );
   }
 
   // 메인 페이지 렌더링
   return (
-      <div className="app">
-        <ParticleBackground />
-        <Header 
-          isMenuOpen={isMenuOpen} 
-          setIsMenuOpen={setIsMenuOpen}
-          onLoginClick={() => setIsLoginOpen(true)}
-          onCategorySelect={handleCategorySelect}
-          onProfileClick={handleProfileClick}
-          onInquiry={handleInquiry}
-          isLoggedIn={isLoggedIn}
-          userInfo={userInfo}
-          onChatRoom={handleChatRoom}
-          onLogout={handleLogout}
-          onSSEDemo={handleSSEDemo}
-        />
-        <main className="main-content">
-          <HeroSection />
-          <StatsSection />
-          <MentorSection />
-          <CTASection />
-        </main>
-        <Login 
-          isOpen={isLoginOpen} 
-          onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-        
-        {/* 알림 컨테이너 - 로그인된 사용자만 */}
-        <NotificationContainer isLoggedIn={isLoggedIn} />
-      </div>
+      <BrowserRouter>
+        <div className="app">
+          <ParticleBackground />
+          <Header
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onLoginClick={() => setIsLoginOpen(true)}
+              onCategorySelect={handleCategorySelect}
+              onProfileClick={handleProfileClick}
+              onInquiry={handleInquiry}
+              isLoggedIn={isLoggedIn}
+              userInfo={userInfo}
+              onChatRoom={handleChatRoom}
+              onLogout={handleLogout}
+              onSSEDemo={handleSSEDemo}
+          />
+          <Routes>
+            <Route
+                path="/"
+                element={
+                  <main className="main-content">
+                    <HeroSection />
+                    <StatsSection />
+                    <MentorSection onMentorSelect={handleMentorSelect} />
+                    <CTASection />
+                  </main>
+                }
+            />
+            <Route
+                path="/mentor/:userId/profile/:profileId"
+                element={<MentorProfilePage />}
+            />
+          </Routes>
+          <Login
+              isOpen={isLoginOpen}
+              onClose={() => setIsLoginOpen(false)}
+              onLoginSuccess={handleLoginSuccess}
+          />
+
+          {/* 알림 컨테이너 - 로그인된 사용자만 */}
+          <NotificationContainer isLoggedIn={isLoggedIn} />
+        </div>
+      </BrowserRouter>
   );
 };
 
