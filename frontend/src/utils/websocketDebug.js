@@ -36,6 +36,11 @@ export const debugWebSocket = () => {
  * WebSocket 강제 재연결
  */
 export const forceReconnectWebSocket = async () => {
+  console.log('🚫 WebSocket 자동 재연결이 비활성화되었습니다');
+  console.log('💡 JWT 토큰이 만료되었을 가능성이 높습니다');
+  console.log('💡 새로운 토큰으로 수동 재연결을 시도하거나 페이지를 새로고침하세요');
+  return;
+  
   console.log('🔄 WebSocket 강제 재연결 시작...');
   try {
     await websocketService.forceReconnect();

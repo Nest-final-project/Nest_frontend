@@ -1,20 +1,15 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import websocketService from '../services/websocketService';
 
-/**
- * WebSocket 연결 및 메시지 처리를 위한 커스텀 훅
- */
 export const useWebSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
   const callbackIdRef = useRef(null);
 
-  // 연결 상태 업데이트
   const updateConnectionStatus = useCallback(() => {
     setIsConnected(websocketService.isConnected());
   }, []);
 
-  // 웹소켓 연결
   const connect = useCallback(async () => {
     try {
       setConnectionError(null);
@@ -28,14 +23,12 @@ export const useWebSocket = () => {
     }
   }, []);
 
-  // 웹소켓 연결 해제
   const disconnect = useCallback(() => {
     websocketService.disconnect();
     setIsConnected(false);
     console.log('🔌 WebSocket 연결 해제');
   }, []);
 
-  // 메시지 전송
   const sendMessage = useCallback(async (chatRoomId, content) => {
     try {
       await websocketService.sendMessage(chatRoomId, content);
@@ -48,7 +41,6 @@ export const useWebSocket = () => {
     }
   }, []);
 
-  // 강제 재연결
   const reconnect = useCallback(async () => {
     try {
       setConnectionError(null);
@@ -62,7 +54,6 @@ export const useWebSocket = () => {
     }
   }, []);
 
-  // 메시지 수신 콜백 등록
   const onMessage = useCallback((callback) => {
     if (callbackIdRef.current) {
       websocketService.offMessage(callbackIdRef.current);
@@ -78,7 +69,6 @@ export const useWebSocket = () => {
     };
   }, []);
 
-  // 컴포넌트 언마운트 시 정리
   useEffect(() => {
     return () => {
       if (callbackIdRef.current) {
@@ -87,7 +77,6 @@ export const useWebSocket = () => {
     };
   }, []);
 
-  // 주기적으로 연결 상태 확인
   useEffect(() => {
     const interval = setInterval(updateConnectionStatus, 1000);
     return () => clearInterval(interval);
@@ -105,14 +94,10 @@ export const useWebSocket = () => {
   };
 };
 
-/**
- * 특정 채팅방의 메시지를 관리하는 훅
- */
 export const useChatRoom = (chatRoomId) => {
   const [messages, setMessages] = useState([]);
-  const { isConnected, connect, sendMessage: wsSendMessage, onMessage } = useWebSocket();
+  const { isConnected, connectionError, connect, sendMessage: wsSendMessage, onMessage } = useWebSocket();
 
-  // 메시지 추가
   const addMessage = useCallback((message) => {
     setMessages(prev => [...prev, {
       ...message,
@@ -121,17 +106,28 @@ export const useChatRoom = (chatRoomId) => {
     }]);
   }, []);
 
-  // 메시지 전송
   const sendMessage = useCallback(async (content) => {
     if (!chatRoomId || !content?.trim()) {
       console.warn('채팅방 ID와 메시지 내용이 필요합니다.');
       return false;
     }
 
-    return await wsSendMessage(chatRoomId, content.trim());
-  }, [chatRoomId, wsSendMessage]);
+    // WebSocket이 연결되지 않은 경우 먼저 연결 시도
+    if (!isConnected) {
+      console.log('🔌 WebSocket이 연결되지 않음 - 연결 시도...');
+      try {
+        await connect();
+        // 연결 후 메시지 전송
+        return await wsSendMessage(chatRoomId, content.trim());
+      } catch (error) {
+        console.error('❌ WebSocket 연결 실패:', error);
+        return false;
+      }
+    }
 
-  // 메시지 수신 처리
+    return await wsSendMessage(chatRoomId, content.trim());
+  }, [chatRoomId, wsSendMessage, isConnected, connect]);
+
   useEffect(() => {
     if (!isConnected) return;
 
@@ -143,18 +139,22 @@ export const useChatRoom = (chatRoomId) => {
     return unsubscribe;
   }, [isConnected, onMessage, addMessage]);
 
-  // 자동 연결
+  // 채팅방 진입 시 자동 WebSocket 연결
   useEffect(() => {
-    if (!isConnected) {
-      connect();
+    if (chatRoomId && !isConnected) {
+      console.log('📱 채팅방 진입 - WebSocket 연결 시도...');
+      connect().catch(error => {
+        console.error('❌ 채팅방 WebSocket 연결 실패:', error);
+      });
     }
-  }, [isConnected, connect]);
+  }, [chatRoomId, isConnected, connect]);
 
   return {
     messages,
     sendMessage,
     addMessage,
     isConnected,
+    connectionError,
     connect,
     chatRoomId
   };
