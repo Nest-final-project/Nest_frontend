@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronUp, Check, Star } from 'lucide-react';
+import { ArrowLeft, Check, Star } from 'lucide-react';
 import './MentorProfile.css';
 import { profileAPI } from '../services/api';
 
@@ -24,7 +24,6 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
   const [ticketList, setTicketList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCareer, setShowCareer] = useState(false);
-  const [showServices, setShowServices] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
 
   useEffect(() => {
@@ -55,7 +54,7 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
 
   const handleBookingClick = () => {
     if (onBooking) {
-      onBooking({ mentor: mentorDetails, service: selectedService });
+      onBooking({ mentor: mentorDetails});
     }
   };
 
@@ -110,11 +109,8 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
           </div>
 
           <div className="content-section career-section">
-            <button className="section-toggle" onClick={() => setShowCareer(!showCareer)}>
-              <span className="toggle-title">멘토 경력</span>
-              {showCareer ? <ChevronUp className="toggle-icon" /> : <ChevronDown className="toggle-icon" />}
-            </button>
-            {showCareer && Array.isArray(careerList) && (
+            <h2 className="section-title">멘토 경력</h2>
+            {Array.isArray(careerList) && (
                 <div className="career-content">
                   <div className="career-table">
                     <div className="career-header">
@@ -136,6 +132,7 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
             )}
           </div>
 
+
           <div className="content-section services-section">
             <div className="service-intro">
               <h2 className="section-title">제공 서비스</h2>
@@ -151,65 +148,57 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
           </div>
 
           <div className="content-section service-items-section">
-            <button className="section-toggle" onClick={() => setShowServices(!showServices)}>
-              <span className="toggle-title">이용권 선택</span>
-              {showServices ? <ChevronUp className="toggle-icon" /> : <ChevronDown className="toggle-icon" />}
-            </button>
-            {showServices && (
-                <div className="services-content">
-                  <div className="services-grid">
-                    {services.map((service) => (
-                        <div
-                            key={service.id}
-                            className={`service-card ${service.popular ? 'popular' : ''} ${selectedService?.id === service.id ? 'selected' : ''}`}
-                            onClick={() => handleServiceSelect(service)}
-                        >
-                          {service.popular && (
-                              <div className="popular-badge">
-                                <Star className="star-icon" /> 인기
-                              </div>
-                          )}
-                          <div className="service-header">
-                            <h3 className="service-name">{service.name}</h3>
-                            <div className="service-duration">
-                              {service.duration.map((dur, idx) => (
-                                  <span key={idx} className="duration-tag">{dur}</span>
-                              ))}
-                            </div>
+            <h2 className="section-title">이용권</h2>
+            <div className="services-content">
+              <div className="services-grid">
+                {services.map((service) => (
+                    <div
+                        key={service.id}
+                        className={`service-card ${service.popular ? 'popular' : ''}`}
+                    >
+                      {service.popular && (
+                          <div className="popular-badge">
+                            <Star className="star-icon" /> 인기
                           </div>
-                          <p className="service-description">{service.description}</p>
-                          <div className="service-detail">
-                            {service.detail.split('\n').map((line, idx) => (
-                                <div key={idx} className="detail-line">{line}</div>
-                            ))}
-                          </div>
-                          <div className="service-footer">
-                            <div className="service-price">{service.price}</div>
-                            {selectedService?.id === service.id && (
-                                <div className="selected-indicator">
-                                  <Check className="check-icon" /> 선택됨
-                                </div>
-                            )}
-                          </div>
-                        </div>
-                    ))}
-                  </div>
-                  {selectedService && (
-                      <div className="selection-summary">
-                        <div className="summary-content">
-                          <div className="summary-service">
-                            <strong>{selectedService.name}</strong>
-                            <span className="summary-price">{selectedService.price}</span>
-                          </div>
-                          <div className="summary-duration">
-                            {selectedService.duration.join(' • ')}
-                          </div>
+                      )}
+                      <div className="service-header">
+                        <h3 className="service-name">{service.name}</h3>
+                        <div className="service-duration">
+                          {service.duration.map((dur, idx) => (
+                              <span key={idx} className="duration-tag">{dur}</span>
+                          ))}
                         </div>
                       </div>
-                  )}
-                </div>
-            )}
+                      <p className="service-description">{service.description}</p>
+                      <div className="service-detail">
+                        {service.detail.split('\n').map((line, idx) => (
+                            <div key={idx} className="detail-line">{line}</div>
+                        ))}
+                      </div>
+                      <div className="service-footer">
+                        <div className="service-price">{service.price}</div>
+                      </div>
+                    </div>
+                ))}
+
+              </div>
+
+              {selectedService && (
+                  <div className="selection-summary">
+                    <div className="summary-content">
+                      <div className="summary-service">
+                        <strong>{selectedService.name}</strong>
+                        <span className="summary-price">{selectedService.price}</span>
+                      </div>
+                      <div className="summary-duration">
+                        {selectedService.duration.join(' • ')}
+                      </div>
+                    </div>
+                  </div>
+              )}
+            </div>
           </div>
+
         </div>
 
         <div className="fixed-bottom">
