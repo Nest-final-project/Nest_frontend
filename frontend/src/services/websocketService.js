@@ -29,7 +29,29 @@ class WebSocketService {
       try {
         const token = accessTokenUtils.getAccessToken();
         if (!token) {
+          console.error('❌ JWT 토큰이 없습니다 - WebSocket 연결 중단');
           reject(new Error('토큰이 없습니다'));
+          return;
+        }
+
+        // JWT 토큰 만료 확인
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const expTime = payload.exp * 1000; // seconds to milliseconds
+          const currentTime = Date.now();
+          
+          if (expTime < currentTime) {
+            console.error('❌ JWT 토큰이 만료되었습니다 - WebSocket 연결 중단');
+            console.error(`토큰 만료 시간: ${new Date(expTime).toISOString()}`);
+            console.error(`현재 시간: ${new Date(currentTime).toISOString()}`);
+            reject(new Error('JWT 토큰이 만료되었습니다'));
+            return;
+          }
+          
+          console.log('✅ JWT 토큰 유효성 확인 완료');
+        } catch (tokenError) {
+          console.error('❌ JWT 토큰 파싱 실패 - WebSocket 연결 중단:', tokenError);
+          reject(new Error('유효하지 않은 JWT 토큰입니다'));
           return;
         }
 
@@ -46,7 +68,7 @@ class WebSocketService {
           debug: (str) => {
             console.log('🔍 STOMP Debug:', str);
           },
-          reconnectDelay: 5000,
+          reconnectDelay: 0, // 자동 재연결 비활성화 (수동으로 관리)
           heartbeatIncoming: 4000,
           heartbeatOutgoing: 4000,
           // WebSocket 팩토리 설정 (브라우저 호환성)
@@ -73,6 +95,13 @@ class WebSocketService {
         this.stompClient.onStompError = (frame) => {
           console.error('❌ STOMP 프로토콜 에러:', frame.headers['message']);
           console.error('📝 에러 상세:', frame.body);
+          
+          // JWT 관련 에러인지 확인
+          const errorMessage = frame.headers['message'] || frame.body || '';
+          if (errorMessage.includes('JWT') || errorMessage.includes('토큰') || errorMessage.includes('인증')) {
+            console.error('🚫 JWT 인증 실패 - 재연결하지 않음');
+          }
+          
           this.connectionPromise = null;
           reject(new Error(`STOMP Error: ${frame.headers['message']}`));
         };
@@ -82,7 +111,7 @@ class WebSocketService {
           console.log('🔴 STOMP WebSocket 연결 끊김');
           this.isConnectedState = false;
           this.connectionPromise = null;
-          this.handleReconnect();
+          // 자동 재연결은 하지 않음 (수동으로 관리)
         };
 
         // WebSocket 레벨 에러 시
@@ -90,14 +119,6 @@ class WebSocketService {
           console.error('🔴 WebSocket 레벨 에러:', error);
           console.error('🔗 연결 시도했던 URL:', wsUrl);
           this.connectionPromise = null;
-          
-          // 백엔드 서버가 실행중인지 확인 제안
-          if (error.type === 'error') {
-            console.warn('💡 해결 방법:');
-            console.warn('1. 백엔드 서버가 8080 포트에서 실행중인지 확인');
-            console.warn('2. WebSocket 엔드포인트 /ws-nest가 올바른지 확인'); 
-            console.warn('3. CORS 설정이 올바른지 확인');
-          }
           
           reject(new Error(`WebSocket connection failed to ${wsUrl}`));
         };
@@ -234,18 +255,11 @@ class WebSocketService {
     });
   }
 
-  // 자동 재연결 처리
+  // 자동 재연결 처리 (비활성화)
   handleReconnect() {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      console.log(`🔄 재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
-      
-      setTimeout(() => {
-        this.connect().catch(error => {
-          console.error('재연결 실패:', error);
-        });
-      }, this.reconnectInterval * this.reconnectAttempts);
-    }
+    console.log('🚫 자동 재연결이 비활성화되었습니다');
+    console.log('💡 채팅방 진입 시 수동으로 연결하거나 페이지를 새로고침하세요');
+    return;
   }
 
   // 디버그 정보 반환 (useWebSocket 훅 호환용)
@@ -257,6 +271,59 @@ class WebSocketService {
       stompState: this.stompClient ? this.stompClient.state : 'NULL',
       hasClient: !!this.stompClient
     };
+  }
+
+  // 새로운 메서드들 추가 (useWebSocket 훅 호환용)
+  getConnectionStatus() {
+    return {
+      connected: this.isConnected(),
+      authenticationFailed: false, // 기존 서비스에서는 미구현
+      lastTokenError: null,
+      reconnectAttempts: this.reconnectAttempts,
+      isManualDisconnect: false
+    };
+  }
+
+  // 이벤트 에미터 구현 (간단 버전)
+  listeners = new Map();
+
+  on(event, callback) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event).push(callback);
+  }
+
+  off(event, callback) {
+    if (this.listeners.has(event)) {
+      const callbacks = this.listeners.get(event);
+      const index = callbacks.indexOf(callback);
+      if (index > -1) {
+        callbacks.splice(index, 1);
+      }
+    }
+  }
+
+  emit(event, data) {
+    if (this.listeners.has(event)) {
+      this.listeners.get(event).forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error(`Error in event listener for ${event}:`, error);
+        }
+      });
+    }
+  }
+
+  // 호환성을 위한 빈 메서드들
+  reconnectWithNewToken() {
+    console.error('🚫 reconnectWithNewToken 기능이 비활성화되었습니다');
+    return Promise.reject(new Error('Feature disabled'));
+  }
+
+  resetAuthenticationState() {
+    console.log('🔓 인증 상태 리셋 (기존 서비스에서는 미구현)');
   }
 }
 
