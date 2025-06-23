@@ -1,3 +1,6 @@
+import { EventSourcePolyfill } from 'event-source-polyfill';
+import { accessTokenUtils } from '../utils/tokenUtils';
+
 class NotificationService {
   constructor() {
     this.eventSource = null;
@@ -14,7 +17,42 @@ class NotificationService {
     }
 
     try {
-      this.eventSource = new EventSource('/sse/notifications/subscribe');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+      const sseUrl = `${baseUrl}/sse/notifications/subscribe`;
+      
+      // JWT 토큰을 Authorization 헤더에 포함
+      const accessToken = accessTokenUtils.getAccessToken();
+      const headers = {};
+      
+      console.log('=== SSE 연결 디버깅 정보 ===');
+      console.log('baseUrl:', baseUrl);
+      console.log('sseUrl:', sseUrl);
+      console.log('원본 accessToken:', accessToken);
+      console.log('accessToken 타입:', typeof accessToken);
+      console.log('accessToken 길이:', accessToken?.length);
+      
+      if (accessToken) {
+        // Bearer 접두사가 이미 포함되어 있는지 확인
+        if (accessToken.startsWith('Bearer ')) {
+          headers.Authorization = accessToken;
+        } else {
+          headers.Authorization = `Bearer ${accessToken}`;
+        }
+        console.log('최종 Authorization 헤더:', headers.Authorization);
+        console.log('토큰 앞부분:', headers.Authorization.substring(0, 50) + '...');
+      } else {
+        console.warn('⚠️ Access token이 없어 SSE 연결 시도 (인증 없이)');
+      }
+      
+      console.log('전송할 헤더들:', headers);
+      console.log('========================');
+      
+      // EventSourcePolyfill을 사용하여 헤더 포함 가능
+      this.eventSource = new EventSourcePolyfill(sseUrl, {
+        headers: headers,
+        heartbeatTimeout: 180000, // 3분으로 heartbeat 타임아웃 증가
+        connectionTimeout: 60000   // 1분 연결 타임아웃
+      });
 
       this.eventSource.onopen = () => {
         console.log('SSE 연결 성공');
@@ -33,6 +71,26 @@ class NotificationService {
 
       this.eventSource.onerror = (error) => {
         console.error('SSE 연결 오류:', error);
+        console.error('EventSource readyState:', this.eventSource?.readyState);
+        console.error('EventSource url:', this.eventSource?.url);
+        
+        // 연결 상태에 따른 상세 로그
+        if (this.eventSource) {
+          switch (this.eventSource.readyState) {
+            case EventSource.CONNECTING:
+              console.log('SSE 상태: 연결 중...');
+              break;
+            case EventSource.OPEN:
+              console.log('SSE 상태: 연결됨');
+              break;
+            case EventSource.CLOSED:
+              console.log('SSE 상태: 연결 종료됨');
+              break;
+            default:
+              console.log('SSE 상태: 알 수 없음');
+          }
+        }
+        
         this.handleConnectionError();
       };
 
@@ -160,11 +218,24 @@ class NotificationService {
   // 세션 연장 요청
   async requestSessionExtension(sessionId) {
     try {
-      const response = await fetch('/api/sessions/extend', {
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+      const accessToken = accessTokenUtils.getAccessToken();
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (accessToken) {
+        if (accessToken.startsWith('Bearer ')) {
+          headers.Authorization = accessToken;
+        } else {
+          headers.Authorization = `Bearer ${accessToken}`;
+        }
+      }
+      
+      const response = await fetch(`${baseUrl}/api/sessions/extend`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({ sessionId, extensionMinutes: 15 })
       });
 
