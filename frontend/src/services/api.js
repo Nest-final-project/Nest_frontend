@@ -31,9 +31,10 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
   withCredentials: true, // CORS 설정: 쿠키 및 인증 정보 포함
-  timeout: 10000, // 10초 타임아웃
+  timeout: 15000, // 15초 타임아웃으로 증가
 });
 
 // 디버깅을 위한 baseURL 확인
@@ -67,12 +68,13 @@ api.interceptors.request.use(
       
       if (accessToken) {
         // 토큰이 이미 "Bearer " 접두사를 포함하고 있는지 확인
-        if (accessToken.startsWith('Bearer ')) {
-          config.headers.Authorization = accessToken;
-          console.log(`🔑 [인증 API] Authorization 헤더 추가 (이미 Bearer 포함): ${accessToken.substring(0, 20)}...`);
-        } else {
-          config.headers.Authorization = `Bearer ${accessToken}`;
-          console.log(`🔑 [인증 API] Authorization 헤더 추가 (Bearer 추가): Bearer ${accessToken.substring(0, 20)}...`);
+        const tokenToUse = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`;
+        config.headers.Authorization = tokenToUse;
+        console.log(`🔑 [인증 API] Authorization 헤더 추가: ${tokenToUse.substring(0, 30)}...`);
+
+        // 토큰 검증 (디버깅용)
+        if (!tokenToUse.startsWith('Bearer ')) {
+          console.error('❌ Authorization 헤더 형식 오류: Bearer 접두사 누락');
         }
         console.log(`🔑 [전체 Authorization 헤더] ${config.headers.Authorization}`);
       } else {
@@ -104,7 +106,11 @@ api.interceptors.response.use(
     console.error(`❌ [에러 상태] ${error.response?.status} ${error.response?.statusText}`);
     console.error(`❌ [에러 데이터]`, error.response?.data);
     
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 회원탈퇴 API는 자동 토큰 갱신에서 제외 (비밀번호 검증 실패와 구분하기 위해)
+    const isDeleteUserRequest = originalRequest?.url?.includes('/api/users/me') &&
+                               originalRequest?.method?.toLowerCase() === 'delete';
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isDeleteUserRequest) {
       originalRequest._retry = true;
       
       console.log('🔄 401 에러 감지 - 토큰 갱신 시도...');
@@ -132,15 +138,15 @@ api.interceptors.response.use(
       } catch (refreshError) {
         console.error('❌ 토큰 갱신 실패:', refreshError);
         
-        // 토큰 갱신 실패 시 로그아웃 처리
-        accessTokenUtils.removeAccessToken();
-        refreshTokenUtils.removeRefreshToken();
-        
-        // 현재 페이지가 로그인 페이지가 아닌 경우에만 리다이렉트
-        if (!window.location.pathname.includes('/login')) {
-          alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-          window.location.reload(); // 페이지 새로고침으로 로그인 상태 초기화
-        }
+        // // 토큰 갱신 실패 시 로그아웃 처리
+        // accessTokenUtils.removeAccessToken();
+        // refreshTokenUtils.removeRefreshToken();
+        //
+        // // 현재 페이지가 로그인 페이지가 아닌 경우에만 리다이렉트
+        // if (!window.location.pathname.includes('/login')) {
+        //   alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+        //   window.location.reload(); // 페이지 새로고침으로 로그인 상태 초기화
+        // }
       }
     }
     
@@ -186,8 +192,13 @@ export const userAPI = {
   // 마이페이지 조회
   getUser: () => api.get('/api/users/me'),
 
-  // 사용자 정보 업데이트
-  updateUser: (userData) => api.patch('/api/users/me', userData),
+  getUserById: (userId) => api.get(`/api/users/${userId}`),
+
+  // 사용자 정보 업데이트 (간단한 버전)
+  updateUser: (userData) => {
+    console.log('📤 사용자 정보 업데이트:', userData);
+    return api.patch('/api/users/me', userData);
+  },
 
   // 비밀번호 수정
   updatePassword: (passwordData) => api.patch('/api/users/me/password', passwordData),
@@ -195,12 +206,8 @@ export const userAPI = {
   // 추가정보 입력
   updateExtraInfo: (extraInfoData) => api.patch('/api/users/me/extra-info', extraInfoData),
 
-  // 회원 탈퇴 (refreshToken을 body에 포함)
-  deleteUser: () => {
-    const refreshToken = refreshTokenUtils.getRefreshToken();
-    const deleteData = {
-      refreshToken: refreshToken
-    };
+  // 회원 탈퇴
+  deleteUser: (deleteData) => {
     return api.delete('/api/users/me', { data: deleteData });
   },
 };
@@ -238,7 +245,7 @@ export const profileAPI = {
 // Consultation API
 export const consultationAPI = {
   // 상담 목록 조회
-  getConsultations: (params) => api.get('/api/consultations', { params }),
+  getConsultations: (params) => api.get('/api/mentor/consultations', { params }),
   
   // 상담 생성
   createConsultation: (consultationData) => api.post('/api/consultations', consultationData),
@@ -257,7 +264,10 @@ export const consultationAPI = {
 // Reservation API
 export const reservationAPI = {
   // 예약 목록 조회
-  getReservations: (params) => api.get('/api/reservations', { params }),
+  getReservations: () => api.get('/api/reservations'),
+
+  // 예약 단건 조회
+  getReservation: (reservationId) => api.get(`/api/reservations/${reservationId}`),
   
   // 예약 생성
   createReservation: (reservationData) => api.post('/api/reservations', reservationData),
@@ -308,7 +318,7 @@ export const paymentAPI = {
   cancelPayment: (paymentId, cancelData) => api.post(`/api/payments/${paymentId}/cancel`, cancelData),
   
   // 결제 내역 조회
-  getPaymentHistory: (params) => api.get('/api/payments/history', { params }),
+  getPaymentHistory: () => api.get(`/api/v1/payments`),
   
   // 결제 상세 조회
   getPaymentDetail: (paymentId) => api.get(`/api/payments/${paymentId}`),
@@ -360,6 +370,9 @@ export const ticketAPI = {
   getTickets: (ticketId, params) =>
       api.get(`/api/ticket`, { params }),
 
+  // 티켓 단건 조회
+  getTicket: (ticketId) => api.get(`/api/ticket/${ticketId}`),
+
   // 타캣 작성
   createTicket: (ticketData) => api.post('/api/admin/ticket', ticketData),
 
@@ -402,6 +415,13 @@ export const inquiryAPI = {
   updateInquiryStatus: (complaintId, status) =>
       api.patch(`/api/admin/answers/{answerId}`, { status }),
 };
+
+// Career API
+export const careerAPI = {
+  // 경력 전체 목록 조회
+  getAllCareers: () => api.get('/api/careers'),
+
+}
 
 
 export default api;
