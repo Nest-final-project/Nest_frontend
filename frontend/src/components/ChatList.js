@@ -107,7 +107,7 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
         const chatData = {
           id: room.roomId,
           contact: contactInfo,
-          contactTitle: isCurrentUserMentor ? '멘토' : '멘티',
+          contactTitle: isCurrentUserMentor ? '멘티' : '멘토',
           lastMessage: {
             id: null,
             text: '대화를 시작해보세요!', // 백엔드에서 마지막 메시지 정보를 제공하지 않음

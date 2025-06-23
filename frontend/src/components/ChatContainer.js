@@ -32,13 +32,13 @@ const ChatContainer = ({onBack, isLoggedIn = true}) => {
       chat,
       chatIdType: typeof chat?.id
     });
-    
+
     // 같은 채팅방을 다시 선택한 경우 무시
     if (selectedChat?.id === chat?.id) {
       console.log('🚫 같은 채팅방 재선택 - 무시');
       return;
     }
-    
+
     // 채팅방 변경 - key prop으로 인해 컴포넌트가 완전히 재마운트됨
     console.log(`🔄 채팅방 변경: ${selectedChat?.id} → ${chat?.id}`);
     setSelectedChat(chat);
