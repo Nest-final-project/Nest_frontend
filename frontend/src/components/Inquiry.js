@@ -259,71 +259,40 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
           </div>
 
           <div className="tab-content">
-            {/* FAQ 탭만 FAQ만 */}
+            {/* FAQ 탭 */}
             {activeTab === 'faq' && (
-                <div className="faq-list">
+                <div className="faq-container">
                   <section>
-                    <div className="faq-title" style={{
-                      color: "#555", fontSize: "18px", fontWeight: "bold", marginBottom: 24
-                    }}>
+                    <div className="faq-section-title">
                       서비스 이용방법 및 자주 묻는 질문(FAQ)
                     </div>
                     <div>
                       {FAQ_LIST.map((faq, idx) => (
-                          <div
-                              key={idx}
-                              className="faq-item"
-                              style={{
-                                borderBottom: "1px solid #eee",
-                                marginBottom: 0,
-                                paddingBottom: 0
-                              }}
-                          >
+                          <div key={idx} className="faq-item">
                             <div
                                 className="faq-question"
                                 onClick={() => toggleFaq(idx)}
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  padding: "12px 0",
-                                  cursor: 'pointer',
-                                  color: "#767676",
-                                  fontSize: "15px",
-                                  fontWeight: 500
-                                }}
                             >
-                              <span>{faq.question}</span>
+                              <span className="faq-question-text">{faq.question}</span>
                               <svg
-                                  width="16" height="16"
-                                  style={{ transform: faqOpenIndex === idx ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}
-                                  viewBox="0 0 16 16" fill="none"
+                                  className={`faq-toggle-icon ${faqOpenIndex === idx ? 'open' : ''}`}
+                                  viewBox="0 0 16 16"
+                                  fill="none"
                                   xmlns="http://www.w3.org/2000/svg"
                               >
-                                <path d="M13.3334 5.33317L8.00008 10.6665L2.66675 5.33317" stroke="#555" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
+                                <path 
+                                    d="M13.3334 5.33317L8.00008 10.6665L2.66675 5.33317" 
+                                    stroke="#555" 
+                                    strokeWidth="1.33333" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                />
                               </svg>
                             </div>
-                            <div
-                                className="faq-answer"
-                                style={{
-                                  maxHeight: faqOpenIndex === idx ? 500 : 0,
-                                  opacity: faqOpenIndex === idx ? 1 : 0,
-                                  overflow: 'hidden',
-                                  transition: 'all 0.3s',
-                                  paddingBottom: faqOpenIndex === idx ? 12 : 0
-                                }}
-                            >
-                              <div style={{ display: 'flex', gap: 6 }}>
-                          <span style={{
-                            color: "#444", fontWeight: "bold"
-                          }}>·</span>
-                                <span
-                                    style={{
-                                      color: "#1a202c",
-                                      fontSize: "14px",
-                                      whiteSpace: "pre-line"
-                                    }}
-                                >{faq.answer}</span>
+                            <div className={`faq-answer ${faqOpenIndex === idx ? 'open' : ''}`}>
+                              <div className="faq-answer-content">
+                                <span className="faq-answer-bullet">·</span>
+                                <span className="faq-answer-text">{faq.answer}</span>
                               </div>
                             </div>
                           </div>
