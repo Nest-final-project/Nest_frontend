@@ -9,7 +9,8 @@ const NotificationContainer = ({ isLoggedIn = false }) => {
   useEffect(() => {
     // 로그인되지 않은 상태에서는 알림 서비스를 시작하지 않음
     if (!isLoggedIn) {
-      // 로그아웃 시 모든 알림 제거
+      // 로그아웃 시 SSE 연결 해제 및 모든 알림 제거
+      notificationService.disconnect();
       setNotifications([]);
       return;
     }
@@ -50,7 +51,8 @@ const NotificationContainer = ({ isLoggedIn = false }) => {
     notificationService.addEventListener('notification', handleNotification);
     notificationService.addEventListener('connection', handleConnection);
 
-    // SSE 연결 시작
+    // SSE 연결 시작 (로그인된 상태에서만)
+    console.log('로그인된 사용자 - SSE 연결 시작');
     notificationService.connect();
 
     // 컴포넌트 언마운트 시 정리
@@ -58,6 +60,7 @@ const NotificationContainer = ({ isLoggedIn = false }) => {
       notificationService.removeEventListener('notification', handleNotification);
       notificationService.removeEventListener('connection', handleConnection);
       notificationService.disconnect();
+      console.log('SSE 연결 해제 및 리스너 정리 완료');
     };
   }, [isLoggedIn]); // isLoggedIn이 변경될 때마다 useEffect 재실행
 

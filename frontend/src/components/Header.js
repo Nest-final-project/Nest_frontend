@@ -6,7 +6,7 @@ import logo from '../image/cool.png';
 import { categoryAPI, authAPI } from '../services/api';
 import { accessTokenUtils, refreshTokenUtils } from '../utils/tokenUtils';
 
-const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, onInquiry, isLoggedIn, userInfo, onLogout }) => {
+const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, onInquiry, isLoggedIn, userInfo, onLogout,onSSEDemo }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
@@ -179,7 +179,7 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, on
           
           {/* 고객센터 드롭다운 섹션 */}
           <div className="sidebar-category-section">
-            <button 
+            <button
               className={`sidebar-category-toggle ${isInquiryOpen ? 'open' : ''}`}
               onClick={toggleInquiry}
             >
@@ -211,6 +211,16 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, on
                 문의 사항
               </button>
               <button
+                  className="sidebar-sublink"
+                  onClick={() => {
+                    setIsNavOpen(false);
+                    setIsInquiryOpen(false);
+                    onInquiry && onInquiry('myInquiries'); // 내 문의 내역 탭으로 이동
+                  }}
+              >
+                내 문의 내역
+              </button>
+              <button
                 className="sidebar-sublink"
                 onClick={() => {
                   setIsNavOpen(false);
@@ -235,16 +245,30 @@ const Header = ({ onLoginClick, onCategorySelect, onChatRoom, onProfileClick, on
           
           {/* 채팅 메뉴 - 로그인 상태에서만 표시 */}
           {isLoggedIn && (
-            <button
-              className="sidebar-link chat-button"
-              onClick={() => {
-                setIsNavOpen(false);
-                onChatRoom && onChatRoom({ name: '김개발' });
-              }}
-            >
-              <span className="sidebar-link-icon">💬</span>
-              채팅
-            </button>
+            <>
+              <button
+                className="sidebar-link chat-button"
+                onClick={() => {
+                  setIsNavOpen(false);
+                  onChatRoom && onChatRoom({ name: '김개발' });
+                }}
+              >
+                <span className="sidebar-link-icon">💬</span>
+                채팅
+              </button>
+
+              {/* SSE 데모 메뉴 */}
+              <button
+                className="sidebar-link sse-demo-button"
+                onClick={() => {
+                  setIsNavOpen(false);
+                  onSSEDemo && onSSEDemo();
+                }}
+              >
+                <span className="sidebar-link-icon">🔔</span>
+                SSE 알림 데모
+              </button>
+            </>
           )}
         </nav>
         
