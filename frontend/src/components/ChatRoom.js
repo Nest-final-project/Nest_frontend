@@ -65,7 +65,7 @@ const ChatRoom = ({
 
     try {
       setLoading(true);
-      console.log(`📥 채팅방 ${chatRoomId}의 메시지를 가져오는 중...`);
+      console.log(`📥 채팅방 ${chatRoomId}의 메시지 가져오는 중...`);
 
       // 대화내역 가져오기
       const response = await axios.get(
@@ -78,8 +78,6 @@ const ChatRoom = ({
           }
       );
 
-      console.log(`📥 채팅방 ${chatRoomId} 메시지 응답:`, response.data);
-
       const newMessages = response.data.content
       .slice()
       .reverse()
@@ -91,8 +89,11 @@ const ChatRoom = ({
         status: msg.mine ? 'sent' : 'received'
       }));
 
-      console.log(`✅ 채팅방 ${chatRoomId}에서 ${newMessages.length}개 메시지 로드됨`);
+      console.log(`✅ 채팅방 ${chatRoomId}: ${newMessages.length}개 메시지 로드`);
+
+      // 메시지를 완전히 새로 설정 (기존 메시지와 합치지 않음)
       setMessages(newMessages);
+
     } catch (err) {
       console.error(`❌ 채팅방 ${chatRoomId} 메시지 불러오기 실패:`, err);
       if (err.response?.status === 404) {
@@ -113,9 +114,19 @@ const ChatRoom = ({
     const unsubscribe = onMessage((messageData) => {
       console.log('📨 WebSocket 메시지 수신:', messageData);
 
-      // 현재 채팅방의 메시지인지 확인
-      if (messageData.chatRoomId && messageData.chatRoomId.toString()
-          === chatRoomId.toString()) {
+      // 현재 채팅방의 메시지인지 엄격하게 확인
+      const receivedChatRoomId = messageData.chatRoomId
+          ? messageData.chatRoomId.toString() : null;
+      const currentChatRoomId = chatRoomId ? chatRoomId.toString() : null;
+
+      console.log('🔍 채팅방 ID 비교:', {
+        received: receivedChatRoomId,
+        current: currentChatRoomId,
+        match: receivedChatRoomId === currentChatRoomId
+      });
+
+      if (receivedChatRoomId === currentChatRoomId && currentChatRoomId
+          !== null) {
         const senderId = messageData.senderId ? messageData.senderId.toString()
             : null;
         const currentUserId = userId ? userId.toString() : null;
@@ -131,6 +142,19 @@ const ChatRoom = ({
         console.log(`✅ 채팅방 ${chatRoomId}에 메시지 추가:`, newMessage);
 
         setMessages(prev => {
+          // 현재 채팅방 ID와 다시 한번 확인
+          const currentRoomId = chatRoomId ? chatRoomId.toString() : null;
+          if (messageData.chatRoomId?.toString() !== currentRoomId) {
+            console.log('🚫 setState 내부에서 채팅방 ID 불일치로 메시지 무시');
+            return prev;
+          }
+
+          // 메시지가 비어있다면 (새 채팅방이거나 초기화 직후) 바로 추가
+          if (prev.length === 0) {
+            console.log('➕ 빈 채팅방에 첫 메시지 추가:', newMessage);
+            return [newMessage];
+          }
+
           // 같은 내용의 임시 메시지가 있는지 확인 (낙관적 업데이트 메시지)
           const tempMessageIndex = prev.findIndex(msg =>
               msg.id.startsWith('temp-') &&
@@ -163,7 +187,8 @@ const ChatRoom = ({
               (a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         });
       } else {
-        console.log(`🚫 다른 채팅방(${messageData.chatRoomId})의 메시지이므로 무시`);
+        console.log(
+            `🚫 다른 채팅방(${receivedChatRoomId})의 메시지이므로 무시 (현재: ${currentChatRoomId})`);
       }
     });
 
@@ -174,12 +199,27 @@ const ChatRoom = ({
     };
   }, [isConnected, connect, onMessage, chatRoomId, userId]);
 
+  // 컴포넌트 unmount 시 정리
+  useEffect(() => {
+    console.log(`🚀 ChatRoom 마운트 - 채팅방: ${chatRoomId}`);
+    return () => {
+      console.log(`🧹 ChatRoom 언마운트 - 채팅방: ${chatRoomId}`);
+      setMessages([]);
+      setError(null);
+      setLoading(false);
+    };
+  }, []);
+
   // 채팅방 변경 시 메시지 초기화 및 새 메시지 로드
   useEffect(() => {
     if (chatRoomId) {
-      console.log(`🔄 채팅방 변경: ${chatRoomId}`);
-      // 먼저 메시지 즉시 초기화
+      console.log(`🔄 채팅방 ${chatRoomId} 변경 - 메시지 초기화`);
+
+      // 즉시 메시지 완전 초기화 
       setMessages([]);
+      setError(null);
+      setLoading(true);
+
       // 새 채팅방의 메시지 가져오기
       fetchMessages(chatRoomId);
     }
