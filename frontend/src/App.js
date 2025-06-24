@@ -12,16 +12,17 @@ import MentorList from './components/MentorList';
 import MentorProfile from './components/MentorProfile';
 import Booking from './components/Booking';
 import Payment from './components/Payment';
-import Checkout from './components/Checkout';
+import TossPaymentApp from './components/TossPayment';
 import Success from './components/Success';
 import Fail from './components/Fail';
 import PaymentSuccess from './components/PaymentSuccess';
 import ChatRoom from './components/ChatRoom';
-import MyPage from './components/MyPage';
+import MyPage from './components/MyPage.js';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
 import SSEExample from './components/SSEExample.js';
 import Inquiry from './components/Inquiry';
+import AdminDashboard from './components/AdminDashboard';
 import { authUtils, userInfoUtils } from './utils/tokenUtils';
 import { registerDebugFunctions } from './utils/websocketDebug';
 
@@ -29,6 +30,7 @@ const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
+  const [currentTossPage, setCurrentTossPage] = useState('toss-payment');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [bookingData, setBookingData] = useState(null);
@@ -51,6 +53,12 @@ const App = () => {
         setIsLoggedIn(true);
         setUserInfo(userData);
         console.log('세션에서 로그인 상태 복원됨:', userData);
+        
+        // 관리자 역할 체크 및 자동 리다이렉트
+        if (userData.userRole === 'ADMIN') {
+          console.log('🔐 관리자 사용자 감지됨 - 관리자 대시보드로 이동');
+          setCurrentPage('admin-dashboard');
+        }
       }
 
       // 개발용: 전역 디버깅 함수 추가
@@ -60,6 +68,7 @@ const App = () => {
         console.log('sessionStorage userData:', sessionStorage.getItem('userData') ? '존재' : '없음');
         console.log('localStorage refreshToken:', localStorage.getItem('refreshToken') ? '존재' : '없음');
         console.log('React isLoggedIn 상태:', isLoggedIn);
+        console.log('User Role:', userData?.userRole || '없음');
         console.groupEnd();
       };
 
@@ -73,23 +82,47 @@ const App = () => {
       // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
       const urlParams = new URLSearchParams(window.location.search);
       const needsAdditionalInfo = urlParams.get('additional-info');
-      
-      // 토스페이먼츠 결제 결과 처리
+      const pageParam = urlParams.get('page');
+
+      // 토스페이먼츠 결제 결과 처리 (경로 기반)
+      const currentPath = window.location.pathname;
       const paymentKey = urlParams.get('paymentKey');
       const orderId = urlParams.get('orderId');
       const amount = urlParams.get('amount');
-      
+      const reservationId = urlParams.get('reservationId');
+
       // 결제 실패 처리
       const errorCode = urlParams.get('code');
       const errorMessage = urlParams.get('message');
-      
+
       if (needsAdditionalInfo === 'true') {
         setCurrentPage('social-signup');
-      } else if (paymentKey && orderId && amount) {
-        // 결제 성공
+      } else if (currentPath === '/toss/success' && paymentKey && orderId && amount) {
+        // 토스 결제 성공 - 새로운 플로우 (경로 기반)
+        console.log('✅ 토스 결제 성공 (경로):', {paymentKey, orderId, amount, reservationId});
+        setCurrentTossPage('toss-success');
+        setCurrentPage('toss-payment');
+      } else if (currentPath === '/toss/fail') {
+        // 토스 결제 실패 - 새로운 플로우 (경로 기반)
+        console.log('❌ 토스 결제 실패 (경로):', {errorCode, errorMessage});
+        setCurrentTossPage('toss-fail');
+        setCurrentPage('toss-payment');
+      } else if (pageParam === 'toss-success' && paymentKey && orderId && amount) {
+        // 토스 결제 성공 - 새로운 플로우 (파라미터 기반 - 폴백)
+        console.log('✅ 토스 결제 성공 (파라미터):', {paymentKey, orderId, amount, reservationId});
+        setCurrentTossPage('toss-success');
+        setCurrentPage('toss-payment');
+      } else if (pageParam === 'toss-fail') {
+        // 토스 결제 실패 - 새로운 플로우 (파라미터 기반 - 폴백)
+        console.log('❌ 토스 결제 실패 (파라미터):', {errorCode, errorMessage});
+        setCurrentTossPage('toss-fail');
+        setCurrentPage('toss-payment');
+      } else if (paymentKey && orderId && amount && reservationId) {
+        // 기존 결제 성공 - 기존 플로우 유지
+        console.log('✅ 기존 결제 성공 파라미터:', {paymentKey, orderId, amount, reservationId});
         setCurrentPage('success');
       } else if (errorCode && errorMessage) {
-        // 결제 실패
+        // 기존 결제 실패 - 기존 플로우 유지
         setCurrentPage('fail');
       }
     } catch (error) {
@@ -110,6 +143,12 @@ const App = () => {
     setIsLoginOpen(false);
 
     console.log('로그인 성공, App 상태 업데이트됨');
+    
+    // 관리자 역할인 경우 자동으로 관리자 대시보드로 이동
+    if (userData.userRole === 'ADMIN') {
+      console.log('🔐 관리자 로그인 감지 - 관리자 대시보드로 이동');
+      setCurrentPage('admin-dashboard');
+    }
   };
 
   // 로그아웃 처리
@@ -161,10 +200,31 @@ const App = () => {
     setCurrentPage('payment');
   };
 
-  // 토스페이 체크아웃 페이지로 이동
-  const handleCheckout = (data) => {
-    setPaymentData(data);
-    setCurrentPage('checkout');
+  // 토스 결제 페이지로 이동 (새로 추가)
+  const handleTossPayment = (data) => {
+    console.log('🎯 App.js handleTossPayment 호출됨');
+    console.log('📦 Payment.js에서 받은 데이터:', data);
+    console.log('📦 기존 bookingData:', bookingData);
+    
+    // Payment.js에서 전달된 데이터를 bookingData로 설정
+    const finalBookingData = data || bookingData;
+    console.log('📦 최종 bookingData (TossPayment로 전달):', finalBookingData);
+    
+    setBookingData(finalBookingData);
+    setCurrentTossPage('toss-payment');
+    setCurrentPage('toss-payment');
+    
+    console.log('🎯 토스 결제 페이지로 이동 완료');
+  };
+
+  // 토스 결제 성공 페이지로 이동
+  const handleTossSuccess = () => {
+    setCurrentTossPage('toss-success');
+  };
+
+  // 토스 결제 실패 페이지로 이동
+  const handleTossFail = () => {
+    setCurrentTossPage('toss-fail');
   };
 
   // 채팅방으로 이동
@@ -278,6 +338,26 @@ const App = () => {
     );
   }
 
+  // 관리자 대시보드 렌더링
+  if (currentPage === 'admin-dashboard') {
+    return (
+      <AdminDashboard
+        onBack={() => {
+          // 관리자에서 나올 때는 완전 로그아웃 처리
+          handleLogout();
+        }}
+        userInfo={userInfo}
+      />
+    );
+  }
+
+  // 관리자 대시보드로 이동
+  const handleAdminDashboard = () => {
+    if (userInfo?.userRole === 'ADMIN') {
+      setCurrentPage('admin-dashboard');
+    }
+  };
+
   // SSE 데모 페이지로 이동
   const handleSSEDemo = () => {
     setCurrentPage('sse-demo');
@@ -298,6 +378,7 @@ const App = () => {
           onChatRoom={handleChatRoom}
           onLogout={handleLogout}
           onSSEDemo={handleSSEDemo}
+          onAdminDashboard={handleAdminDashboard}
         />
         <SSEExample />
         <Login
@@ -341,6 +422,7 @@ const App = () => {
           onChatRoom={handleChatRoom}
           onLogout={handleLogout}
           onSSEDemo={handleSSEDemo}
+          onAdminDashboard={handleAdminDashboard}
         />
         <MentorList
           category={selectedCategory} 
@@ -389,7 +471,7 @@ const App = () => {
         bookingData={bookingData}
         onBack={handleBackToBooking}
         onPaymentComplete={handlePaymentComplete}
-        onCheckout={handleCheckout}
+        onTossPayment={handleTossPayment}
       />
     );
   }
@@ -404,14 +486,18 @@ const App = () => {
     );
   }
 
-  // 토스페이 체크아웃 페이지 렌더링
-  if (currentPage === 'checkout') {
+  // 토스 결제 페이지 렌더링 (새로 추가)
+  if (currentPage === 'toss-payment') {
     return (
-      <Checkout 
+      <TossPaymentApp
+        currentTossPage={currentTossPage}
+        bookingData={bookingData}
         paymentData={paymentData}
-        onBack={handleBackToPayment}
-        onSuccess={handlePaymentSuccess}
-        onFail={handlePaymentFail}
+        onBack={() => setCurrentPage('payment')}
+        onHome={handleBackToHome}
+        onTossSuccess={handleTossSuccess}
+        onTossFail={handleTossFail}
+        onPaymentComplete={handlePaymentComplete}
       />
     );
   }
@@ -463,6 +549,7 @@ const App = () => {
           onChatRoom={handleChatRoom}
           onLogout={handleLogout}
           onSSEDemo={handleSSEDemo}
+          onAdminDashboard={handleAdminDashboard}
         />
         <main className="main-content">
           <HeroSection />

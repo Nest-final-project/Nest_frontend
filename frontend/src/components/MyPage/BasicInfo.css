@@ -1,0 +1,472 @@
+/* ===== BasicInfo 컴포넌트 스타일 ===== */
+
+/* ===== 프로필 섹션 ===== */
+.profile-section {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-radius: 20px !important;
+  padding: 2rem !important;
+  margin-bottom: 2rem !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 2rem !important;
+}
+
+.profile-image-container {
+  position: relative;
+}
+
+.profile-image {
+  width: 120px !important;
+  height: 120px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 4px solid #fff !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+  transition: transform 0.3s ease !important;
+  display: block !important;
+}
+
+.profile-image:hover {
+  transform: scale(1.05);
+}
+
+.profile-edit-button {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #667eea;
+  border: 2px solid white;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.profile-edit-button:hover {
+  background: #5a67d8;
+  transform: scale(1.1);
+}
+
+.profile-info h2 {
+  margin: 0 0 0.5rem 0 !important;
+  color: #2d3748 !important;
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  display: block !important;
+}
+
+.profile-info p {
+  margin: 0 0 1rem 0 !important;
+  color: #4a5568 !important;
+  font-size: 1rem !important;
+  display: block !important;
+}
+
+.user-level {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  padding: 0.4rem 1rem !important;
+  border-radius: 20px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
+}
+
+/* ===== 프로필 정보 카드 ===== */
+.info-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%) !important;
+  border-radius: 24px !important;
+  padding: 0 !important;
+  margin-bottom: 2rem !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08),
+  0 8px 25px rgba(0, 0, 0, 0.06),
+  inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(226, 232, 240, 0.6) !important;
+  overflow: hidden !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.info-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.12),
+  0 12px 32px rgba(0, 0, 0, 0.08),
+  inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.info-card-header {
+  background: rgba(255, 255, 255, 0.95) !important;
+  padding: 2rem 2.5rem 1.5rem 2.5rem !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6) !important;
+}
+
+.info-card h3 {
+  color: #2d3748 !important;
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  margin: 0 !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.info-card-body {
+  padding: 2.5rem !important;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%) !important;
+}
+
+.info-item {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-radius: 16px !important;
+  padding: 1.5rem !important;
+  margin-bottom: 1.2rem !important;
+  border: 1px solid rgba(226, 232, 240, 0.4) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.info-item::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 4px !important;
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  transform: scaleY(0) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.info-item:hover::before {
+  transform: scaleY(1) !important;
+}
+
+.info-item:hover {
+  transform: translateX(8px) !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.info-item label {
+  color: #667eea !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  display: block !important;
+  margin-bottom: 0.8rem !important;
+  position: relative !important;
+}
+
+.info-item span {
+  color: #2d3748 !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  display: block !important;
+  line-height: 1.5 !important;
+}
+
+.field-display {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 1rem !important;
+}
+
+.field-display span {
+  color: #2d3748 !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  flex: 1 !important;
+}
+
+.edit-btn {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)) !important;
+  border: 1px solid rgba(102, 126, 234, 0.2) !important;
+  color: #667eea !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  flex-shrink: 0 !important;
+}
+
+.edit-btn:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25) !important;
+}
+
+/* ===== 편집 필드 스타일 ===== */
+.edit-field {
+  display: flex !important;
+  gap: 0.8rem !important;
+  align-items: center !important;
+}
+
+.edit-input {
+  flex: 1 !important;
+  padding: 0.8rem 1.2rem !important;
+  border: 2px solid rgba(102, 126, 234, 0.3) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #2d3748 !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.edit-input:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+.edit-buttons {
+  display: flex !important;
+  gap: 0.5rem !important;
+  flex-shrink: 0 !important;
+}
+
+.save-btn, .cancel-btn {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  border: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: white !important;
+}
+
+.save-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+}
+
+.bank-edit {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 1rem !important;
+}
+
+.bank-select {
+  padding: 0.8rem 1.2rem !important;
+  border: 2px solid rgba(102, 126, 234, 0.3) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #2d3748 !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.bank-select:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* ===== 계정 관리 버튼들 ===== */
+.account-actions {
+  display: flex !important;
+  gap: 1.5rem !important;
+  margin-top: 2rem !important;
+  padding: 2rem !important;
+  background: linear-gradient(145deg, rgba(248, 250, 252, 0.8), rgba(255, 255, 255, 0.9)) !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(226, 232, 240, 0.6) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04) !important;
+}
+
+.password-change-btn, .account-delete-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.8rem !important;
+  padding: 1rem 2rem !important;
+  border-radius: 16px !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: none !important;
+  flex: 1 !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+}
+
+.password-change-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+}
+
+.password-change-btn:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+}
+
+.account-delete-btn {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)) !important;
+  color: #ef4444 !important;
+  border: 2px solid rgba(239, 68, 68, 0.2) !important;
+}
+
+.account-delete-btn:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15)) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* ===== 비밀번호 필드 ===== */
+.password-field {
+  margin-bottom: 1.5rem !important;
+}
+
+.password-field label {
+  display: block !important;
+  color: #2d3748 !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 0.9rem !important;
+}
+
+.password-input-container {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.password-input {
+  width: 100% !important;
+  padding: 0.8rem 3rem 0.8rem 1rem !important;
+  border: 2px solid rgba(226, 232, 240, 0.8) !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  color: #2d3748 !important;
+  font-size: 1rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.password-input:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+.password-toggle {
+  position: absolute !important;
+  right: 1rem !important;
+  background: none !important;
+  border: none !important;
+  color: #718096 !important;
+  cursor: pointer !important;
+  padding: 0.5rem !important;
+  border-radius: 6px !important;
+  transition: all 0.3s ease !important;
+}
+
+/* ===== 경고 메시지 ===== */
+.warning-message {
+  text-align: center !important;
+  margin-bottom: 2rem !important;
+}
+
+.warning-icon {
+  margin: 0 auto 1rem auto !important;
+  color: #ef4444 !important;
+}
+
+.warning-message h4 {
+  color: #ef4444 !important;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+  margin: 0 0 1rem 0 !important;
+}
+
+.warning-message p {
+  color: #4a5568 !important;
+  margin: 0 0 1rem 0 !important;
+  line-height: 1.5 !important;
+}
+
+.warning-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: rgba(239, 68, 68, 0.05) !important;
+  border-radius: 12px !important;
+  padding: 1rem 1.5rem !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+}
+
+.warning-list li {
+  color: #ef4444 !important;
+  padding: 0.3rem 0 !important;
+  position: relative !important;
+  padding-left: 1.5rem !important;
+}
+
+.warning-list li::before {
+  content: '•' !important;
+  position: absolute !important;
+  left: 0 !important;
+  color: #ef4444 !important;
+  font-weight: bold !important;
+}
+
+/* ===== 반응형 디자인 ===== */
+@media (max-width: 768px) {
+  .profile-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .profile-image {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-info h2 {
+    font-size: 1.5rem;
+  }
+}

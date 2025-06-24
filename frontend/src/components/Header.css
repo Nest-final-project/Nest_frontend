@@ -290,6 +290,29 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* 관리자 버튼 특별 스타일 */
+.sidebar-link.admin-button {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 0.5rem;
+  margin: 0.5rem 1rem;
+  padding: 0.875rem 1rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.sidebar-link.admin-button:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  padding-left: 1rem;
+}
+
+.sidebar-link.admin-button::before {
+  display: none;
+}
+
 .sidebar-login-button {
   width: 100%;
   padding: 0.875rem;
