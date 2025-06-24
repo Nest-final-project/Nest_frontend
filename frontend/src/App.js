@@ -12,7 +12,7 @@ import MentorList from './components/MentorList';
 import MentorProfile from './components/MentorProfile';
 import Booking from './components/Booking';
 import Payment from './components/Payment';
-import Checkout from './components/Checkout';
+import TossPaymentApp from './components/TossPayment';
 import Success from './components/Success';
 import Fail from './components/Fail';
 import PaymentSuccess from './components/PaymentSuccess';
@@ -29,6 +29,7 @@ const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
+  const [currentTossPage, setCurrentTossPage] = useState('toss-payment');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedMentor, setSelectedMentor] = useState(null);
   const [bookingData, setBookingData] = useState(null);
@@ -73,23 +74,47 @@ const App = () => {
       // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
       const urlParams = new URLSearchParams(window.location.search);
       const needsAdditionalInfo = urlParams.get('additional-info');
-      
-      // 토스페이먼츠 결제 결과 처리
+      const pageParam = urlParams.get('page');
+
+      // 토스페이먼츠 결제 결과 처리 (경로 기반)
+      const currentPath = window.location.pathname;
       const paymentKey = urlParams.get('paymentKey');
       const orderId = urlParams.get('orderId');
       const amount = urlParams.get('amount');
-      
+      const reservationId = urlParams.get('reservationId');
+
       // 결제 실패 처리
       const errorCode = urlParams.get('code');
       const errorMessage = urlParams.get('message');
-      
+
       if (needsAdditionalInfo === 'true') {
         setCurrentPage('social-signup');
-      } else if (paymentKey && orderId && amount) {
-        // 결제 성공
+      } else if (currentPath === '/toss/success' && paymentKey && orderId && amount) {
+        // 토스 결제 성공 - 새로운 플로우 (경로 기반)
+        console.log('✅ 토스 결제 성공 (경로):', {paymentKey, orderId, amount, reservationId});
+        setCurrentTossPage('toss-success');
+        setCurrentPage('toss-payment');
+      } else if (currentPath === '/toss/fail') {
+        // 토스 결제 실패 - 새로운 플로우 (경로 기반)
+        console.log('❌ 토스 결제 실패 (경로):', {errorCode, errorMessage});
+        setCurrentTossPage('toss-fail');
+        setCurrentPage('toss-payment');
+      } else if (pageParam === 'toss-success' && paymentKey && orderId && amount) {
+        // 토스 결제 성공 - 새로운 플로우 (파라미터 기반 - 폴백)
+        console.log('✅ 토스 결제 성공 (파라미터):', {paymentKey, orderId, amount, reservationId});
+        setCurrentTossPage('toss-success');
+        setCurrentPage('toss-payment');
+      } else if (pageParam === 'toss-fail') {
+        // 토스 결제 실패 - 새로운 플로우 (파라미터 기반 - 폴백)
+        console.log('❌ 토스 결제 실패 (파라미터):', {errorCode, errorMessage});
+        setCurrentTossPage('toss-fail');
+        setCurrentPage('toss-payment');
+      } else if (paymentKey && orderId && amount && reservationId) {
+        // 기존 결제 성공 - 기존 플로우 유지
+        console.log('✅ 기존 결제 성공 파라미터:', {paymentKey, orderId, amount, reservationId});
         setCurrentPage('success');
       } else if (errorCode && errorMessage) {
-        // 결제 실패
+        // 기존 결제 실패 - 기존 플로우 유지
         setCurrentPage('fail');
       }
     } catch (error) {
@@ -161,10 +186,31 @@ const App = () => {
     setCurrentPage('payment');
   };
 
-  // 토스페이 체크아웃 페이지로 이동
-  const handleCheckout = (data) => {
-    setPaymentData(data);
-    setCurrentPage('checkout');
+  // 토스 결제 페이지로 이동 (새로 추가)
+  const handleTossPayment = (data) => {
+    console.log('🎯 App.js handleTossPayment 호출됨');
+    console.log('📦 Payment.js에서 받은 데이터:', data);
+    console.log('📦 기존 bookingData:', bookingData);
+    
+    // Payment.js에서 전달된 데이터를 bookingData로 설정
+    const finalBookingData = data || bookingData;
+    console.log('📦 최종 bookingData (TossPayment로 전달):', finalBookingData);
+    
+    setBookingData(finalBookingData);
+    setCurrentTossPage('toss-payment');
+    setCurrentPage('toss-payment');
+    
+    console.log('🎯 토스 결제 페이지로 이동 완료');
+  };
+
+  // 토스 결제 성공 페이지로 이동
+  const handleTossSuccess = () => {
+    setCurrentTossPage('toss-success');
+  };
+
+  // 토스 결제 실패 페이지로 이동
+  const handleTossFail = () => {
+    setCurrentTossPage('toss-fail');
   };
 
   // 채팅방으로 이동
@@ -389,7 +435,7 @@ const App = () => {
         bookingData={bookingData}
         onBack={handleBackToBooking}
         onPaymentComplete={handlePaymentComplete}
-        onCheckout={handleCheckout}
+        onTossPayment={handleTossPayment}
       />
     );
   }
@@ -404,14 +450,18 @@ const App = () => {
     );
   }
 
-  // 토스페이 체크아웃 페이지 렌더링
-  if (currentPage === 'checkout') {
+  // 토스 결제 페이지 렌더링 (새로 추가)
+  if (currentPage === 'toss-payment') {
     return (
-      <Checkout 
+      <TossPaymentApp
+        currentTossPage={currentTossPage}
+        bookingData={bookingData}
         paymentData={paymentData}
-        onBack={handleBackToPayment}
-        onSuccess={handlePaymentSuccess}
-        onFail={handlePaymentFail}
+        onBack={() => setCurrentPage('payment')}
+        onHome={handleBackToHome}
+        onTossSuccess={handleTossSuccess}
+        onTossFail={handleTossFail}
+        onPaymentComplete={handlePaymentComplete}
       />
     );
   }
