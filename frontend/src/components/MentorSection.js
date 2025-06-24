@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, {useState, useEffect} from 'react';
+import {Star, ChevronLeft, ChevronRight} from 'lucide-react';
 import './MentorSection.css';
-import { profileAPI, categoryAPI } from "../services/api";  // api.js 에서 profileAPI, categoryAPI 임포트
+import {profileAPI, categoryAPI} from "../services/api";
+import MentorProfile from "./MentorProfile";
+import { useNavigate } from 'react-router-dom';
 
-const MentorSection = ({ onCategorySelect }) => {
+
+const MentorSection = ({onCategorySelect, onMentorSelect}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState(null);
   // api에서 가져온 데이터 저장할 상태
@@ -12,13 +15,12 @@ const MentorSection = ({ onCategorySelect }) => {
   const [loadingMentors, setLoadingMentors] = useState(true); // 프로필 로딩 상태
   const [loadingCategories, setLoadingCategories] = useState(true); // 카테고리 로딩 상태
   const [error, setError] = useState(null); // 에러 상태
+  const [selectedMentor, setSelectedMentor] = useState(null);
+  const navigate = useNavigate();
 
-  const handleCategoryClick = (categoryId) => {
-    if (onCategorySelect) {
-      onCategorySelect(categoryId);
-    } else {
-      setSelectedCategory(categoryId);
-    }
+  const handleMentorClick = (mentor) => {
+    console.log("mentor:", mentor); // ✅ userId, profileId 있는지 확인
+    navigate(`/mentor/${mentor.userId}/profile/${mentor.profileId}`);
   };
 
   // 카테고리 불러오기
@@ -28,7 +30,8 @@ const MentorSection = ({ onCategorySelect }) => {
       setError(null);
       try {
         const response = await categoryAPI.getCategories(); // 카테고리 목록 호출
-        if (response.data && response.data.data && Array.isArray(response.data.data.content)) {
+        if (response.data && response.data.data && Array.isArray(
+            response.data.data.content)) {
           const fetchedCats = response.data.data.content.map(category => ({
             id: String(category.id), // 프론트 내부에서 사용할 고유 ID
             name: category.name,
@@ -54,7 +57,8 @@ const MentorSection = ({ onCategorySelect }) => {
 
   // 추천 멘토 불러오기
   useEffect(() => {
-    if (!loadingCategories && selectedCategory !== null && categories.length > 0) {
+    if (!loadingCategories && selectedCategory !== null && categories.length
+        > 0) {
       const fetchMentors = async () => {
 
         setLoadingMentors(true);  // 로딩 시작
@@ -62,7 +66,8 @@ const MentorSection = ({ onCategorySelect }) => {
 
         try {
           // 선택한 카테고리의 apiId 찾기
-          const selectedCategoryObj = categories.find(category => category.id === selectedCategory);
+          const selectedCategoryObj = categories.find(
+              category => category.id === selectedCategory);
 
           if (!selectedCategoryObj) {
             setError("일치하는 카테고리가 없습니다.");
@@ -74,16 +79,33 @@ const MentorSection = ({ onCategorySelect }) => {
           const categoryId = selectedCategoryObj.apiId;
 
           // recommendedProfiles 호출
-          const response = await profileAPI.getRecommendedMentors({categoryId});
-
-          const fetchedMentors = response.data && response.data.data && Array.isArray(response.data.data) ? response.data.data.map(profile => ({
-            id: profile.profileId,
-            name: profile.userName,
-            title: profile.profileTitle,
-            categoryName: profile.categoryName,
-            tags: profile.keywords ? profile.keywords.map(keyword => keyword.name) : [],
-            avatar: profile.userName ? profile.userName.charAt(0) : 'M' // 이름의 첫 글자를 아바타로 사용
-          })) : [];
+          const response = await profileAPI.getRecommendedMentors(
+              {categoryId});
+          console.log('응답:', response.data.data);
+          /* const fetchedMentors = response.data && response.data.data && Array.isArray(response.data.data) ? response.data.data.map(profile => ({
+             id: profile.profileId,
+             name: profile.userName,
+             userId: profile.userId,
+             title: profile.profileTitle,
+             categoryName: profile.categoryName,
+             tags: profile.keywords ? profile.keywords.map(keyword => keyword.name) : [],
+             avatar: profile.userName ? profile.userName.charAt(0) : 'M' // 이름의 첫 글자를 아바타로 사용
+           })) : [];
+ */
+          const fetchedMentors = response.data.data.map(profile => {
+            console.log("profile 확인:", profile); // 🔍 디버깅용 로그
+            return {
+              ...profile,
+              id: profile.profileId,
+              profileId: profile.profileId,
+              userId: profile.userId,
+              name: profile.userName,
+              title: profile.profileTitle,
+              categoryName: profile.categoryName,
+              tags: profile.keywords?.map(k => k.name) || [],
+              avatar: profile.userName?.charAt(0) || 'M',
+            };
+          });
           setMentors(fetchedMentors);
         } catch (error) {
           console.error("추천 멘토 정보를 불러오는 데 실패했습니다. : ", error);
@@ -123,7 +145,9 @@ const MentorSection = ({ onCategorySelect }) => {
 
   // 이전 멘토 슬라이드로 이동
   const prevMentor = () => {
-    setCurrentIndex((prev) => (prev - 1 + Math.max(1, mentors.length - 2)) % Math.max(1, mentors.length - 2));
+    setCurrentIndex(
+        (prev) => (prev - 1 + Math.max(1, mentors.length - 2)) % Math.max(1,
+            mentors.length - 2));
   };
 
   // 로딩 중이거나 에러 발생 시 표시할 UI
@@ -135,7 +159,8 @@ const MentorSection = ({ onCategorySelect }) => {
             <div className="category-tabs">
               {/* 카테고리 로딩 중에도 '전체' 카테고리는 표시될 수 있도록 합니다. */}
               {categories.length > 0 ? categories.map(category => (
-                  <button key={category.id} className="category-tab" disabled>{category.name}</button>
+                  <button key={category.id} className="category-tab"
+                          disabled>{category.name}</button>
               )) : <button className="category-tab" disabled>로딩 중...</button>}
             </div>
             <p>데이터를 불러오는 중...</p>
@@ -151,7 +176,8 @@ const MentorSection = ({ onCategorySelect }) => {
             <h2 className="section-title mento-text">카테고리별 추천 멘토</h2>
             <div className="category-tabs">
               {categories.map(category => (
-                  <button key={category.id} className="category-tab" disabled>{category.name}</button>
+                  <button key={category.id} className="category-tab"
+                          disabled>{category.name}</button>
               ))}
             </div>
             <p className="error-message">오류: {error}</p>
@@ -160,98 +186,119 @@ const MentorSection = ({ onCategorySelect }) => {
     );
   }
 
+  // If a mentor is selected, show their profile
+  if (selectedMentor) {
+    return (
+        <MentorProfile
+            mentor={selectedMentor}
+            onBack={() => setSelectedMentor(null)}
+        />
+    );
+  }
   return (
-    <section className="mentor-section" id="category">
-      <div className="mentor-container">
-        <h2 className="section-title mento-text">카테고리별 추천 멘토</h2>
-        
-        {/* 카테고리 탭 */}
-        <div className="category-tabs">
-          {categories.map(category => (
-            <button
-              key={category.id}
-              className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
-              onClick={() => handleCategoryClick(category.id)}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-        
-        <div className="mentor-carousel">
-          <button 
-            className="carousel-button carousel-button-prev"
-            onClick={prevMentor}
-            disabled={mentors.length <= 3}
-          >
-            <ChevronLeft />
-          </button>
-          
-          <div className="mentor-slider">
-            <div 
-              className="mentor-track"
-              style={{
-                transform: `translateX(-${currentIndex * 33.333}%)`,
-                transition: 'transform 0.5s ease-in-out'
-              }}
-            >
-              {mentors.length > 0 ? (
-                mentors.map((mentor) => (
-                <div 
-                  key={mentor.id}  // api 에서 받은 profileId 를 key 로 사용
-                  className="mentor-slide"
+      <section className="mentor-section" id="category">
+        <div className="mentor-container">
+          <h2 className="section-title mento-text">카테고리별 추천 멘토</h2>
+
+          {/* 카테고리 탭 */}
+          <div className="category-tabs">
+            {categories.map(category => (
+                <button
+                    key={category.id}
+                    className={`category-tab ${selectedCategory
+                    === category.id
+                        ? 'active' : ''}`}
+                    onClick={() => onMentorSelect(category.id)}
                 >
-                  <div className="mentor-card glass-effect">
-                    <div className="mentor-card-shimmer"></div>
-                    <div className={`mentor-avatar`}>
-                      {mentor.avatar}
-                    </div>
-                    <h3 className="mentor-name">{mentor.name}</h3>
-                    <p className="mentor-profileTitle">{mentor.title}</p>
-                    <p className="mentor-categoryName">{mentor.categoryName}</p>
-                    
-                    <div className="mentor-tags">
-                      {mentor.tags && Array.isArray(mentor.tags) && mentor.tags.map((tag, tagIndex) => (
-                        <span key={tagIndex} className="mentor-tag">
+                  {category.name}
+                </button>
+            ))}
+          </div>
+
+          <div className="mentor-carousel">
+            <button
+                className="carousel-button carousel-button-prev"
+                onClick={prevMentor}
+                disabled={mentors.length <= 3}
+            >
+              <ChevronLeft/>
+            </button>
+
+            <div className="mentor-slider">
+              <div
+                  className="mentor-track"
+                  style={{
+                    transform: `translateX(-${currentIndex * 33.333}%)`,
+                    transition: 'transform 0.5s ease-in-out'
+                  }}
+              >
+                {mentors.length > 0 ? (
+                    mentors.map((mentor) => (
+                        <div
+                            key={mentor.id}  // api 에서 받은 profileId 를 key 로 사용
+                            className="mentor-slide"
+                        >
+                          <div className="mentor-card glass-effect">
+                            <div className="mentor-card-shimmer"></div>
+                            <div className={`mentor-avatar`}>
+                              {mentor.avatar}
+                            </div>
+                            <h3 className="mentor-name">{mentor.name}</h3>
+                            <p className="mentor-profileTitle">{mentor.title}</p>
+                            <p className="mentor-categoryName">{mentor.categoryName}</p>
+
+                            <div className="mentor-tags">
+                              {mentor.tags && Array.isArray(mentor.tags)
+                                  && mentor.tags.map((tag, tagIndex) => (
+                                      <span key={tagIndex}
+                                            className="mentor-tag">
                           {tag}
                         </span>
-                      ))}
-                    </div>
-                    
-                    <div className="mentor-footer">
-                      <button className="reservation-button">조회하기</button>
-                    </div>
-                  </div>
-                </div>
-              ))
-              ) : (
-              <p className="no-mentors-message">선택된 카테고리에 해당하는 멘토가 없습니다.</p>
-              )}
+                                  ))}
+                            </div>
+
+                            <div className="mentor-footer">
+                              <button
+                                  className="reservation-button"
+                                  onClick={() => handleMentorClick(mentor)}>
+                                조회하기
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                    ))
+                ) : (
+                    <p className="no-mentors-message">선택된 카테고리에 해당하는 멘토가
+                      없습니다.</p>
+                )}
+              </div>
             </div>
-          </div>
-          
-          <button 
-            className="carousel-button carousel-button-next"
-            onClick={nextMentor}
-            disabled={mentors.length <= 3}
-          >
-            <ChevronRight />
-          </button>
-        </div>
-        
-        {/* 슬라이드 인디케이터 */}
-        <div className="slide-indicators">
-          {Array.from({ length: Math.max(1, mentors.length - 2) }).map((_, index) => (
+
             <button
-              key={index}
-              className={`indicator ${currentIndex === index ? 'active' : ''}`}
-              onClick={() => setCurrentIndex(index)}
-            />
-          ))}
+                className="carousel-button carousel-button-next"
+                onClick={nextMentor}
+                disabled={mentors.length <= 3}
+            >
+              <ChevronRight/>
+            </button>
+          </div>
+
+          {/* 슬라이드 인디케이터 */}
+          <div className="slide-indicators">
+            {Array.from({length: Math.max(1, mentors.length - 2)}).map(
+                (_, index) => (
+                    <button
+                        key={index}
+                        className={`indicator ${currentIndex === index
+                            ? 'active' : ''}`}
+                        onClick={() => setCurrentIndex(index)}
+                    />
+                ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
   );
 };
 
 export default MentorSection;
+

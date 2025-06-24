@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import './App.css';
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
@@ -22,8 +22,10 @@ import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
 import Inquiry from './components/Inquiry';
 import AdminDashboard from './components/AdminDashboard';
-import { authUtils, userInfoUtils } from './utils/tokenUtils';
-import { registerDebugFunctions } from './utils/websocketDebug';
+import {authUtils, userInfoUtils} from './utils/tokenUtils';
+import {registerDebugFunctions} from './utils/websocketDebug';
+import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import MentorProfilePage from './components/MentorProfilePage';
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -54,7 +56,7 @@ const App = () => {
           setIsLoggedIn(true);
           setUserInfo(userData);
           console.log('세션에서 로그인 상태 복원됨:', userData);
-          
+
           // 🔐 ADMIN 사용자인 경우 즉시 관리자 대시보드로 이동
           if (userData.userRole === 'ADMIN') {
             console.log('🔐 ADMIN 사용자 감지됨 - 바로 관리자 대시보드로 이동');
@@ -64,16 +66,19 @@ const App = () => {
           }
         }
 
-        // 개발용: 전역 디버깅 함수 추가
-        window.checkAuth = () => {
-          console.group('🔍 현재 인증 상태');
-          console.log('sessionStorage accessToken:', sessionStorage.getItem('accessToken') ? '존재' : '없음');
-          console.log('sessionStorage userData:', sessionStorage.getItem('userData') ? '존재' : '없음');
-          console.log('localStorage refreshToken:', localStorage.getItem('refreshToken') ? '존재' : '없음');
-          console.log('React isLoggedIn 상태:', isLoggedIn);
-          console.log('User Role:', userData?.userRole || '없음');
-          console.groupEnd();
-        };
+      // 개발용: 전역 디버깅 함수 추가
+      window.checkAuth = () => {
+        console.group('🔍 현재 인증 상태');
+        console.log('sessionStorage accessToken:',
+            sessionStorage.getItem('accessToken') ? '존재' : '없음');
+        console.log('sessionStorage userData:',
+            sessionStorage.getItem('userData') ? '존재' : '없음');
+        console.log('localStorage refreshToken:',
+            localStorage.getItem('refreshToken') ? '존재' : '없음');
+        console.log('React isLoggedIn 상태:', isLoggedIn);
+        console.log('User Role:', userData?.userRole || '없음');
+        console.groupEnd();
+      };
 
         console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
 
@@ -152,7 +157,7 @@ const App = () => {
       currentPage: currentPage,
       isAdmin: userInfo?.userRole === 'ADMIN'
     });
-    
+
     if (userInfo && userInfo.userRole === 'ADMIN' && currentPage !== 'admin-dashboard') {
       console.log('🔐 userInfo 업데이트 감지 - ADMIN 사용자를 관리자 대시보드로 이동');
       console.log('현재 페이지:', currentPage, '→ admin-dashboard로 변경');
@@ -166,13 +171,18 @@ const App = () => {
     console.log('📦 받은 userData:', userData);
     console.log('🔐 사용자 역할:', userData?.userRole);
     console.log('📄 현재 페이지:', currentPage);
-    
+
     setIsLoggedIn(true);
     setUserInfo(userData);
     setIsLoginOpen(false);
 
-    console.log('✅ 상태 업데이트 완료 - isLoggedIn: true, userInfo 설정됨, 로그인 모달 닫힘');
-    // 🔐 ADMIN 체크는 useEffect에서 userInfo가 업데이트될 때 자동으로 처리됨
+    console.log('로그인 성공, App 상태 업데이트됨');
+
+    // 관리자 역할인 경우 자동으로 관리자 대시보드로 이동
+    if (userData.userRole === 'ADMIN') {
+      console.log('🔐 관리자 로그인 감지 - 관리자 대시보드로 이동');
+      setCurrentPage('admin-dashboard');
+    }
   };
 
   // 로그아웃 처리
@@ -235,15 +245,15 @@ const App = () => {
     console.log('🎯 App.js handleTossPayment 호출됨');
     console.log('📦 Payment.js에서 받은 데이터:', data);
     console.log('📦 기존 bookingData:', bookingData);
-    
+
     // Payment.js에서 전달된 데이터를 bookingData로 설정
     const finalBookingData = data || bookingData;
     console.log('📦 최종 bookingData (TossPayment로 전달):', finalBookingData);
-    
+
     setBookingData(finalBookingData);
     setCurrentTossPage('toss-payment');
     setCurrentPage('toss-payment');
-    
+
     console.log('🎯 토스 결제 페이지로 이동 완료');
   };
 
@@ -251,21 +261,21 @@ const App = () => {
   const handleTossSuccess = async (tossPaymentData) => {
     console.log('🎉 토스 결제 성공! PaymentComplete로 이동');
     console.log('💳 토스 승인 완료 데이터:', tossPaymentData);
-    
+
     // 🔥 예약 ID로 실제 DB에서 예약 정보 조회
     let actualBookingData = null;
-    const reservationId = tossPaymentData?.reservationId || 
+    const reservationId = tossPaymentData?.reservationId ||
                          tossPaymentData?.originalResponse?.reservationId;
-    
+
     if (reservationId) {
       try {
         console.log('🔍 예약 ID로 실제 예약 정보 조회 중:', reservationId);
-        
+
         // 동적 import 사용
         const { reservationAPI } = await import('./services/api');
         const reservationResponse = await reservationAPI.getReservation(reservationId);
         actualBookingData = reservationResponse.data;
-        
+
         console.log('✅ 실제 DB에서 가져온 예약 정보:', actualBookingData);
       } catch (error) {
         console.error('❌ 예약 정보 조회 실패:', error);
@@ -275,7 +285,7 @@ const App = () => {
       console.warn('⚠️ reservationId가 없어서 예약 정보를 조회할 수 없습니다');
     }
     console.log('📦 현재 bookingData:', bookingData);
-    
+
     // sessionStorage에서 결제 데이터 복원 (토스 결제 과정에서 저장된 데이터)
     const savedPaymentData = sessionStorage.getItem('tossPaymentData');
     let savedData = null;
@@ -283,7 +293,7 @@ const App = () => {
       try {
         savedData = JSON.parse(savedPaymentData);
         console.log('💾 복원된 결제 데이터:', savedData);
-        
+
         // 🔍 중요: 복원된 데이터 구조 상세 확인
         console.group('🔍 savedData 구조 상세 분석');
         console.log('savedData 전체:', savedData);
@@ -303,16 +313,16 @@ const App = () => {
     } else {
       console.warn('⚠️ sessionStorage에 tossPaymentData가 없습니다!');
     }
-    
+
     // 추가: 현재 App.js에서 가지고 있는 bookingData도 확인
     console.log('📦 App.js bookingData:', bookingData);
-    
+
     // 실제 토스 승인 API 응답 데이터 활용
     const originalResponse = tossPaymentData?.originalResponse || {};
     const paymentResponse = originalResponse.payment || originalResponse;
     const apiBookingData = tossPaymentData?.apiBookingData || {};
     const backupBookingData = tossPaymentData?.backupBookingData || null;
-    
+
     console.log('🔍 토스 승인 API 응답 분석:', {
       originalResponse,
       paymentResponse,
@@ -322,7 +332,7 @@ const App = () => {
       hasOrderId: !!tossPaymentData?.orderId,
       hasAmount: !!tossPaymentData?.amount
     });
-    
+
     // 🔍 예약 데이터 소스 확인
     console.group('🔍 예약 데이터 소스 분석');
     console.log('bookingData (App.js):', bookingData);
@@ -336,7 +346,7 @@ const App = () => {
     console.log('  - originalResponse.reservation:', originalResponse.reservation);
     console.log('  - originalResponse.mentor:', originalResponse.mentor);
     console.groupEnd();
-    
+
     // 토스 결제 데이터를 PaymentSuccess 컴포넌트가 기대하는 형태로 변환
     const formattedPaymentResult = {
       // 🔥 실제 토스 승인 API 응답 데이터 사용
@@ -346,7 +356,7 @@ const App = () => {
       approvedAt: tossPaymentData?.approvedAt || paymentResponse?.approvedAt || new Date().toISOString(),
       paymentKey: tossPaymentData?.paymentKey || paymentResponse?.paymentKey || 'N/A',
       status: tossPaymentData?.status || paymentResponse?.status || 'DONE',
-      
+
       // 🏷️ 예약 정보 - API 응답 우선 사용
       booking: {
         mentor: {
@@ -356,8 +366,8 @@ const App = () => {
                originalResponse.reservation?.mentor?.name ||
                // 🔥 올바른 경로로 수정: savedData.bookingData.mentor → savedData.bookingData.mentor
                savedData?.bookingData?.mentor?.name ||
-               bookingData?.mentor?.name || 
-               savedData?.customerInfo?.name || 
+               bookingData?.mentor?.name ||
+               savedData?.customerInfo?.name ||
                '멘토 정보 없음',
           title: apiBookingData.mentor?.title ||
                 apiBookingData.mentor?.specialization ||
@@ -365,13 +375,13 @@ const App = () => {
                 originalResponse.mentor?.specialization ||
                 savedData?.bookingData?.mentor?.title ||
                 savedData?.bookingData?.mentor?.specialization ||
-                bookingData?.mentor?.title || 
-                bookingData?.mentor?.specialization || 
+                bookingData?.mentor?.title ||
+                bookingData?.mentor?.specialization ||
                 '전문 멘토',
           profileImage: apiBookingData.mentor?.profileImage ||
                        originalResponse.mentor?.profileImage ||
                        savedData?.bookingData?.mentor?.profileImage ||
-                       bookingData?.mentor?.profileImage || 
+                       bookingData?.mentor?.profileImage ||
                        null,
         },
         date: // API 응답에서 날짜 정보 먼저 확인
@@ -381,7 +391,7 @@ const App = () => {
              originalResponse.date ||
              // 🔥 올바른 경로로 수정
              savedData?.bookingData?.date ||
-             bookingData?.date || 
+             bookingData?.date ||
              savedData?.date ||
              '날짜 미정',
         startTime: apiBookingData.reservation?.startTime ||
@@ -390,7 +400,7 @@ const App = () => {
                   originalResponse.startTime ||
                   // 🔥 올바른 경로로 수정
                   savedData?.bookingData?.startTime ||
-                  bookingData?.startTime || 
+                  bookingData?.startTime ||
                   savedData?.startTime ||
                   '시간 미정',
         endTime: apiBookingData.reservation?.endTime ||
@@ -399,7 +409,7 @@ const App = () => {
                 originalResponse.endTime ||
                 // 🔥 올바른 경로로 수정
                 savedData?.bookingData?.endTime ||
-                bookingData?.endTime || 
+                bookingData?.endTime ||
                 savedData?.endTime ||
                 '시간 미정',
         service: apiBookingData.reservation?.serviceName ||
@@ -411,8 +421,8 @@ const App = () => {
                 savedData?.bookingData?.serviceName ||
                 savedData?.bookingData?.ticket?.name ||
                 savedData?.orderName ||
-                bookingData?.serviceName || 
-                bookingData?.orderName || 
+                bookingData?.serviceName ||
+                bookingData?.orderName ||
                 '멘토링 서비스',
         duration: apiBookingData.reservation?.duration ||
                  apiBookingData.booking?.duration ||
@@ -420,7 +430,7 @@ const App = () => {
                  // 🔥 올바른 경로로 수정
                  savedData?.bookingData?.ticket?.duration ||
                  savedData?.bookingData?.duration ||
-                 bookingData?.duration || 
+                 bookingData?.duration ||
                  savedData?.duration ||
                  null,
         meetingType: apiBookingData.reservation?.meetingType ||
@@ -428,7 +438,7 @@ const App = () => {
                     originalResponse.reservation?.meetingType ||
                     // 🔥 올바른 경로로 수정
                     savedData?.bookingData?.meetingType ||
-                    bookingData?.meetingType || 
+                    bookingData?.meetingType ||
                     savedData?.meetingType ||
                     '화상 미팅',
         location: backupBookingData?.location ||
@@ -436,22 +446,22 @@ const App = () => {
                  apiBookingData.booking?.location ||
                  originalResponse.reservation?.location ||
                  savedData?.bookingData?.location ||
-                 bookingData?.location || 
+                 bookingData?.location ||
                  savedData?.location ||
                  null,
       },
-      
+
       // 💰 실제 결제 금액들
       servicePrice: savedData?.bookingData?.servicePrice || bookingData?.servicePrice || tossPaymentData?.amount || 0,
       platformFee: 0, // 토스 결제에서는 별도 수수료 없음
       couponDiscount: savedData?.bookingData?.couponDiscount || bookingData?.couponDiscount || 0,
       selectedCoupon: savedData?.bookingData?.selectedCoupon || bookingData?.selectedCoupon || null,
-      
+
       // 🔗 추가 정보
       reservationId: tossPaymentData?.reservationId || originalResponse?.reservationId || savedData?.reservationId,
       ticketId: savedData?.ticketId || bookingData?.ticketId,
       customerInfo: tossPaymentData?.customerInfo || savedData?.customerInfo,
-      
+
       // 🐛 디버깅용 원본 데이터
       _debug: {
         tossPaymentData,
@@ -460,7 +470,7 @@ const App = () => {
         originalResponse
       }
     };
-    
+
     console.log('✅ 최종 변환된 결제 결과 (실제 승인 데이터):', formattedPaymentResult);
     console.group('🔍 실제 데이터 소스 추적');
     console.log('주문번호:', formattedPaymentResult.orderId, '(소스: ' + (tossPaymentData?.orderId ? '토스승인' : savedData?.orderId ? '세션저장' : '기본값') + ')');
@@ -468,12 +478,12 @@ const App = () => {
     console.log('결제방법:', formattedPaymentResult.method);
     console.log('승인시각:', formattedPaymentResult.approvedAt);
     console.groupEnd();
-    
+
     console.group('📋 최종 예약 정보 데이터 소스 확인');
     console.log('멘토 이름:', formattedPaymentResult.booking.mentor.name);
     console.log('  - 소스:', backupBookingData?.mentor?.name ? 'backupBookingData.mentor.name' :
                          savedData?.bookingData?.mentor?.name ? 'savedData.bookingData.mentor.name' :
-                         bookingData?.mentor?.name ? 'bookingData.mentor.name' : 
+                         bookingData?.mentor?.name ? 'bookingData.mentor.name' :
                          savedData?.customerInfo?.name ? 'savedData.customerInfo.name' : '기본값');
     console.log('멘토 전문분야:', formattedPaymentResult.booking.mentor.title);
     console.log('  - 소스:', backupBookingData?.mentor?.title ? 'backupBookingData.mentor.title' :
@@ -501,7 +511,7 @@ const App = () => {
     console.log('예약번호:', formattedPaymentResult.reservationId);
     console.log('티켓번호:', formattedPaymentResult.ticketId);
     console.groupEnd();
-    
+
     // PaymentComplete 페이지로 이동
     setPaymentResult(formattedPaymentResult);
     setCurrentPage('payment-success');
@@ -564,13 +574,13 @@ const App = () => {
         <h1 style={{ marginBottom: '16px', fontSize: '24px', color: '#374151' }}>
           MentorConnect 시작 중...
         </h1>
-        <div style={{ 
-          width: '32px', 
-          height: '32px', 
-          border: '3px solid #e5e7eb', 
-          borderTop: '3px solid #3b82f6', 
-          borderRadius: '50%', 
-          animation: 'spin 1s linear infinite' 
+        <div style={{
+          width: '32px',
+          height: '32px',
+          border: '3px solid #e5e7eb',
+          borderTop: '3px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
         }}></div>
         <style>
           {`
@@ -605,8 +615,8 @@ const App = () => {
           {appError}
         </p>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             style={{
               backgroundColor: '#3b82f6',
               color: 'white',
@@ -619,12 +629,12 @@ const App = () => {
           >
             페이지 새로고침
           </button>
-          <button 
+          <button
             onClick={() => {
               localStorage.clear();
               sessionStorage.clear();
               window.location.reload();
-            }} 
+            }}
             style={{
               backgroundColor: '#ef4444',
               color: 'white',
@@ -651,23 +661,23 @@ const App = () => {
   // 문의 페이지 렌더링
   if (currentPage === 'inquiry') {
     return (
-      <Inquiry
-        onBack={handleBackToHome}
-        initialTab={inquiryTab}
-      />
+        <Inquiry
+            onBack={handleBackToHome}
+            initialTab={inquiryTab}
+        />
     );
   }
 
   // 관리자 대시보드 렌더링
   if (currentPage === 'admin-dashboard') {
     return (
-      <AdminDashboard
-        onBack={() => {
-          // 관리자에서 나올 때는 완전 로그아웃 처리
-          handleLogout();
-        }}
-        userInfo={userInfo}
-      />
+        <AdminDashboard
+            onBack={() => {
+              // 관리자에서 나올 때는 완전 로그아웃 처리
+              handleLogout();
+            }}
+            userInfo={userInfo}
+        />
     );
   }
 
@@ -678,18 +688,50 @@ const App = () => {
     }
   };
 
+  // SSE 데모 페이지로 이동
+  const handleSSEDemo = () => {
+    setCurrentPage('sse-demo');
+  };
+
+  // SSE 데모 페이지 렌더링
+  if (currentPage === 'sse-demo') {
+    return (
+        <div className="min-h-screen bg-gray-50">
+          <Header
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onLoginClick={() => setIsLoginOpen(true)}
+              onCategorySelect={handleCategorySelect}
+              onProfileClick={handleProfileClick}
+              isLoggedIn={isLoggedIn}
+              userInfo={userInfo}
+              onChatRoom={handleChatRoom}
+              onLogout={handleLogout}
+              onSSEDemo={handleSSEDemo}
+              onAdminDashboard={handleAdminDashboard}
+          />
+          <SSEExample/>
+          <Login
+              isOpen={isLoginOpen}
+              onClose={() => setIsLoginOpen(false)}
+              onLoginSuccess={handleLoginSuccess}
+          />
+        </div>
+    );
+  }
+
   // 소셜 회원가입 페이지 렌더링
   if (currentPage === 'social-signup') {
-    return <SocialSignup />;
+    return <SocialSignup/>;
   }
 
   // 마이페이지 렌더링
   if (currentPage === 'mypage') {
     return (
-      <MyPage
-        onBack={handleBackToHome}
-        onLogout={handleLogout}
-      />
+        <MyPage
+            onBack={handleBackToHome}
+            onLogout={handleLogout}
+        />
     );
   }
 
@@ -731,97 +773,98 @@ const App = () => {
   // 채팅방 페이지 렌더링
   if (currentPage === 'chat') {
     return (
-      <div>
-        <ChatContainer
-          onBack={handleBackToHome}
-          isLoggedIn={isLoggedIn}
-        />
-      </div>
+        <div>
+          <ChatContainer
+              onBack={handleBackToHome}
+              isLoggedIn={isLoggedIn}
+          />
+        </div>
     );
   }
 
   // 예약 페이지 렌더링
   if (currentPage === 'booking') {
     return (
-      <Booking 
-        mentor={selectedMentor}
-        onBack={handleBackToProfile}
-        onBooking={handlePayment}
-      />
+        <Booking
+            mentor={selectedMentor}
+            onBack={handleBackToProfile}
+            onBooking={handlePayment}
+        />
     );
   }
 
   // 결제 페이지 렌더링
   if (currentPage === 'payment') {
     return (
-      <Payment 
-        bookingData={bookingData}
-        onBack={handleBackToBooking}
-        onPaymentComplete={handlePaymentComplete}
-        onTossPayment={handleTossPayment}
-      />
+        <Payment
+            bookingData={bookingData}
+            onBack={handleBackToBooking}
+            onPaymentComplete={handlePaymentComplete}
+            onTossPayment={handleTossPayment}
+        />
     );
   }
 
   // 결제 완료 페이지 렌더링
   if (currentPage === 'payment-success') {
     return (
-      <PaymentSuccess 
-        paymentResult={paymentResult}
-        onHome={handleBackToHome}
-      />
+        <PaymentSuccess
+            paymentResult={paymentResult}
+            onHome={handleBackToHome}
+        />
     );
   }
 
   // 토스 결제 페이지 렌더링 (새로 추가)
   if (currentPage === 'toss-payment') {
     return (
-      <TossPaymentApp
-        currentTossPage={currentTossPage}
-        bookingData={bookingData}
-        paymentData={paymentData}
-        onBack={() => setCurrentPage('payment')}
-        onHome={handleBackToHome}
-        onTossSuccess={handleTossSuccess}
-        onTossFail={handleTossFail}
-        onPaymentComplete={handlePaymentComplete}
-      />
+        <TossPaymentApp
+            currentTossPage={currentTossPage}
+            bookingData={bookingData}
+            paymentData={paymentData}
+            onBack={() => setCurrentPage('payment')}
+            onHome={handleBackToHome}
+            onTossSuccess={handleTossSuccess}
+            onTossFail={handleTossFail}
+            onPaymentComplete={handlePaymentComplete}
+        />
     );
   }
 
   // 결제 성공 페이지 렌더링
   if (currentPage === 'success') {
     return (
-      <Success 
-        paymentData={paymentData}
-        onHome={handleBackToHome}
-      />
+        <Success
+            paymentData={paymentData}
+            onHome={handleBackToHome}
+        />
     );
   }
 
   // 결제 실패 페이지 렌더링
   if (currentPage === 'fail') {
     return (
-      <Fail 
-        onBack={handleBackToPayment}
-        onHome={handleBackToHome}
-      />
+        <Fail
+            onBack={handleBackToPayment}
+            onHome={handleBackToHome}
+        />
     );
   }
 
   // 멘토 프로필 페이지 렌더링
   if (currentPage === 'mentor-profile') {
     return (
-      <MentorProfile 
-        mentor={selectedMentor}
-        onBack={handleBackToList}
-        onBooking={handleBooking}
-      />
+        <MentorProfile
+            mentor={selectedMentor}
+            onBack={handleBackToList}
+            onBooking={handleBooking}
+        />
     );
   }
 
   // 메인 페이지 렌더링
   return (
+      <BrowserRouter>
       <div className="app">
         <ParticleBackground />
         <Header 
@@ -837,21 +880,32 @@ const App = () => {
           onLogout={handleLogout}
           onAdminDashboard={handleAdminDashboard}
         />
-        <main className="main-content">
-          <HeroSection />
-          <StatsSection />
-          <MentorSection />
-          <CTASection />
-        </main>
-        <Login 
-          isOpen={isLoginOpen} 
-          onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
+        <Routes>
+          <Route
+              path="/"
+              element={
+                <main className="main-content">
+                  <HeroSection />
+                  <StatsSection />
+                  <MentorSection onMentorSelect={handleMentorSelect} />
+                  <CTASection />
+                </main>
+              }
+          />
+          <Route
+              path="/mentor/:userId/profile/:profileId"
+              element={<MentorProfilePage />}
+          />
+        </Routes>
+        <Login
+            isOpen={isLoginOpen}
+            onClose={() => setIsLoginOpen(false)}
+            onLoginSuccess={handleLoginSuccess}
         />
-        
+      </div>
         {/* 알림 컨테이너 - 로그인된 사용자만 */}
         <NotificationContainer isLoggedIn={isLoggedIn} />
-      </div>
+      </BrowserRouter>
   );
 };
 

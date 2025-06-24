@@ -480,6 +480,8 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  position: relative;
+  z-index: 1000; /* 충분히 높은 값 */
 }
 
 .payment-button:hover:not(:disabled) {
