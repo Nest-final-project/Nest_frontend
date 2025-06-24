@@ -272,8 +272,10 @@ export const consultationAPI = {
   getConsultationDetail: (consultationId) => api.get(
       `/api/consultations/${consultationId}`),
 
-  getAvailableConsultations: (mentorId) =>
-      api.get(`/api/mentor/${mentorId}/availableConsultations`),
+  getAvailableConsultationSlots: (mentorId, dayOfWeek) =>
+      api.get(`/api/mentor/${mentorId}/availableConsultations`, {
+        params: {dayOfWeek}
+      }),
 
   // 상담 상태 업데이트
   updateConsultationStatus: (consultationId, status) =>
@@ -527,5 +529,6 @@ export const keywordAPI = {
   // 키워드 조회
   getKeywords: () => api.get('/api/keywords'),
 }
+
 
 export default api;
