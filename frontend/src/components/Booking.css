@@ -1,6 +1,8 @@
 .booking-container {
   min-height: 100vh;
   background: linear-gradient(90deg, #e4efe5 50%, #e1efe1 100%);
+  position: relative;
+  z-index: 100;
 }
 
 .booking-header {

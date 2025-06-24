@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import './App.css';
 import Header from './components/Header';
 import HeroSection from './components/HeroSection';
@@ -22,9 +22,9 @@ import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
 import Inquiry from './components/Inquiry';
 import AdminDashboard from './components/AdminDashboard';
-import { authUtils, userInfoUtils } from './utils/tokenUtils';
-import { registerDebugFunctions } from './utils/websocketDebug';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import {authUtils, userInfoUtils} from './utils/tokenUtils';
+import {registerDebugFunctions} from './utils/websocketDebug';
+import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import MentorProfilePage from './components/MentorProfilePage';
 
 const App = () => {
@@ -66,16 +66,19 @@ const App = () => {
           }
         }
 
-        // 개발용: 전역 디버깅 함수 추가
-        window.checkAuth = () => {
-          console.group('🔍 현재 인증 상태');
-          console.log('sessionStorage accessToken:', sessionStorage.getItem('accessToken') ? '존재' : '없음');
-          console.log('sessionStorage userData:', sessionStorage.getItem('userData') ? '존재' : '없음');
-          console.log('localStorage refreshToken:', localStorage.getItem('refreshToken') ? '존재' : '없음');
-          console.log('React isLoggedIn 상태:', isLoggedIn);
-          console.log('User Role:', userData?.userRole || '없음');
-          console.groupEnd();
-        };
+      // 개발용: 전역 디버깅 함수 추가
+      window.checkAuth = () => {
+        console.group('🔍 현재 인증 상태');
+        console.log('sessionStorage accessToken:',
+            sessionStorage.getItem('accessToken') ? '존재' : '없음');
+        console.log('sessionStorage userData:',
+            sessionStorage.getItem('userData') ? '존재' : '없음');
+        console.log('localStorage refreshToken:',
+            localStorage.getItem('refreshToken') ? '존재' : '없음');
+        console.log('React isLoggedIn 상태:', isLoggedIn);
+        console.log('User Role:', userData?.userRole || '없음');
+        console.groupEnd();
+      };
 
         console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
 
@@ -612,8 +615,8 @@ const App = () => {
           {appError}
         </p>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             style={{
               backgroundColor: '#3b82f6',
               color: 'white',
@@ -626,12 +629,12 @@ const App = () => {
           >
             페이지 새로고침
           </button>
-          <button 
+          <button
             onClick={() => {
               localStorage.clear();
               sessionStorage.clear();
               window.location.reload();
-            }} 
+            }}
             style={{
               backgroundColor: '#ef4444',
               color: 'white',
@@ -668,13 +671,13 @@ const App = () => {
   // 관리자 대시보드 렌더링
   if (currentPage === 'admin-dashboard') {
     return (
-      <AdminDashboard
-        onBack={() => {
-          // 관리자에서 나올 때는 완전 로그아웃 처리
-          handleLogout();
-        }}
-        userInfo={userInfo}
-      />
+        <AdminDashboard
+            onBack={() => {
+              // 관리자에서 나올 때는 완전 로그아웃 처리
+              handleLogout();
+            }}
+            userInfo={userInfo}
+        />
     );
   }
 
@@ -685,9 +688,41 @@ const App = () => {
     }
   };
 
+  // SSE 데모 페이지로 이동
+  const handleSSEDemo = () => {
+    setCurrentPage('sse-demo');
+  };
+
+  // SSE 데모 페이지 렌더링
+  if (currentPage === 'sse-demo') {
+    return (
+        <div className="min-h-screen bg-gray-50">
+          <Header
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onLoginClick={() => setIsLoginOpen(true)}
+              onCategorySelect={handleCategorySelect}
+              onProfileClick={handleProfileClick}
+              isLoggedIn={isLoggedIn}
+              userInfo={userInfo}
+              onChatRoom={handleChatRoom}
+              onLogout={handleLogout}
+              onSSEDemo={handleSSEDemo}
+              onAdminDashboard={handleAdminDashboard}
+          />
+          <SSEExample/>
+          <Login
+              isOpen={isLoginOpen}
+              onClose={() => setIsLoginOpen(false)}
+              onLoginSuccess={handleLoginSuccess}
+          />
+        </div>
+    );
+  }
+
   // 소셜 회원가입 페이지 렌더링
   if (currentPage === 'social-signup') {
-    return <SocialSignup />;
+    return <SocialSignup/>;
   }
 
   // 마이페이지 렌더링
@@ -761,12 +796,12 @@ const App = () => {
   // 결제 페이지 렌더링
   if (currentPage === 'payment') {
     return (
-      <Payment 
-        bookingData={bookingData}
-        onBack={handleBackToBooking}
-        onPaymentComplete={handlePaymentComplete}
-        onTossPayment={handleTossPayment}
-      />
+        <Payment
+            bookingData={bookingData}
+            onBack={handleBackToBooking}
+            onPaymentComplete={handlePaymentComplete}
+            onTossPayment={handleTossPayment}
+        />
     );
   }
 
@@ -783,16 +818,16 @@ const App = () => {
   // 토스 결제 페이지 렌더링 (새로 추가)
   if (currentPage === 'toss-payment') {
     return (
-      <TossPaymentApp
-        currentTossPage={currentTossPage}
-        bookingData={bookingData}
-        paymentData={paymentData}
-        onBack={() => setCurrentPage('payment')}
-        onHome={handleBackToHome}
-        onTossSuccess={handleTossSuccess}
-        onTossFail={handleTossFail}
-        onPaymentComplete={handlePaymentComplete}
-      />
+        <TossPaymentApp
+            currentTossPage={currentTossPage}
+            bookingData={bookingData}
+            paymentData={paymentData}
+            onBack={() => setCurrentPage('payment')}
+            onHome={handleBackToHome}
+            onTossSuccess={handleTossSuccess}
+            onTossFail={handleTossFail}
+            onPaymentComplete={handlePaymentComplete}
+        />
     );
   }
 
@@ -829,6 +864,7 @@ const App = () => {
 
   // 메인 페이지 렌더링
   return (
+      <BrowserRouter>
       <div className="app">
         <ParticleBackground />
         <Header 
@@ -844,21 +880,32 @@ const App = () => {
           onLogout={handleLogout}
           onAdminDashboard={handleAdminDashboard}
         />
-        <main className="main-content">
-          <HeroSection />
-          <StatsSection />
-          <MentorSection />
-          <CTASection />
-        </main>
-        <Login 
-          isOpen={isLoginOpen} 
-          onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
+        <Routes>
+          <Route
+              path="/"
+              element={
+                <main className="main-content">
+                  <HeroSection />
+                  <StatsSection />
+                  <MentorSection onMentorSelect={handleMentorSelect} />
+                  <CTASection />
+                </main>
+              }
+          />
+          <Route
+              path="/mentor/:userId/profile/:profileId"
+              element={<MentorProfilePage />}
+          />
+        </Routes>
+        <Login
+            isOpen={isLoginOpen}
+            onClose={() => setIsLoginOpen(false)}
+            onLoginSuccess={handleLoginSuccess}
         />
-        
+      </div>
         {/* 알림 컨테이너 - 로그인된 사용자만 */}
         <NotificationContainer isLoggedIn={isLoggedIn} />
-      </div>
+      </BrowserRouter>
   );
 };
 

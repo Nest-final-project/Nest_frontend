@@ -1,19 +1,19 @@
 /*
  * 🔥 실제 운영용 handleBooking 함수 (임시 코드 제거된 버전)
- * 
+ *
  * const handleBooking = async () => {
  *   if (selectedDate && selectedStartTime && selectedEndTime && selectedService) {
  *     try {
  *       const selectedTicket = serviceOptions.find(option => option.id === selectedService);
- *       
+ *
  *       if (!selectedTicket) {
  *         alert('선택된 서비스 정보를 찾을 수 없습니다.');
  *         return;
  *       }
- * 
+ *
  *       const startDateTime = `${selectedDate} ${selectedStartTime}:00`;
  *       const endDateTime = `${selectedDate} ${selectedEndTime}:00`;
- *       
+ *
  *       const reservationData = {
  *         mentor: mentor?.userId || mentor?.id,
  *         ticket: selectedService,
@@ -21,10 +21,10 @@
  *         reservationStartAt: startDateTime,
  *         reservationEndAt: endDateTime
  *       };
- * 
+ *
  *       const reservationResponse = await reservationAPI.createReservation(reservationData);
  *       const createdReservationId = reservationResponse.data.data.id || reservationResponse.data.id;
- * 
+ *
  *       const bookingData = {
  *         mentor: mentor,
  *         date: selectedDate,
@@ -36,9 +36,9 @@
  *         serviceName: selectedTicket.duration || selectedTicket.name?.replace(" 이용권", "") || "선택된 서비스",
  *         servicePrice: selectedTicket.price || 0
  *       };
- *       
+ *
  *       if (onBooking) onBooking(bookingData);
- *       
+ *
  *     } catch (error) {
  *       console.error('❌ 예약 생성 중 오류:', error);
  *       alert('예약 생성에 실패했습니다. 다시 시도해주세요.');
@@ -89,7 +89,13 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     });
   }, []);
 
-
+  function getDayOfWeek(dateString) {
+    const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    // dateString expected in 'YYYY-MM-DD' format
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return days[date.getDay()];
+  }
 
   useEffect(() => {
     console.log("Booking mentor prop:", mentor); // <- id/userId가 실제로 찍히는지 확인
@@ -99,7 +105,50 @@ const Booking = ({ mentor, onBack, onBooking }) => {
   // 2. 날짜 선택 시 해당 날짜의 상담 가능 시간 조회
   useEffect(() => {
     if (!selectedDate || !mentor?.userId) return;
-    consultationAPI.getAvailableConsultations(mentor.userId)
+
+    const dayOfWeek = getDayOfWeek(selectedDate);
+
+    // API 호출 이후 응답을 기반으로 가공
+    consultationAPI.getAvailableConsultationSlots(mentor.userId, dayOfWeek)
+    .then(res => {
+      const slots = res.data.data || [];
+
+      console.log("🧪 원시 슬롯 데이터 확인:", slots);
+
+      const dateTimeSlots = slots
+        .filter(slot =>
+          slot.availableStartAt &&
+          slot.availableEndAt &&
+          slot.availableStartAt.length >= 5 &&
+          slot.availableEndAt.length >= 5
+        )
+        .map(slot => {
+          const startTime = slot.availableStartAt.slice(-5); // "HH:mm"
+          const endTime = slot.availableEndAt.slice(-5);     // "HH:mm"
+
+          return {
+            startAt: `${selectedDate}T${startTime}`,
+            endAt: `${selectedDate}T${endTime}`
+          };
+        });
+
+      console.log('🕓 날짜+시간 조합된 슬롯:', dateTimeSlots);
+
+      const formattedSlots = dateTimeSlots.map(slot => slot.startAt.substring(11, 16));
+      setConsultationSlots(formattedSlots);
+    })
+    .catch(err => {
+      console.error('❌ 상담 시간 불러오기 실패:', err);
+      setConsultationSlots([]);
+    });
+  }, [mentor?.userId, selectedDate]);
+
+ /* useEffect(() => {
+    if (!selectedDate || !mentor?.userId) return;
+
+    const dayOfWeek = getDayOfWeek(selectedDate);
+
+    consultationAPI.getAvailableConsultationSlots(mentor.userId, dayOfWeek)
     .then(res => {
       const slots = res.data.data;
       const selectedSlots = slots.filter(slot => {
@@ -119,7 +168,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         setConsultationEndAt(null);
       }
     });
-  }, [mentor?.userId, selectedDate]);
+  }, [mentor?.userId, selectedDate]);*/
 
 
 
@@ -180,10 +229,14 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     for (let day = 1; day <= daysInMonth; day++) {
       const isCurrentDay = isToday(year, month, day);
       const isSelectedDay = isSelected(year, month, day);
+
+      // 선택된 날짜가 있으면 오늘 표시를 하지 않음 (어떤 날짜든 선택되면 today 스타일 제거)
+      const shouldShowToday = isCurrentDay && !selectedDate;
+
       days.push(
           <div
               key={day}
-              className={`calendar-day ${isCurrentDay ? 'today' : ''} ${isSelectedDay ? 'selected' : ''}`}
+              className={`calendar-day ${shouldShowToday ? 'today' : ''} ${isSelectedDay ? 'selected' : ''}`}
               onClick={() => setSelectedDate(formatDate(year, month, day))}
           >
             {day}
@@ -240,7 +293,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     try {
       // 선택한 ticketId로 티켓 상세 정보 찾기
       const selectedTicket = serviceOptions.find(option => option.id === selectedService);
-      
+
       if (!selectedTicket) {
         alert('선택된 서비스 정보를 찾을 수 없습니다.');
         return;
@@ -258,7 +311,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         // 날짜와 시간을 LocalDateTime 형식으로 변환 (초 단위까지 명시)
         const startDateTime = `${selectedDate}T${selectedStartTime}:00.000`;
         const endDateTime = `${selectedDate}T${selectedEndTime}:00.000`;
-        
+
         const reservationData = {
           mentor: mentor?.userId || mentor?.id,
           ticket: selectedService,
@@ -268,16 +321,16 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         };
 
         console.log('🔄 예약 생성 중...', reservationData);
-        
+
         let createdReservationId;
-        
+
         // 실제 예약 API 호출
         try {
           const reservationResponse = await reservationAPI.createReservation(reservationData);
-          
+
           // 응답 구조 확인 및 ID 추출
           console.log('📋 예약 생성 응답:', reservationResponse);
-          
+
           if (reservationResponse.data) {
             // 일반적인 응답 구조: { success: true, data: { id: 1, ... } }
             createdReservationId = reservationResponse.data.data?.id || reservationResponse.data.id;
@@ -285,30 +338,30 @@ const Booking = ({ mentor, onBack, onBooking }) => {
             // 직접 응답 구조: { id: 1, ... }
             createdReservationId = reservationResponse.id;
           }
-          
+
           if (!createdReservationId) {
             throw new Error('예약 ID를 찾을 수 없습니다. 응답 구조를 확인해주세요.');
           }
-          
+
           console.log('✅ 예약 생성 완료. 예약 ID:', createdReservationId);
-          
+
         } catch (error) {
           console.error('❌ 예약 생성 실패:', error);
-          
+
           // 구체적인 오류 메시지 표시
           let errorMessage = '예약 생성에 실패했습니다.';
-          
+
           if (error.response?.data?.message) {
             errorMessage += ` (${error.response.data.message})`;
           } else if (error.message) {
             errorMessage += ` (${error.message})`;
           }
-          
+
           // 인증 오류인 경우
           if (error.response?.status === 401) {
             errorMessage = '로그인이 필요합니다. 다시 로그인해주세요.';
           }
-          // 중복 예약인 경우  
+          // 중복 예약인 경우
           else if (error.response?.status === 409 || error.message.includes('중복')) {
             errorMessage = '이미 예약된 시간입니다. 다른 시간을 선택해주세요.';
           }
@@ -316,7 +369,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
           else if (error.response?.status === 403) {
             errorMessage = '예약 권한이 없습니다.';
           }
-          
+
           alert(errorMessage);
           return; // 예약 생성 실패 시 함수 종료
         }
@@ -343,12 +396,12 @@ const Booking = ({ mentor, onBack, onBooking }) => {
           reservationStartAt: `${selectedDate}T${selectedStartTime}:00`,
           reservationEndAt: `${selectedDate}T${selectedEndTime}:00`
         };
-        
+
         console.log('📦 최종 예약 데이터:', bookingData);
         console.log('🎉 예약 성공! 결제 페이지로 이동합니다.');
-        
+
         if (onBooking) onBooking(bookingData);
-        
+
     } catch (error) {
       console.error('❌ 예약 처리 중 오류:', error);
       alert('예약 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
