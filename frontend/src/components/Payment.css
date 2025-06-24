@@ -131,12 +131,35 @@
 }
 
 .price-item.discount {
-  color: #dc2626;
+  color: #f59e0b;
   font-weight: 600;
 }
 
 .price-item.discount span:last-child {
-  color: #dc2626;
+  color: #f59e0b;
+}
+
+.price-item.final-amount {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white !important;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 8px -16px;
+  font-weight: 700;
+}
+
+.price-item.final-amount span {
+  color: white !important;
+}
+
+.price-final {
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+}
+
+.price-discount {
+  color: #f59e0b !important;
+  font-weight: 700;
 }
 
 .price-divider {
