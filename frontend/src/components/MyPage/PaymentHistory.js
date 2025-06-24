@@ -8,38 +8,31 @@ const PaymentHistory = ({ userInfo }) => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
-    if (userInfo?.userRole === 'MENTEE' && !dataLoaded) {
+    // 멘티일 경우에만 결제 내역을 불러옴
+    if (userInfo?.userRole === 'MENTEE') {
+      const fetchPayments = async () => {
+        try {
+          setLoading(true);
+          const response = await paymentAPI.getPaymentHistory();
+          setPayments(response.data.data.content || []);
+        } catch (err) {
+          console.error("결제 내역을 불러오는 데 실패했습니다:", err);
+          setError("결제 내역을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.");
+        } finally {
+          setLoading(false);
+        }
+      };
+
       fetchPayments();
-    }
-  }, [userInfo, dataLoaded]);
-
-  const fetchPayments = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await paymentAPI.getPaymentHistory();
-      const fetchedPayments = response.data.data.content;
-      setPayments(fetchedPayments);
-      setDataLoaded(true);
-    } catch (err) {
-      console.error("결제 내역을 불러오는 데 실패했습니다:", err);
-      setError("결제 내역을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.");
-    } finally {
+    } else {
+      // 멘티가 아니면 로딩을 멈추고 빈 화면을 보여줌
       setLoading(false);
     }
-  };
+  }, [userInfo]); // userInfo가 변경될 때만 실행
 
-  const handleRetry = () => {
-    setDataLoaded(false);
-    setError(null);
-    fetchPayments();
-  };
-
-  // 멘티가 아닌 경우 렌더링하지 않음
+  // 멘티가 아닌 경우 아무것도 렌더링하지 않음
   if (userInfo?.userRole !== 'MENTEE') {
     return null;
   }
