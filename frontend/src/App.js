@@ -12,7 +12,6 @@ import MentorList from './components/MentorList';
 import MentorProfile from './components/MentorProfile';
 import Booking from './components/Booking';
 import Payment from './components/Payment';
-import Checkout from './components/Checkout';
 import Success from './components/Success';
 import Fail from './components/Fail';
 import PaymentSuccess from './components/PaymentSuccess';
