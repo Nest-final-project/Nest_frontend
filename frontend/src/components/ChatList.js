@@ -14,6 +14,21 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
   const [initialLoading, setInitialLoading] = useState(true);
   const chatListRef = useRef(null);
 
+  // 채팅방 상태 확인 함수
+  const checkChatRoomStatus = async (chatRoomId) => {
+    try {
+      const response = await axios.get(`/api/chat_rooms/${chatRoomId}/status`, {
+        headers: {
+          'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
+        }
+      });
+      return response.data.closed;
+    } catch (error) {
+      console.error(`채팅방 ${chatRoomId} 상태 확인 실패:`, error);
+      return false; // 에러 시 기본적으로 활성 상태로 가정
+    }
+  };
+
   // 채팅방 목록 조회 함수
   const fetchChatRooms = useCallback(async (reset = false) => {
     if ((!hasNext && !reset) || loading) {
@@ -104,18 +119,49 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
           profileImage: null
         };
 
+        // 마지막 메시지 정보 설정
+        let lastMessage;
+        if (room.lastMessageContent) {
+          // 백엔드에서 마지막 메시지가 있는 경우
+          const isMyMessage = room.lastMessageSenderId === currentUserId;
+          
+          lastMessage = {
+            id: null, // 메시지 ID는 현재 제공되지 않음
+            text: room.lastMessageContent,
+            sender: isMyMessage ? 'user' : 'other',
+            timestamp: room.lastMessageTime || new Date().toISOString(),
+            isRead: true // 읽음 상태는 추후 구현
+          };
+          
+          console.log('📨 마지막 메시지 정보:', {
+            content: room.lastMessageContent,
+            senderId: room.lastMessageSenderId,
+            currentUserId,
+            isMyMessage,
+            time: room.lastMessageTime
+          });
+        } else {
+          // 마지막 메시지가 없는 경우 (새 채팅방)
+          lastMessage = {
+            id: null,
+            text: '대화를 시작해보세요!',
+            sender: 'system',
+            timestamp: new Date().toISOString(),
+            isRead: true
+          };
+          
+          console.log('📝 새 채팅방 - 기본 메시지 설정');
+        }
+
         const chatData = {
           id: room.roomId,
           contact: contactInfo,
           contactTitle: isCurrentUserMentor ? '멘티' : '멘토',
-          lastMessage: {
-            id: null,
-            text: '대화를 시작해보세요!', // 백엔드에서 마지막 메시지 정보를 제공하지 않음
-            sender: 'system',
-            timestamp: new Date().toISOString(),
-            isRead: true
-          },
-          updatedAt: new Date().toISOString(),
+          lastMessage: lastMessage,
+          updatedAt: room.lastMessageTime || new Date().toISOString(),
+          unreadCount: 0, // 읽지 않은 메시지 수는 추후 구현
+          isOnline: false, // 온라인 상태는 추후 구현
+          isClosed: null, // 초기값, 나중에 상태 확인 후 설정
           // 실제 백엔드 데이터
           mentorId: room.mentorId,
           menteeId: room.menteeId,
@@ -131,11 +177,24 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
           currentUserId,
           isCurrentUserMentor,
           contactName: contactInfo.name,
-          contactId: contactInfo.id
+          contactId: contactInfo.id,
+          lastMessage: lastMessage.text,
+          lastMessageTime: lastMessage.timestamp
         });
         
         return chatData;
       });
+
+      // 각 채팅방의 상태를 확인하여 isClosed 필드 설정
+      console.log('🔍 채팅방 상태 확인 시작...');
+      
+      for (const room of fetchedRooms) {
+        const isClosed = await checkChatRoomStatus(room.id);
+        room.isClosed = isClosed;
+        console.log(`🔍 채팅방 ${room.id} 상태: ${isClosed ? '종료됨' : '활성'}`);
+      }
+      
+      console.log(`✅ 채팅방 상태 확인 완료: ${fetchedRooms.length}개`);
 
       if (reset) {
         setChatRooms(fetchedRooms);
@@ -251,25 +310,42 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
   );
 
   const formatTime = (timestamp) => {
-    const now = new Date();
-    const messageTime = new Date(timestamp);
-    const diffInMinutes = Math.floor((now - messageTime) / (1000 * 60));
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    const diffInDays = Math.floor(diffInHours / 24);
+    if (!timestamp) {
+      return '';
+    }
 
-    if (diffInMinutes < 1) {
-      return '방금 전';
-    } else if (diffInMinutes < 60) {
-      return `${diffInMinutes}분 전`;
-    } else if (diffInHours < 24) {
-      return `${diffInHours}시간 전`;
-    } else if (diffInDays < 7) {
-      return `${diffInDays}일 전`;
-    } else {
-      return messageTime.toLocaleDateString('ko-KR', {
-        month: 'short',
-        day: 'numeric'
-      });
+    try {
+      const now = new Date();
+      // 백엔드에서 문자열로 온 경우 파싱
+      const messageTime = new Date(timestamp);
+      
+      // 유효한 날짜인지 확인
+      if (isNaN(messageTime.getTime())) {
+        console.warn('잘못된 시간 형식:', timestamp);
+        return '시간 정보 없음';
+      }
+
+      const diffInMinutes = Math.floor((now - messageTime) / (1000 * 60));
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      const diffInDays = Math.floor(diffInHours / 24);
+
+      if (diffInMinutes < 1) {
+        return '방금 전';
+      } else if (diffInMinutes < 60) {
+        return `${diffInMinutes}분 전`;
+      } else if (diffInHours < 24) {
+        return `${diffInHours}시간 전`;
+      } else if (diffInDays < 7) {
+        return `${diffInDays}일 전`;
+      } else {
+        return messageTime.toLocaleDateString('ko-KR', {
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+    } catch (error) {
+      console.error('시간 파싱 에러:', error, 'timestamp:', timestamp);
+      return '';
     }
   };
 
@@ -387,10 +463,11 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
                       <div className="chat-info">
                         <div className="chat-header-info">
                           <div className="chat-name-container">
-                            <span
-                                className="chat-name">{chat.contact.name}</span>
-                            <span
-                                className="contact-title">{chat.contactTitle}</span>
+                            <span className="chat-name">{chat.contact.name}</span>
+                            {/* 활성화된 채팅방에만 상태 표시 */}
+                            {!chat.isClosed && (
+                              <span className="contact-title">멘토링 중</span>
+                            )}
                           </div>
                           <div className="chat-meta">
                             <span className="chat-time">
@@ -407,10 +484,6 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
 
                         <div className="last-message-container">
                           <div className="last-message">
-                            <span
-                                className={`message-sender ${chat.lastMessage.sender}`}>
-                              {chat.lastMessage.sender === 'user' ? '나: ' : ''}
-                            </span>
                             <span className={`message-text ${
                                 !chat.lastMessage.isRead
                                 && chat.lastMessage.sender === 'other'
