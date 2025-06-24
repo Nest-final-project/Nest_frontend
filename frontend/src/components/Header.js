@@ -15,7 +15,8 @@ const Header = ({
   isLoggedIn,
   userInfo,
   onLogout,
-  onSSEDemo
+  onSSEDemo,
+  onAdminDashboard
 }) => {
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -265,6 +266,19 @@ const Header = ({
                     <span className="sidebar-link-icon">🔔</span>
                     SSE 알림 데모
                   </button>
+                  {/* 관리자만 볼 수 있는 관리자 페이지 버튼 */}
+                  {userInfo?.userRole === 'ADMIN' && (
+                    <button
+                        className="sidebar-link admin-button"
+                        onClick={() => {
+                          setIsNavOpen(false);
+                          onAdminDashboard && onAdminDashboard();
+                        }}
+                    >
+                      <span className="sidebar-link-icon">⚙️</span>
+                      관리자 대시보드
+                    </button>
+                  )}
                 </>
             )}
           </nav>

@@ -142,7 +142,7 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
   const fetchKeywords = async () => {
     try {
       const response = await keywordAPI.getKeywords();
-      const fetchedKeywords = response.data.data;
+      const fetchedKeywords = response.data.data.content;
 
       if (Array.isArray(fetchedKeywords)) {
         setKeywords(fetchedKeywords);
