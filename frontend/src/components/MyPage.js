@@ -13,11 +13,11 @@ import {
 import './MyPage.css';
 import { userInfoUtils, authUtils } from '../utils/tokenUtils.js';
 import { userAPI, authAPI } from '../services/api.js';
+import BookingHistory from './MyPage/BookingHistory.js';
+import PaymentHistory from './MyPage/PaymentHistory.js';
 
 // Lazy load components for better performance
 const BasicInfo = lazy(() => import('./MyPage/BasicInfo.js'));
-const BookingHistory = lazy(() => import('./MyPage/BookingHistory.js'));
-const PaymentHistory = lazy(() => import('./MyPage/PaymentHistory.js'));
 const CareerHistory = lazy(() => import('./MyPage/CareerHistory.js'));
 const MentorRegistration = lazy(() => import('./MyPage/MentorRegistration.js'));
 const ConsultationTime = lazy(() => import('./MyPage/ConsultationTime.js'));
