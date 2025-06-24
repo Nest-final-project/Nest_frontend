@@ -1,3 +1,54 @@
+/*
+ * 🔥 실제 운영용 handleBooking 함수 (임시 코드 제거된 버전)
+ * 
+ * const handleBooking = async () => {
+ *   if (selectedDate && selectedStartTime && selectedEndTime && selectedService) {
+ *     try {
+ *       const selectedTicket = serviceOptions.find(option => option.id === selectedService);
+ *       
+ *       if (!selectedTicket) {
+ *         alert('선택된 서비스 정보를 찾을 수 없습니다.');
+ *         return;
+ *       }
+ * 
+ *       const startDateTime = `${selectedDate} ${selectedStartTime}:00`;
+ *       const endDateTime = `${selectedDate} ${selectedEndTime}:00`;
+ *       
+ *       const reservationData = {
+ *         mentor: mentor?.userId || mentor?.id,
+ *         ticket: selectedService,
+ *         reservationStatus: "REQUESTED",
+ *         reservationStartAt: startDateTime,
+ *         reservationEndAt: endDateTime
+ *       };
+ * 
+ *       const reservationResponse = await reservationAPI.createReservation(reservationData);
+ *       const createdReservationId = reservationResponse.data.data.id || reservationResponse.data.id;
+ * 
+ *       const bookingData = {
+ *         mentor: mentor,
+ *         date: selectedDate,
+ *         startTime: selectedStartTime,
+ *         endTime: selectedEndTime,
+ *         ticketId: selectedService,
+ *         reservationId: createdReservationId,
+ *         ticket: { id: selectedTicket.id, name: selectedTicket.name, duration: selectedTicket.duration, price: selectedTicket.price },
+ *         serviceName: selectedTicket.duration || selectedTicket.name?.replace(" 이용권", "") || "선택된 서비스",
+ *         servicePrice: selectedTicket.price || 0
+ *       };
+ *       
+ *       if (onBooking) onBooking(bookingData);
+ *       
+ *     } catch (error) {
+ *       console.error('❌ 예약 생성 중 오류:', error);
+ *       alert('예약 생성에 실패했습니다. 다시 시도해주세요.');
+ *     }
+ *   } else {
+ *     alert('모든 항목을 선택해주세요.');
+ *   }
+ * };
+ */
+
 import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft,
@@ -160,41 +211,150 @@ const Booking = ({ mentor, onBack, onBooking }) => {
   };
 
   // 예약 버튼 클릭 시 실행
-  const handleBooking = () => {
-    if (selectedDate && selectedStartTime && selectedEndTime && selectedService) {
-      const bookingData = {
-        mentor: mentor,
-        date: selectedDate,
-        startTime: selectedStartTime,
-        endTime: selectedEndTime,
-        ticketId: selectedService     // 👈 반드시 포함!
-      };
-      console.log('예약 데이터:', bookingData); // 이 값이 그대로 부모로 전달됨
-      if (onBooking) onBooking(bookingData);
-    } else {
+  const handleBooking = async () => {
+    // 1. 필수 입력값 검증
+    if (!selectedDate || !selectedStartTime || !selectedEndTime || !selectedService) {
       alert('모든 항목을 선택해주세요.');
+      return;
+    }
+
+    // 2. 멘토 정보 검증
+    if (!mentor?.userId && !mentor?.id) {
+      alert('멘토 정보가 없습니다. 페이지를 새로고침해주세요.');
+      return;
+    }
+
+    // 3. 시간 유효성 검증
+    if (selectedStartTime >= selectedEndTime) {
+      alert('종료 시간은 시작 시간보다 늦어야 합니다.');
+      return;
+    }
+
+    // 4. 로그인 상태 확인
+    const token = localStorage?.getItem("accessToken") || sessionStorage?.getItem("accessToken");
+    if (!token) {
+      alert('로그인이 필요합니다. 로그인 후 다시 시도해주세요.');
+      return;
+    }
+
+    try {
+      // 선택한 ticketId로 티켓 상세 정보 찾기
+      const selectedTicket = serviceOptions.find(option => option.id === selectedService);
+      
+      if (!selectedTicket) {
+        alert('선택된 서비스 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      console.log('🎯 예약 시작 - 선택된 정보:', {
+        멘토: mentor?.name || mentor?.userId,
+        날짜: selectedDate,
+        시간: `${selectedStartTime} ~ ${selectedEndTime}`,
+        서비스: selectedTicket.name,
+        가격: selectedTicket.price
+      });
+
+        // 1. 먼저 예약을 생성
+        // 날짜와 시간을 LocalDateTime 형식으로 변환 (초 단위까지 명시)
+        const startDateTime = `${selectedDate}T${selectedStartTime}:00.000`;
+        const endDateTime = `${selectedDate}T${selectedEndTime}:00.000`;
+        
+        const reservationData = {
+          mentor: mentor?.userId || mentor?.id,
+          ticket: selectedService,
+          reservationStatus: "REQUESTED", // 예약 요청 상태
+          reservationStartAt: startDateTime,
+          reservationEndAt: endDateTime
+        };
+
+        console.log('🔄 예약 생성 중...', reservationData);
+        
+        let createdReservationId;
+        
+        // 실제 예약 API 호출
+        try {
+          const reservationResponse = await reservationAPI.createReservation(reservationData);
+          
+          // 응답 구조 확인 및 ID 추출
+          console.log('📋 예약 생성 응답:', reservationResponse);
+          
+          if (reservationResponse.data) {
+            // 일반적인 응답 구조: { success: true, data: { id: 1, ... } }
+            createdReservationId = reservationResponse.data.data?.id || reservationResponse.data.id;
+          } else {
+            // 직접 응답 구조: { id: 1, ... }
+            createdReservationId = reservationResponse.id;
+          }
+          
+          if (!createdReservationId) {
+            throw new Error('예약 ID를 찾을 수 없습니다. 응답 구조를 확인해주세요.');
+          }
+          
+          console.log('✅ 예약 생성 완료. 예약 ID:', createdReservationId);
+          
+        } catch (error) {
+          console.error('❌ 예약 생성 실패:', error);
+          
+          // 구체적인 오류 메시지 표시
+          let errorMessage = '예약 생성에 실패했습니다.';
+          
+          if (error.response?.data?.message) {
+            errorMessage += ` (${error.response.data.message})`;
+          } else if (error.message) {
+            errorMessage += ` (${error.message})`;
+          }
+          
+          // 인증 오류인 경우
+          if (error.response?.status === 401) {
+            errorMessage = '로그인이 필요합니다. 다시 로그인해주세요.';
+          }
+          // 중복 예약인 경우  
+          else if (error.response?.status === 409 || error.message.includes('중복')) {
+            errorMessage = '이미 예약된 시간입니다. 다른 시간을 선택해주세요.';
+          }
+          // 권한 오류인 경우
+          else if (error.response?.status === 403) {
+            errorMessage = '예약 권한이 없습니다.';
+          }
+          
+          alert(errorMessage);
+          return; // 예약 생성 실패 시 함수 종료
+        }
+
+        // 2. 예약 완료 후 결제 데이터 구성
+        const bookingData = {
+          mentor: mentor,
+          date: selectedDate,
+          startTime: selectedStartTime,
+          endTime: selectedEndTime,
+          ticketId: selectedService,
+          reservationId: createdReservationId, // 🎯 실제 생성된 예약 ID 사용
+          ticket: {
+            id: selectedTicket.id,
+            name: selectedTicket.name,
+            duration: selectedTicket.duration,
+            price: selectedTicket.price
+          },
+          serviceName: selectedTicket.duration || selectedTicket.name?.replace(" 이용권", "") || "선택된 서비스",
+          servicePrice: selectedTicket.price || 0,
+          // 예약 생성 시간 추가 (디버깅용)
+          createdAt: new Date().toISOString(),
+          // 예약 시간 정보 추가
+          reservationStartAt: `${selectedDate}T${selectedStartTime}:00`,
+          reservationEndAt: `${selectedDate}T${selectedEndTime}:00`
+        };
+        
+        console.log('📦 최종 예약 데이터:', bookingData);
+        console.log('🎉 예약 성공! 결제 페이지로 이동합니다.');
+        
+        if (onBooking) onBooking(bookingData);
+        
+    } catch (error) {
+      console.error('❌ 예약 처리 중 오류:', error);
+      alert('예약 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
     }
   };
 
-  /*const handleBooking = () => {
-    if (selectedDate && selectedStartTime && selectedEndTime && selectedService) {
-      // 1. 선택한 ticketId로 티켓 상세 객체 찾기
-      const selectedTicket = serviceOptions.find(option => option.id === selectedService);
-
-      const bookingData = {
-        mentor: mentor,
-        date: selectedDate,
-        startTime: selectedStartTime,
-        endTime: selectedEndTime,
-        ticketId: selectedService,
-        ticket: selectedTicket, // 👈 상세 데이터도 같이 전달!
-      };
-      console.log('예약 데이터:', bookingData);
-      if (onBooking) onBooking(bookingData);
-    } else {
-      alert('모든 항목을 선택해주세요.');
-    }
-  };*/
 
   return (
       <div className="booking-container">

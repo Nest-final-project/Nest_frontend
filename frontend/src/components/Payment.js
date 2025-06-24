@@ -1,67 +1,114 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { ArrowLeft, CreditCard, Calendar, Clock, User, Shield, CheckCircle, Gift, X } from 'lucide-react';
 import './Payment.css';
+import { ticketAPI, userCouponAPI, userAPI } from "../services/api";
 
-const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
+const Payment = ({ bookingData, onBack, onTossPayment }) => {
   const [paymentMethod, setPaymentMethod] = useState('tosspay');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(true);
+  const [couponFetchError, setCouponFetchError] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
 
-  // 사용 가능한 쿠폰 데이터 (실제로는 API에서 가져올 것)
-  const availableCoupons = [
-    {
-      id: 1,
-      name: '신규 회원 할인',
-      discount: 5000,
-      type: 'fixed', // fixed: 고정금액, percent: 퍼센트
-      description: '신규 회원 전용 5,000원 할인 쿠폰',
-      expiryDate: '2025-12-31',
-      minAmount: 10000
-    },
-    {
-      id: 2,
-      name: '여름 시즌 특가',
-      discount: 15,
-      type: 'percent',
-      description: '전체 서비스 15% 할인 (최대 10,000원)',
-      expiryDate: '2025-08-31',
-      minAmount: 15000,
-      maxDiscount: 10000
-    },
-    {
-      id: 3,
-      name: '멘토링 체험권',
-      discount: 3000,
-      type: 'fixed',
-      description: '첫 멘토링 3,000원 할인',
-      expiryDate: '2025-07-31',
-      minAmount: 5000
-    },
-    {
-      id: 4,
-      name: 'VIP 회원 혜택',
-      discount: 20,
-      type: 'percent',
-      description: 'VIP 회원 전용 20% 할인 (최대 15,000원)',
-      expiryDate: '2025-10-31',
-      minAmount: 20000,
-      maxDiscount: 15000
-    }
-  ];
-
-  // 가격 정보 (서비스 시간에 따른 가격)
-  const getPriceByService = (service) => {
-    const prices = {
-      '20분': 14900,
-      '30분': 18900,
-      '40분': 22900
+  // 사용자 정보 가져오기
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await userAPI.getUser();
+        setUserInfo(response.data.data || response.data);
+        console.log('✅ 사용자 정보 로드 완료:', response.data);
+      } catch (error) {
+        console.error('❌ 사용자 정보 로드 실패:', error);
+        // 기본값 설정
+        setUserInfo({
+          email: 'customer@example.com',
+          phone: '010-0000-0000',
+          name: '고객'
+        });
+      }
     };
-    return prices[service] || 0;
-  };
 
-  const servicePrice = getPriceByService(bookingData?.service);
-  const platformFee = Math.round(servicePrice * 0.05); // 5% 플랫폼 수수료
+    fetchUserInfo();
+  }, []);
+
+  // 쿠폰 정보 가져오기
+  useEffect(() => {
+    const fetchedCoupons = async () => {
+      try {
+        setLoadingCoupons(true);
+        const response = await userCouponAPI.getUserCoupons();
+        
+        // Backend에서 페이징 응답을 받음
+        const couponsData = response.data.data; // PagingResponse의 data 필드
+        
+        // UserCouponResponseDto를 Frontend 쿠폰 객체로 변환
+        const transformedCoupons = couponsData.content.map(userCoupon => {
+          // 유효기간 포맷팅
+          const validTo = new Date(userCoupon.validTo);
+          const formattedExpiryDate = validTo.toLocaleDateString('ko-KR');
+          
+          return {
+            id: userCoupon.couponId,
+            name: userCoupon.couponName,
+            type: 'fixed', // 현재 Backend에서는 고정 할인만 지원
+            discount: userCoupon.discountAmount,
+            description: `${userCoupon.discountAmount.toLocaleString()}원 할인 쿠폰`,
+            minAmount: 0, // Backend에서 최소 주문금액 정보가 없어서 0으로 설정
+            expiryDate: formattedExpiryDate,
+            maxDiscount: null, // 고정 할인이므로 null
+            useStatus: userCoupon.useStatus,
+            validFrom: userCoupon.validFrom,
+            validTo: userCoupon.validTo
+          };
+        });
+        
+        // 사용 가능한 쿠폰만 필터링 (UNUSED 상태 + 유효기간 내)
+        const now = new Date();
+        const availableCoupons = transformedCoupons.filter(coupon => {
+          const isUnused = coupon.useStatus === 'UNUSED';
+          const isValid = new Date(coupon.validFrom) <= now && now <= new Date(coupon.validTo);
+          return isUnused && isValid;
+        });
+        
+        setAvailableCoupons(availableCoupons);
+        console.log('✅ 사용자 쿠폰 조회 성공:', availableCoupons);
+      } catch (error) {
+        console.error('❌ 사용자 쿠폰을 불러오는 데 실패했습니다:', error);
+        setCouponFetchError(error);
+        
+        // 에러 발생 시 기존 티켓 API로 폴백 (임시)
+        try {
+          const fallbackResponse = await ticketAPI.getTickets();
+          const transformedTickets = fallbackResponse.data.map(ticket => ({
+            id: ticket.id,
+            name: ticket.name,
+            type: 'fixed',
+            discount: ticket.price || 0,
+            description: ticket.description,
+            minAmount: 0,
+            expiryDate: '2024-12-31',
+            useStatus: 'UNUSED'
+          }));
+          setAvailableCoupons(transformedTickets);
+          console.log('⚠️ 폴백으로 티켓 데이터 사용:', transformedTickets);
+        } catch (fallbackError) {
+          console.error('❌ 폴백 티켓 API도 실패:', fallbackError);
+        }
+      } finally {
+        setLoadingCoupons(false);
+      }
+    };
+
+    fetchedCoupons();
+  }, []);
+
+  // 가격 정보 (Booking에서 전달받은 실제 티켓 가격 사용)
+  const servicePrice = bookingData?.servicePrice || bookingData?.ticket?.price || 0;
+  const serviceName = bookingData?.serviceName || bookingData?.ticket?.duration || 
+                     bookingData?.ticket?.name || '선택된 서비스';
 
   // 쿠폰 할인 계산
   const calculateCouponDiscount = () => {
@@ -78,11 +125,19 @@ const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
   };
 
   const couponDiscount = calculateCouponDiscount();
-  const totalPrice = servicePrice + platformFee - couponDiscount;
+  const totalPrice = servicePrice - couponDiscount;
 
-  // 사용 가능한 쿠폰 필터링 (최소 주문 금액 조건)
+  // 사용 가능한 쿠폰 필터링 (최소 주문 금액 조건 + 사용 가능 상태 + 유효기간)
   const getUsableCoupons = () => {
-    return availableCoupons.filter(coupon => servicePrice >= coupon.minAmount);
+    const now = new Date();
+    return availableCoupons.filter(coupon => {
+      const meetsMinAmount = servicePrice >= coupon.minAmount;
+      const isUnused = coupon.useStatus === 'UNUSED';
+      const isValid = coupon.validFrom && coupon.validTo ? 
+        new Date(coupon.validFrom) <= now && now <= new Date(coupon.validTo) : true;
+      
+      return meetsMinAmount && isUnused && isValid;
+    });
   };
 
   const handleCouponSelect = (coupon) => {
@@ -94,30 +149,72 @@ const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
     setSelectedCoupon(null);
   };
 
-  const handlePayment = async () => {
-    setIsProcessing(true);
+  const handleTossPayment = () => {
+    console.log('🚀 토스 결제 버튼 클릭됨');
+    
+    // 🔍 현재 bookingData 상태 확인
+    console.log('🔍 [디버깅] Payment.js의 bookingData:', {
+      bookingData,
+      hasReservationId: !!(bookingData?.reservationId),
+      hasReservationObject: !!(bookingData?.reservation?.id),
+      hasTicketId: !!(bookingData?.ticketId),
+      hasTicketObject: !!(bookingData?.ticket?.id),
+      servicePrice,
+      totalPrice,
+      selectedCoupon,
+      couponDiscount
+    });
+    
+    // 필수 데이터 검증
+    if (!bookingData?.reservationId && !bookingData?.reservation?.id) {
+      alert('예약 정보가 없습니다. 다시 예약해주세요.');
+      console.error('❌ reservationId 누락:', bookingData);
+      return;
+    }
+    
+    if (!bookingData?.ticketId && !bookingData?.ticket?.id) {
+      alert('티켓 정보가 없습니다. 다시 선택해주세요.');
+      console.error('❌ ticketId 누락:', bookingData);
+      return;
+    }
+    
+    // 토스 결제에 필요한 데이터 준비
+    const tossPaymentData = {
+      // 🔥 기존 예약 데이터 유지
+      ...bookingData,
+      
+      // 🔥 필수 ID 명시적 전달
+      reservationId: bookingData.reservationId || bookingData.reservation?.id,
+      ticketId: bookingData.ticketId || bookingData.ticket?.id,
+      
+      // 🔥 결제 금액 정보 (원가 전달 - 백엔드에서 쿠폰 처리)
+      servicePrice: servicePrice, // 원가 (할인 전)
+      finalPrice: totalPrice,     // 최종 금액 (할인 후) - 표시용
+      serviceName,
+      selectedCoupon,
+      couponDiscount,
+      customer: {
+        name: userInfo?.name || bookingData?.mentor?.name || '고객',
+        email: userInfo?.email || 'customer@example.com',
+        phone: userInfo?.phone || '010-0000-0000'
+      }
+    };
 
-    // 토스페이 결제 처리 시뮬레이션
-    setTimeout(() => {
-      setIsProcessing(false);
-      
-      // 결제 완료 데이터 준비
-      const paymentResult = {
-        orderId: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        amount: totalPrice,
-        method: '토스페이',
-        approvedAt: new Date().toISOString(),
-        status: 'DONE',
-        booking: bookingData,
-        selectedCoupon,
-        servicePrice,
-        platformFee,
-        couponDiscount
-      };
-      
-      // 결제 완료 페이지로 이동
-      onPaymentComplete && onPaymentComplete(paymentResult);
-    }, 2000);
+    console.log('💳 토스 결제 데이터 (Payment.js → App.js):', tossPaymentData);
+    console.log('🔍 필수 데이터 최종 확인:', {
+      reservationId: tossPaymentData.reservationId,
+      ticketId: tossPaymentData.ticketId,
+      servicePrice: tossPaymentData.servicePrice,
+      finalPrice: tossPaymentData.finalPrice,
+      customerInfo: tossPaymentData.customer
+    });
+    
+    if (onTossPayment) {
+      console.log('🎯 onTossPayment 호출 - App.js로 데이터 전달');
+      onTossPayment(tossPaymentData);
+    } else {
+      console.error('❌ onTossPayment prop이 없습니다!');
+    }
   };
 
   return (
@@ -164,7 +261,7 @@ const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
               <Clock className="summary-icon" />
               <div className="summary-info">
                 <span className="summary-label">서비스</span>
-                <span className="summary-value">{bookingData?.service}</span>
+                <span className="summary-value">{serviceName}</span>
               </div>
             </div>
           </div>
@@ -178,17 +275,12 @@ const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
               <span>서비스 이용료</span>
               <span>{servicePrice.toLocaleString()}원</span>
             </div>
-            <div className="price-item">
-              <span>플랫폼 수수료</span>
-              <span>{platformFee.toLocaleString()}원</span>
-            </div>
             {couponDiscount > 0 && (
               <div className="price-item discount">
                 <span>쿠폰 할인</span>
                 <span>-{couponDiscount.toLocaleString()}원</span>
               </div>
             )}
-            <div className="price-divider"></div>
             <div className="price-item total">
               <span>총 결제금액</span>
               <span>{totalPrice.toLocaleString()}원</span>
@@ -246,19 +338,19 @@ const Payment = ({ bookingData, onBack, onPaymentComplete }) => {
           </div>
         </div>
 
-        {/* 결제하기 버튼 */}
+        {/* 토스 결제하기 버튼 */}
         <button
           className={`payment-button ${isProcessing ? 'processing' : ''}`}
-          onClick={handlePayment}
+          onClick={handleTossPayment}
           disabled={isProcessing}
         >
           {isProcessing ? (
             <>
               <div className="spinner"></div>
-              토스페이 결제 진행중...
+              결제 진행중...
             </>
           ) : (
-            `토스페이로 ${totalPrice.toLocaleString()}원 결제하기`
+            `🚀 ${totalPrice.toLocaleString()}원 토스 결제하기`
           )}
         </button>
       </div>
