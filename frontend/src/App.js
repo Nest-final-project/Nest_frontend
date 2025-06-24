@@ -22,6 +22,7 @@ import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
 import SSEExample from './components/SSEExample.js';
 import Inquiry from './components/Inquiry';
+import AdminDashboard from './components/AdminDashboard';
 import { authUtils, userInfoUtils } from './utils/tokenUtils';
 import { registerDebugFunctions } from './utils/websocketDebug';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -54,6 +55,12 @@ const App = () => {
         setIsLoggedIn(true);
         setUserInfo(userData);
         console.log('세션에서 로그인 상태 복원됨:', userData);
+
+        // 관리자 역할 체크 및 자동 리다이렉트
+        if (userData.userRole === 'ADMIN') {
+          console.log('🔐 관리자 사용자 감지됨 - 관리자 대시보드로 이동');
+          setCurrentPage('admin-dashboard');
+        }
       }
 
       // 개발용: 전역 디버깅 함수 추가
@@ -63,6 +70,7 @@ const App = () => {
         console.log('sessionStorage userData:', sessionStorage.getItem('userData') ? '존재' : '없음');
         console.log('localStorage refreshToken:', localStorage.getItem('refreshToken') ? '존재' : '없음');
         console.log('React isLoggedIn 상태:', isLoggedIn);
+        console.log('User Role:', userData?.userRole || '없음');
         console.groupEnd();
       };
 
@@ -140,6 +148,12 @@ const App = () => {
     setIsLoginOpen(false);
 
     console.log('로그인 성공, App 상태 업데이트됨');
+
+    // 관리자 역할인 경우 자동으로 관리자 대시보드로 이동
+    if (userData.userRole === 'ADMIN') {
+      console.log('🔐 관리자 로그인 감지 - 관리자 대시보드로 이동');
+      setCurrentPage('admin-dashboard');
+    }
   };
 
   // 로그아웃 처리
@@ -329,6 +343,26 @@ const App = () => {
     );
   }
 
+  // 관리자 대시보드 렌더링
+  if (currentPage === 'admin-dashboard') {
+    return (
+      <AdminDashboard
+        onBack={() => {
+          // 관리자에서 나올 때는 완전 로그아웃 처리
+          handleLogout();
+        }}
+        userInfo={userInfo}
+      />
+    );
+  }
+
+  // 관리자 대시보드로 이동
+  const handleAdminDashboard = () => {
+    if (userInfo?.userRole === 'ADMIN') {
+      setCurrentPage('admin-dashboard');
+    }
+  };
+
   // SSE 데모 페이지로 이동
   const handleSSEDemo = () => {
     setCurrentPage('sse-demo');
@@ -337,26 +371,27 @@ const App = () => {
   // SSE 데모 페이지 렌더링
   if (currentPage === 'sse-demo') {
     return (
-        <div className="min-h-screen bg-gray-50">
-          <Header
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              onLoginClick={() => setIsLoginOpen(true)}
-              onCategorySelect={handleCategorySelect}
-              onProfileClick={handleProfileClick}
-              isLoggedIn={isLoggedIn}
-              userInfo={userInfo}
-              onChatRoom={handleChatRoom}
-              onLogout={handleLogout}
-              onSSEDemo={handleSSEDemo}
-          />
-          <SSEExample />
-          <Login
-              isOpen={isLoginOpen}
-              onClose={() => setIsLoginOpen(false)}
-              onLoginSuccess={handleLoginSuccess}
-          />
-        </div>
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          onLoginClick={() => setIsLoginOpen(true)}
+          onCategorySelect={handleCategorySelect}
+          onProfileClick={handleProfileClick}
+          isLoggedIn={isLoggedIn}
+          userInfo={userInfo}
+          onChatRoom={handleChatRoom}
+          onLogout={handleLogout}
+          onSSEDemo={handleSSEDemo}
+          onAdminDashboard={handleAdminDashboard}
+        />
+        <SSEExample />
+        <Login
+          isOpen={isLoginOpen}
+          onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
+      </div>
     );
   }
 
@@ -378,35 +413,36 @@ const App = () => {
   // 멘토 리스트 페이지 렌더링
   if (currentPage === 'mentor-list') {
     return (
-        <div className="app">
-          <ParticleBackground />
-          <Header
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              onLoginClick={() => setIsLoginOpen(true)}
-              onCategorySelect={handleCategorySelect}
-              onProfileClick={handleProfileClick}
-              onInquiry={handleInquiry}
-              isLoggedIn={isLoggedIn}
-              userInfo={userInfo}
-              onChatRoom={handleChatRoom}
-              onLogout={handleLogout}
-              onSSEDemo={handleSSEDemo}
-          />
-          <MentorList
-              category={selectedCategory}
-              onBack={handleBackToHome}
-              onMentorSelect={handleMentorSelect}
-          />
-          <Login
-              isOpen={isLoginOpen}
-              onClose={() => setIsLoginOpen(false)}
-              onLoginSuccess={handleLoginSuccess}
-          />
-
-          {/* 알림 컨테이너 - 로그인된 사용자만 */}
-          <NotificationContainer isLoggedIn={isLoggedIn} />
-        </div>
+      <div className="app">
+        <ParticleBackground />
+        <Header
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          onLoginClick={() => setIsLoginOpen(true)}
+          onCategorySelect={handleCategorySelect}
+          onProfileClick={handleProfileClick}
+          onInquiry={handleInquiry}
+          isLoggedIn={isLoggedIn}
+          userInfo={userInfo}
+          onChatRoom={handleChatRoom}
+          onLogout={handleLogout}
+          onSSEDemo={handleSSEDemo}
+          onAdminDashboard={handleAdminDashboard}
+        />
+        <MentorList
+          category={selectedCategory} 
+          onBack={handleBackToHome}
+          onMentorSelect={handleMentorSelect}
+        />
+        <Login 
+          isOpen={isLoginOpen} 
+          onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
+        
+        {/* 알림 컨테이너 - 로그인된 사용자만 */}
+        <NotificationContainer isLoggedIn={isLoggedIn} />
+      </div>
     );
   }
 
@@ -504,49 +540,37 @@ const App = () => {
 
   // 메인 페이지 렌더링
   return (
-      <BrowserRouter>
-        <div className="app">
-          <ParticleBackground />
-          <Header
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              onLoginClick={() => setIsLoginOpen(true)}
-              onCategorySelect={handleCategorySelect}
-              onProfileClick={handleProfileClick}
-              onInquiry={handleInquiry}
-              isLoggedIn={isLoggedIn}
-              userInfo={userInfo}
-              onChatRoom={handleChatRoom}
-              onLogout={handleLogout}
-              onSSEDemo={handleSSEDemo}
-          />
-          <Routes>
-            <Route
-                path="/"
-                element={
-                  <main className="main-content">
-                    <HeroSection />
-                    <StatsSection />
-                    <MentorSection onMentorSelect={handleMentorSelect} />
-                    <CTASection />
-                  </main>
-                }
-            />
-            <Route
-                path="/mentor/:userId/profile/:profileId"
-                element={<MentorProfilePage />}
-            />
-          </Routes>
-          <Login
-              isOpen={isLoginOpen}
-              onClose={() => setIsLoginOpen(false)}
-              onLoginSuccess={handleLoginSuccess}
-          />
-
-          {/* 알림 컨테이너 - 로그인된 사용자만 */}
-          <NotificationContainer isLoggedIn={isLoggedIn} />
-        </div>
-      </BrowserRouter>
+      <div className="app">
+        <ParticleBackground />
+        <Header 
+          isMenuOpen={isMenuOpen} 
+          setIsMenuOpen={setIsMenuOpen}
+          onLoginClick={() => setIsLoginOpen(true)}
+          onCategorySelect={handleCategorySelect}
+          onProfileClick={handleProfileClick}
+          onInquiry={handleInquiry}
+          isLoggedIn={isLoggedIn}
+          userInfo={userInfo}
+          onChatRoom={handleChatRoom}
+          onLogout={handleLogout}
+          onSSEDemo={handleSSEDemo}
+          onAdminDashboard={handleAdminDashboard}
+        />
+        <main className="main-content">
+          <HeroSection />
+          <StatsSection />
+          <MentorSection />
+          <CTASection />
+        </main>
+        <Login 
+          isOpen={isLoginOpen} 
+          onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
+        
+        {/* 알림 컨테이너 - 로그인된 사용자만 */}
+        <NotificationContainer isLoggedIn={isLoggedIn} />
+      </div>
   );
 };
 
