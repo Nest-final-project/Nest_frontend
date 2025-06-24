@@ -74,4 +74,210 @@
 
 .cancel-btn:hover {
   background: #cbd5e0;
+}
+
+/* CareerHistory.css */
+
+.career-history-container {
+  padding: 24px;
+  background-color: #f9fafb; /* BasicInfo와 유사한 배경색 */
+  border-radius: 8px;
+}
+
+.career-history-container h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.career-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* BasicInfo.css의 info-card 스타일과 유사하게 만듭니다. */
+.info-card {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.info-card-icon {
+  margin-right: 16px;
+  color: #6b7280;
+}
+
+.info-card-content {
+  flex-grow: 1;
+}
+
+.info-card-label {
+  font-weight: 600;
+  color: #111827;
+}
+
+.info-card-value {
+  color: #4b5563;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.info-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.action-btn.delete:hover {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+.action-btn.save:hover {
+  background-color: #dbeafe;
+  color: #3b82f6;
+}
+
+.action-btn.cancel:hover {
+  background-color: #f3f4f6;
+}
+
+/* 폼 스타일 */
+.form-card {
+  gap: 10px;
+}
+
+.form-card input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  flex-grow: 1;
+}
+
+.add-career-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed #d1d5db;
+  background-color: transparent;
+  color: #6b7280;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.add-career-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.career-detail-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.career-detail-modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 32px 28px 24px 28px;
+  min-width: 320px;
+  max-width: 90vw;
+  min-height: 180px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.career-detail-modal h2 {
+  margin-top: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #22223b;
+}
+
+.career-detail-modal p {
+  margin: 0 0 4px 0;
+  color: #444;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-close-btn,
+.modal-edit-btn,
+.modal-delete-btn {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: #e5e7eb;
+}
+
+.modal-edit-btn {
+  background: #e0e7ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+.modal-edit-btn:hover {
+  background: #c7d2fe;
+}
+
+.modal-delete-btn {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.modal-delete-btn:hover {
+  background: #fecaca;
+}
+
+.modal-edit-cert-btn {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.modal-edit-cert-btn:hover {
+  background: #bbf7d0;
 } 
