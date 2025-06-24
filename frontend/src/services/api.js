@@ -248,7 +248,7 @@ export const consultationAPI = {
   getConsultations: (params) => api.get('/api/mentor/consultations', { params }),
   
   // 상담 생성
-  createConsultation: (consultationData) => api.post('/api/consultations', consultationData),
+  createConsultation: (consultationData) => api.post('/api/mentor/consultations', consultationData),
   
   // 상담 상세 조회
   getConsultationDetail: (consultationId) => api.get(`/api/consultations/${consultationId}`),
@@ -259,6 +259,10 @@ export const consultationAPI = {
   // 상담 상태 업데이트
   updateConsultationStatus: (consultationId, status) => 
     api.patch(`/api/consultations/${consultationId}/status`, { status }),
+
+  // 상담 시간 삭제
+  deleteConsultation: (consultationId) =>
+    api.delete(`/api/mentor/consultations/${consultationId}`),
 };
 
 // Reservation API
