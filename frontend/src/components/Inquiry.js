@@ -54,10 +54,129 @@ const FAQ_LIST = [
   }
 ];
 
+// 공지사항 데이터
+const NOTICE_LIST = [
+  {
+    id: 1,
+    title: "[필독] Nest.dev 서비스 업데이트 안내",
+    content: `안녕하세요. Nest.dev를 이용해 주시는 모든 분들께 감사드립니다.
+
+더 나은 서비스 제공을 위해 다음과 같이 업데이트를 진행하였습니다.
+
+• 새로운 기능 추가
+  - 멘토링 리뷰 시스템 개선
+  - 실시간 채팅 성능 향상
+  - 프로필 작성 가이드 추가
+
+• 보안 강화
+  - 결제 시스템 보안 업그레이드
+  - 개인정보 보호 기능 강화
+
+• 사용성 개선
+  - 모바일 화면 최적화
+  - 검색 기능 개선
+  - 페이지 로딩 속도 향상
+
+이용에 참고하시기 바라며, 문의사항이 있으시면 언제든 고객센터로 연락주세요.
+
+감사합니다.`,
+    date: "2024-06-20",
+    important: true,
+    views: 1250
+  },
+  {
+    id: 2,
+    title: "정기 점검 안내 (2024.06.25 02:00~05:00)",
+    content: `서비스 안정성 향상을 위한 정기 점검을 실시합니다.
+
+• 점검 일시: 2024년 6월 25일(화) 02:00 ~ 05:00 (약 3시간)
+• 점검 내용: 서버 업그레이드 및 데이터베이스 최적화
+• 영향 범위: 전체 서비스 일시 중단
+
+점검 중에는 서비스 이용이 불가하오니 양해 부탁드립니다.
+점검이 예정보다 일찍 완료되는 경우 별도 공지하겠습니다.
+
+불편을 끼쳐드려 죄송합니다.`,
+    date: "2024-06-18",
+    important: false,
+    views: 892
+  },
+  {
+    id: 3,
+    title: "신규 멘토 모집 공고",
+    content: `Nest.dev에서 함께할 개발 멘토를 모집합니다!
+
+• 모집 분야
+  - 백엔드 개발 (Spring, Node.js, Python 등)
+  - 프론트엔드 개발 (React, Vue, Angular 등)
+  - 모바일 개발 (React Native, Flutter 등)
+  - 데이터 사이언스 & AI/ML
+  - DevOps & 클라우드
+  - 게임 개발
+
+• 지원 자격
+  - 해당 분야 3년 이상 실무 경험
+  - 멘토링에 대한 열정과 책임감
+  - 정기적인 활동 가능
+
+• 혜택
+  - 경쟁력 있는 멘토링 수수료
+  - 개발자 네트워크 확장 기회
+  - Nest.dev 공식 멘토 인증
+
+관심 있으신 분들의 많은 지원 바랍니다.`,
+    date: "2024-06-15",
+    important: false,
+    views: 673
+  },
+  {
+    id: 4,
+    title: "여름 특별 이벤트 - 멘토링 할인 혜택",
+    content: `무더운 여름, Nest.dev와 함께 성장하세요!
+
+• 이벤트 기간: 2024.07.01 ~ 2024.08.31
+• 할인 혜택
+  - 신규 가입자: 첫 멘토링 30% 할인
+  - 기존 회원: 멘토링 2회 이상 예약 시 20% 할인
+  - 학생 인증 시: 추가 10% 할인
+
+• 특별 프로그램
+  - 여름방학 집중 코딩 캠프
+  - 포트폴리오 리뷰 이벤트
+  - 취업 준비 멘토링 패키지
+
+이 기회를 놓치지 마세요!`,
+    date: "2024-06-12",
+    important: false,
+    views: 1089
+  },
+  {
+    id: 5,
+    title: "[중요] 개인정보 처리방침 개정 안내",
+    content: `개인정보보호법 개정에 따라 개인정보 처리방침을 개정합니다.
+
+• 개정 시행일: 2024년 6월 10일
+• 주요 변경사항
+  - 개인정보 보관기간 명시
+  - 제3자 제공 범위 구체화
+  - 개인정보 처리 목적 세분화
+  - 이용자 권리 강화
+
+전문은 홈페이지 하단 '개인정보 처리방침'에서 확인하실 수 있습니다.
+궁금한 사항은 고객센터(privacy@nest.dev)로 문의해 주세요.
+
+개인정보 보호를 위해 지속적으로 노력하겠습니다.`,
+    date: "2024-06-08",
+    important: true,
+    views: 567
+  }
+];
+
 const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
-  const [activeTab, setActiveTab] = useState(initialTab); // 'faq', 'inquiries', 'myInquiries', 'create'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'faq', 'inquiries', 'myInquiries', 'create', 'notice'
   const [inquiries, setInquiries] = useState([]);
   const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [selectedNotice, setSelectedNotice] = useState(null); // 선택된 공지사항
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -132,6 +251,7 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
   // 탭 변경/마운트 시 데이터 로딩
   useEffect(() => {
     setSelectedInquiry(null);
+    setSelectedNotice(null);
     if (activeTab === 'inquiries') {
       fetchInquiries();
     } else if (activeTab === 'myInquiries') {
@@ -210,6 +330,8 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
 
   const handleInquiryClick = (inquiry) => fetchInquiryDetail(inquiry.id);
   const handleBackToList = () => setSelectedInquiry(null);
+  const handleNoticeClick = (notice) => setSelectedNotice(notice);
+  const handleBackToNoticeList = () => setSelectedNotice(null);
 
   // FAQ 아코디언 토글
   const toggleFaq = (idx) => setFaqOpenIndex(faqOpenIndex === idx ? null : idx);
@@ -237,7 +359,11 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
                 className={`menu-item ${activeTab === 'create' ? 'current' : ''}`}
                 onClick={() => setActiveTab('create')}
             >문의하기</div>
-            <div className="menu-item">공지사항</div>
+            <div
+                className={`menu-item ${activeTab === 'notice' ? 'current' : ''}`}
+                onClick={() => { setActiveTab('notice'); setSelectedInquiry(null); setSelectedNotice(null); }}
+                style={{ cursor: 'pointer' }}
+            >공지사항</div>
           </div>
         </div>
 
@@ -248,17 +374,102 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
             <h1>
               {activeTab === 'faq'
                   ? '자주 묻는 질문'
-                  : selectedInquiry
-                      ? '문의 상세'
-                      : activeTab === 'myInquiries'
-                          ? '내 문의 내역'
-                          : activeTab === 'inquiries'
-                              ? '문의 사항'
-                              : '문의하기'}
+                  : activeTab === 'notice'
+                      ? (selectedNotice ? '공지사항 상세' : '공지사항')
+                      : selectedInquiry
+                          ? '문의 상세'
+                          : activeTab === 'myInquiries'
+                              ? '내 문의 내역'
+                              : activeTab === 'inquiries'
+                                  ? '문의 사항'
+                                  : '문의하기'}
             </h1>
           </div>
 
           <div className="tab-content">
+            {/* 공지사항 탭 */}
+            {activeTab === 'notice' && (
+                <div className="notice-container">
+                  {selectedNotice ? (
+                      // 공지사항 상세
+                      <div className="notice-detail">
+                        <div className="detail-header">
+                          <button className="back-button" onClick={handleBackToNoticeList}>
+                            <i className="arrow-icon">←</i> 목록으로
+                          </button>
+                        </div>
+
+                        <div className="detail-card">
+                          <div className="detail-card-header">
+                            <div className="title-section">
+                              <h2 className="detail-title">{selectedNotice.title}</h2>
+                              <div className="detail-badges">
+                                {selectedNotice.important && (
+                                    <span className="important-badge">중요</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="detail-meta">
+                              <div className="meta-item">
+                                <span className="meta-label">작성일</span>
+                                <span className="meta-value">{selectedNotice.date}</span>
+                              </div>
+                              <div className="meta-item">
+                                <span className="meta-label">조회수</span>
+                                <span className="meta-value">{selectedNotice.views?.toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="detail-content">
+                            <div className="content-section">
+                              <div className="content-header">
+                                <h3>공지 내용</h3>
+                                <div className="content-icon">📢</div>
+                              </div>
+                              <div className="content-body">
+                                <pre className="notice-content">{selectedNotice.content}</pre>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                  ) : (
+                      // 공지사항 목록
+                      <div className="notice-list">
+                        <h3>공지사항</h3>
+                        <p className="notice-description">Nest.dev의 새로운 소식과 중요한 공지사항을 확인하세요.</p>
+
+                        <div className="notice-items">
+                          {NOTICE_LIST.map(notice => (
+                              <div
+                                  key={notice.id}
+                                  className={`notice-item ${notice.important ? 'important' : ''}`}
+                                  onClick={() => handleNoticeClick(notice)}
+                              >
+                                <div className="notice-header">
+                                  <div className="notice-title-section">
+                                    {notice.important && (
+                                        <span className="important-badge">중요</span>
+                                    )}
+                                    <h4 className="notice-title">{notice.title}</h4>
+                                  </div>
+                                  <div className="notice-meta">
+                                    <span className="notice-date">{notice.date}</span>
+                                    <span className="notice-views">조회 {notice.views?.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                                <div className="notice-preview">
+                                  {notice.content.split('\n')[0]}...
+                                </div>
+                              </div>
+                          ))}
+                        </div>
+                      </div>
+                  )}
+                </div>
+            )}
+
             {/* FAQ 탭 */}
             {activeTab === 'faq' && (
                 <div className="faq-container">
@@ -303,7 +514,7 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
             )}
 
             {/* FAQ가 아닌 탭들만 문의/폼/상세 노출 */}
-            {activeTab !== 'faq' && (
+            {activeTab !== 'faq' && activeTab !== 'notice' && (
                 <>
                   {selectedInquiry ? (
                       // 문의 상세

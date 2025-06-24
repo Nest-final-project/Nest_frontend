@@ -236,6 +236,7 @@ const Header = ({
                     onClick={() => {
                       setIsNavOpen(false);
                       setIsInquiryOpen(false);
+                      onInquiry && onInquiry('notice');
                     }}
                 >
                   공지사항
