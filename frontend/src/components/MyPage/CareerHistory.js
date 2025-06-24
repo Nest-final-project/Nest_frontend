@@ -1,167 +1,265 @@
-import React, { useState, useEffect } from 'react';
-import { Briefcase, Calendar, Edit3, X, UserPlus } from 'lucide-react';
-import { careerAPI } from '../../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { Briefcase, Edit3, X, Plus, Save, RotateCcw } from 'lucide-react';
+import { careerAPI, profileAPI } from '../../services/api';
+import CareerDetailModal from './CareerDetailModal';
 import './CareerHistory.css';
+
+// 경력 아이템 표시 컴포넌트 (직책, 수정/삭제 버튼 제거)
+const CareerItem = ({ career }) => (
+  <div className="info-card">
+    <div className="info-card-icon"><Briefcase /></div>
+    <div className="info-card-content">
+      <span className="info-card-label">{career.company}</span>
+      <p className="info-card-value">
+        {career.startAt?.slice(0, 10)} ~ {career.endAt ? career.endAt.slice(0, 10) : '재직중'}
+      </p>
+    </div>
+  </div>
+);
+
+// 경력 수정/추가 폼 컴포넌트
+const CareerForm = ({ career, onSave, onCancel, profiles, selectedProfileId, setSelectedProfileId }) => {
+  const [formData, setFormData] = useState({
+    company: career?.company || '',
+    startAt: career?.startAt?.slice(0, 10) || '',
+    endAt: career?.endAt?.slice(0, 10) || '',
+  });
+  const [file, setFile] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({ ...career, ...formData }, file);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="info-card form-card">
+      {profiles && profiles.length > 0 && !career?.id && (
+        <select value={selectedProfileId} onChange={e => setSelectedProfileId(e.target.value)} required>
+          <option value="">프로필을 선택하세요</option>
+          {profiles.map(profile => (
+            <option key={profile.id} value={profile.id}>{profile.title || profile.name || `프로필 ${profile.id}`}</option>
+          ))}
+        </select>
+      )}
+      <input name="company" value={formData.company} onChange={handleChange} placeholder="회사명" required />
+      <input type="file" onChange={handleFileChange} />
+      <input type="date" name="startAt" value={formData.startAt} onChange={handleChange} required />
+      <input type="date" name="endAt" value={formData.endAt} onChange={handleChange} placeholder="종료일 (없으면 현재)" />
+      <div className="info-card-actions">
+        <button type="submit" className="action-btn save"><Save size={18} /></button>
+        <button type="button" onClick={onCancel} className="action-btn cancel"><RotateCcw size={18} /></button>
+      </div>
+    </form>
+  );
+};
 
 const CareerHistory = ({ userInfo }) => {
   const [careers, setCareers] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [careerDetail, setCareerDetail] = useState(null);
+  const fileInputRef = useRef(null);
+  const [editingCertInfo, setEditingCertInfo] = useState(null);
+  const [profiles, setProfiles] = useState([]);
+  const [selectedProfileId, setSelectedProfileId] = useState('');
 
   useEffect(() => {
-    if (userInfo?.userRole === 'MENTOR' && !dataLoaded) {
+    if (userInfo?.userRole === 'MENTOR') {
       fetchCareers();
     }
-  }, [userInfo, dataLoaded]);
+  }, [userInfo]);
 
   const fetchCareers = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await careerAPI.getAllCareers();
-      const rawCareers = response.data.data.content;
+      const rawCareers = response.data?.data?.content || [];
       setCareers(rawCareers);
-      setDataLoaded(true);
     } catch (err) {
-      console.error("경력 내역을 불러오는 데 실패했습니다:", err);
-      setError("경력 내역을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      setError("경력 정보를 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRetry = () => {
-    setDataLoaded(false);
-    setError(null);
-    fetchCareers();
+  const handleSave = async (careerData, file) => {
+    const formData = new FormData();
+    formData.append('dto', new Blob([JSON.stringify({
+      company: careerData.company,
+      startAt: careerData.startAt ? careerData.startAt + 'T00:00:00' : null,
+      endAt: careerData.endAt ? careerData.endAt + 'T00:00:00' : null,
+    })], { type: 'application/json' }));
+
+    if (file) {
+      formData.append('files', file);
+    }
+    try {
+      if (careerData.id) {
+        // 수정 API 호출 (FormData 사용)
+        // await careerAPI.updateCareer(careerData.id, formData);
+      } else {
+        if (!selectedProfileId) {
+          alert('프로필을 선택하세요.');
+          return;
+        }
+        await careerAPI.createCareer(selectedProfileId, formData);
+      }
+      fetchCareers();
+      setEditingId(null);
+      setIsAdding(false);
+      setSelectedProfileId('');
+    } catch (err) {
+      console.error("경력 저장 실패:", err);
+    }
   };
 
-  // 멘토가 아닌 경우 렌더링하지 않음
-  if (userInfo?.userRole !== 'MENTOR') {
-    return null;
-  }
+  const handleDelete = async (id) => {
+    if (window.confirm("정말 삭제하시겠습니까?")) {
+      try {
+        // await careerAPI.deleteCareer(id);
+        fetchCareers();
+      } catch (err) {
+        console.error("경력 삭제 실패:", err);
+      }
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="careers-tab">
-        <div className="loading-state">
-          <div className="loading-spinner"></div>
-          <p>경력 내역을 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
+  // 상세보기 핸들러
+  const handleCardClick = async (career) => {
+    if (editingId === career.id) return; // 수정 중일 때는 상세 안 띄움
+    try {
+      const res = await careerAPI.getCareerDetail(career.profileId, career.id);
+      setCareerDetail(res.data.data);
+    } catch (err) {
+      alert('상세 정보를 불러오지 못했습니다.');
+    }
+  };
 
-  if (error) {
-    return (
-      <div className="careers-tab">
-        <div className="error-state">
-          <Briefcase className="error-icon" />
-          <h4>오류가 발생했습니다</h4>
-          <p>{error}</p>
-          <button className="retry-btn" onClick={handleRetry}>
-            다시 시도
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // 모달에서 수정 버튼 클릭 시
+  const handleEditFromModal = (career) => {
+    setCareerDetail(null);
+    setEditingId(career.id);
+  };
+
+  // 모달에서 삭제 버튼 클릭 시
+  const handleDeleteFromModal = (career) => {
+    if (window.confirm("정말 이 경력을 삭제하시겠습니까?")) {
+      setCareerDetail(null); // 모달 닫기
+      careerAPI.deleteCareer(career.id)
+        .then(() => {
+          alert("경력이 삭제되었습니다.");
+          fetchCareers(); // 목록 새로고침
+        })
+        .catch(err => {
+          console.error("경력 삭제 실패:", err);
+          alert("경력 삭제에 실패했습니다.");
+        });
+    }
+  };
+
+  // 자격증 수정 버튼 클릭 시 파일 입력창 열기
+  const handleEditCertificates = (career) => {
+    setEditingCertInfo({
+      careerId: career.id,
+    });
+    fileInputRef.current.click();
+  };
+
+  // 파일 선택 후 API 호출 (여러 파일)
+  const handleFileSelected = async (event) => {
+    const files = event.target.files;
+    if (files && editingCertInfo) {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+      try {
+        await careerAPI.updateCertificate(
+          editingCertInfo.careerId,
+          formData
+        );
+        alert('자격증이 성공적으로 수정되었습니다.');
+        setCareerDetail(null);
+        fetchCareers();
+      } catch (err) {
+        console.error("자격증 수정 실패:", err);
+        alert("자격증 수정에 실패했습니다.");
+      } finally {
+        setEditingCertInfo(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    }
+  };
+
+  // 새 경력 추가 버튼 클릭 시 프로필 목록 조회
+  const handleAddCareer = async () => {
+    try {
+      const res = await profileAPI.getMyProfile();
+      // 응답 구조에 따라 data.data 또는 data.content 등으로 접근 필요
+      const profileList = Array.isArray(res.data.data) ? res.data.data : (res.data.data?.content || []);
+      setProfiles(profileList);
+      setIsAdding(true);
+    } catch (err) {
+      alert('프로필 목록을 불러오지 못했습니다.');
+    }
+  };
+
+  if (userInfo?.userRole !== 'MENTOR') return null;
+  if (loading) return <div>로딩 중...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
-    <div className="careers-tab">
-      <div className="section-header">
-        <h3>경력 목록</h3>
-        <p>멘토링에 표시될 경력 사항을 관리하세요</p>
-      </div>
-
-      {careers.length > 0 ? (
-        <div className="careers-scroll-container">
-          <div className="careers-container">
-            {careers.map((career, index) => (
-              <div key={career.id} className="career-card">
-                <div className="career-number">{index + 1}</div>
-                <div className="career-content">
-                  <div className="career-header">
-                    <div className="career-title-section">
-                      <h4 className="career-company">{career.company}</h4>
-                      <span className="career-position">{career.position || '직책'}</span>
-                    </div>
-                    {career.isCurrent && (
-                      <span className="career-current-badge">재직중</span>
-                    )}
-                  </div>
-
-                  <div className="career-details">
-                    <div className="career-period">
-                      <Calendar className="career-icon" size={16} />
-                      <span className="career-date">
-                        {career.startAt} ~ {career.endAt || '현재'}
-                      </span>
-                      {career.duration && (
-                        <span className="career-duration">({career.duration})</span>
-                      )}
-                    </div>
-
-                    {career.department && (
-                      <div className="career-department">
-                        <Briefcase className="career-icon" size={16} />
-                        <span>{career.department}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {career.description && (
-                    <div className="career-description-section">
-                      <p className="career-description">{career.description}</p>
-                    </div>
-                  )}
-
-                  {career.skills && career.skills.length > 0 && (
-                    <div className="career-skills">
-                      {career.skills.map((skill, idx) => (
-                        <span key={idx} className="skill-tag">{skill}</span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="career-actions">
-                    <button className="career-action-btn edit">
-                      <Edit3 size={14} />
-                      수정
-                    </button>
-                    <button className="career-action-btn delete">
-                      <X size={14} />
-                      삭제
-                    </button>
-                  </div>
-                </div>
+    <div className="career-history-container">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelected}
+        style={{ display: 'none' }}
+        accept="image/*,.pdf"
+        multiple
+      />
+      <h3>경력 목록</h3>
+      <div className="career-list">
+        {careers.map(career => (
+          editingId === career.id
+            ? <CareerForm key={career.id} career={career} onSave={handleSave} onCancel={() => setEditingId(null)} profiles={profiles} selectedProfileId={selectedProfileId} setSelectedProfileId={setSelectedProfileId} />
+            : <div key={career.id} onClick={() => handleCardClick(career)} style={{ cursor: 'pointer' }}>
+                <CareerItem career={career} />
               </div>
-            ))}
-          </div>
-
-          <div className="careers-footer">
-            <button className="add-career-btn">
-              <UserPlus size={18} />
-              새 경력 추가
-            </button>
-          </div>
-
-          <div className="scroll-guide">
-            <span>더 많은 경력을 보려면 스크롤하세요</span>
-          </div>
-        </div>
-      ) : (
-        <div className="empty-state">
-          <Briefcase className="empty-icon" />
-          <h4>등록된 경력이 없습니다</h4>
-          <p>경력을 추가하여 프로필을 완성해보세요!</p>
-          <button className="empty-action-btn">
-            <Briefcase size={18} />
-            첫 경력 추가하기
-          </button>
-        </div>
+        ))}
+        {isAdding && (
+          <CareerForm onSave={handleSave} onCancel={() => setIsAdding(false)} profiles={profiles} selectedProfileId={selectedProfileId} setSelectedProfileId={setSelectedProfileId} />
+        )}
+      </div>
+      {!isAdding && (
+        <button onClick={handleAddCareer} className="add-career-btn">
+          <Plus size={18} /> 새 경력 추가
+        </button>
+      )}
+      {careerDetail && (
+        <CareerDetailModal
+          detail={careerDetail}
+          onClose={() => setCareerDetail(null)}
+          onEdit={() => handleEditFromModal(careerDetail)}
+          onDelete={() => handleDeleteFromModal(careerDetail)}
+          onEditCertificates={() => handleEditCertificates(careerDetail)}
+        />
       )}
     </div>
   );
