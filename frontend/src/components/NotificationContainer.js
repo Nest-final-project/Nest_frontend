@@ -52,7 +52,7 @@ const NotificationContainer = ({ isLoggedIn = false }) => {
     notificationService.addEventListener('connection', handleConnection);
 
     // SSE 연결 시작 (로그인된 상태에서만)
-    console.log('로그인된 사용자 - SSE 연결 시작');
+    console.log('SSE 알림 서비스 연결 시작');
     notificationService.connect();
 
     // 컴포넌트 언마운트 시 정리

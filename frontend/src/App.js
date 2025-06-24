@@ -20,7 +20,6 @@ import ChatRoom from './components/ChatRoom';
 import MyPage from './components/MyPage.js';
 import ChatContainer from './components/ChatContainer';
 import NotificationContainer from './components/NotificationContainer';
-import SSEExample from './components/SSEExample.js';
 import Inquiry from './components/Inquiry';
 import AdminDashboard from './components/AdminDashboard';
 import { authUtils, userInfoUtils } from './utils/tokenUtils';
@@ -358,38 +357,6 @@ const App = () => {
     }
   };
 
-  // SSE 데모 페이지로 이동
-  const handleSSEDemo = () => {
-    setCurrentPage('sse-demo');
-  };
-
-  // SSE 데모 페이지 렌더링
-  if (currentPage === 'sse-demo') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          onLoginClick={() => setIsLoginOpen(true)}
-          onCategorySelect={handleCategorySelect}
-          onProfileClick={handleProfileClick}
-          isLoggedIn={isLoggedIn}
-          userInfo={userInfo}
-          onChatRoom={handleChatRoom}
-          onLogout={handleLogout}
-          onSSEDemo={handleSSEDemo}
-          onAdminDashboard={handleAdminDashboard}
-        />
-        <SSEExample />
-        <Login
-          isOpen={isLoginOpen}
-          onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-      </div>
-    );
-  }
-
   // 소셜 회원가입 페이지 렌더링
   if (currentPage === 'social-signup') {
     return <SocialSignup />;
@@ -421,7 +388,6 @@ const App = () => {
           userInfo={userInfo}
           onChatRoom={handleChatRoom}
           onLogout={handleLogout}
-          onSSEDemo={handleSSEDemo}
           onAdminDashboard={handleAdminDashboard}
         />
         <MentorList
@@ -548,7 +514,6 @@ const App = () => {
           userInfo={userInfo}
           onChatRoom={handleChatRoom}
           onLogout={handleLogout}
-          onSSEDemo={handleSSEDemo}
           onAdminDashboard={handleAdminDashboard}
         />
         <main className="main-content">
