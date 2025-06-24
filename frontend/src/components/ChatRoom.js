@@ -29,6 +29,8 @@ const ChatRoom = ({
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isChatRoomClosed, setIsChatRoomClosed] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -55,6 +57,50 @@ const ChatRoom = ({
     }
     setError(null);
   }, [contact, chatRoomId]);
+
+  // 채팅방 상태 확인
+  const checkChatRoomStatus = async (chatRoomId) => {
+    if (!chatRoomId) {
+      console.warn('❌ checkChatRoomStatus: 채팅방 ID가 없습니다');
+      return;
+    }
+
+    try {
+      setStatusLoading(true);
+      console.log(`🔍 채팅방 ${chatRoomId}의 상태 확인 중...`);
+
+      const response = await axios.get(
+          `/api/chat_rooms/${chatRoomId}/status`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
+            }
+          }
+      );
+
+      console.log('📋 채팅방 상태 API 응답:', response.data);
+
+      // 백엔드에서 "closed" 필드로 응답하므로 이를 사용
+      const isClosed = response.data.closed;
+      setIsChatRoomClosed(isClosed);
+      
+      console.log(`✅ 채팅방 ${chatRoomId} 상태: ${isClosed ? '종료됨' : '활성'}`);
+      console.log(`🔧 isChatRoomClosed 상태 설정됨:`, isClosed);
+
+      return isClosed;
+
+    } catch (err) {
+      console.error(`❌ 채팅방 ${chatRoomId} 상태 확인 실패:`, err);
+      console.error('에러 상세:', err.response?.data || err.message);
+      
+      // 상태 확인 실패 시 기본적으로 열린 상태로 가정
+      setIsChatRoomClosed(false);
+      console.log('🔧 에러로 인해 isChatRoomClosed를 false로 설정');
+      return false;
+    } finally {
+      setStatusLoading(false);
+    }
+  };
 
   // 메시지 불러오기
   const fetchMessages = async (chatRoomId) => {
@@ -107,6 +153,12 @@ const ChatRoom = ({
 
   // WebSocket 연결 및 메시지 수신
   useEffect(() => {
+    // 채팅방이 종료된 경우 WebSocket 연결하지 않음
+    if (isChatRoomClosed) {
+      console.log(`🚫 채팅방 ${chatRoomId}이 종료되어 WebSocket 연결을 시도하지 않습니다.`);
+      return;
+    }
+
     if (!isConnected) {
       connect();
     }
@@ -197,7 +249,7 @@ const ChatRoom = ({
         unsubscribe();
       }
     };
-  }, [isConnected, connect, onMessage, chatRoomId, userId]);
+  }, [isConnected, connect, onMessage, chatRoomId, userId, isChatRoomClosed]);
 
   // 컴포넌트 unmount 시 정리
   useEffect(() => {
@@ -207,6 +259,8 @@ const ChatRoom = ({
       setMessages([]);
       setError(null);
       setLoading(false);
+      setIsChatRoomClosed(false);
+      setStatusLoading(false);
     };
   }, []);
 
@@ -219,9 +273,26 @@ const ChatRoom = ({
       setMessages([]);
       setError(null);
       setLoading(true);
+      setIsChatRoomClosed(false);
 
-      // 새 채팅방의 메시지 가져오기
-      fetchMessages(chatRoomId);
+      // 채팅방 상태 확인 후 메시지 가져오기
+      const loadChatRoom = async () => {
+        try {
+          // 1. 먼저 채팅방 상태 확인
+          const isClosed = await checkChatRoomStatus(chatRoomId);
+          
+          // 2. 메시지 가져오기 (종료된 채팅방이어도 기존 메시지는 볼 수 있음)
+          await fetchMessages(chatRoomId);
+          
+          if (isClosed) {
+            console.log(`🔒 채팅방 ${chatRoomId}이 종료되었습니다. 읽기 전용 모드입니다.`);
+          }
+        } catch (error) {
+          console.error('채팅방 로딩 실패:', error);
+        }
+      };
+
+      loadChatRoom();
     }
   }, [chatRoomId]);
 
@@ -234,7 +305,21 @@ const ChatRoom = ({
 
   // 메시지 전송
   const handleSendMessage = async () => {
+    console.log('🚀 메시지 전송 시도:', {
+      message: message.trim(),
+      chatRoomId,
+      isChatRoomClosed
+    });
+
     if (!message.trim() || !chatRoomId) {
+      console.log('❌ 메시지가 비어있거나 채팅방 ID가 없음');
+      return;
+    }
+
+    // 채팅방이 종료된 경우 메시지 전송 차단
+    if (isChatRoomClosed) {
+      console.log('🚫 채팅방이 종료되어 메시지 전송 차단');
+      alert('종료된 채팅방에서는 메시지를 보낼 수 없습니다.');
       return;
     }
 
@@ -382,13 +467,18 @@ const ChatRoom = ({
               </div>
               <div className="contact-details">
                 <h3 className="contact-name">{contact?.name || '김밤'}</h3>
-                <span className="contact-status">대화 중</span>
-                <div className="connection-status">
-                <span className={`ws-status ${isConnected ? 'connected'
-                    : 'disconnected'}`}>
-                  {isConnected ? '🟢 실시간 연결됨' : '🔴 연결 끊김'}
+                <span className="contact-status">
+                  {isChatRoomClosed ? '채팅 종료됨' : '대화 중'}
                 </span>
-                </div>
+                {/* 활성 채팅방에만 연결 상태 표시 */}
+                {!isChatRoomClosed && (
+                  <div className="connection-status">
+                    <span className={`ws-status ${isConnected ? 'connected'
+                        : 'disconnected'}`}>
+                      {isConnected ? '🟢 실시간 연결됨' : '🔴 연결 끊김'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -448,36 +538,44 @@ const ChatRoom = ({
         </div>
 
         {/* 입력 영역 */}
-        <div className="message-input-container">
-          <div className="message-input-wrapper">
-            <button className="attachment-button">
-              <Paperclip className="icon"/>
-            </button>
+        {isChatRoomClosed ? (
+          <div className="message-input-container disabled">
+            <div className="chat-closed-notice">
+              <span>📫 이 채팅방은 종료되었습니다. 메시지를 읽을 수만 있습니다.</span>
+            </div>
+          </div>
+        ) : (
+          <div className="message-input-container">
+            <div className="message-input-wrapper">
+              <button className="attachment-button">
+                <Paperclip className="icon"/>
+              </button>
 
-            <div className="text-input-container">
-            <textarea
-                ref={textareaRef}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="메시지를 입력하세요..."
-                className="message-textarea"
-                rows="1"
-            />
-              <button className="emoji-button">
-                <Smile className="icon"/>
+              <div className="text-input-container">
+              <textarea
+                  ref={textareaRef}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="메시지를 입력하세요..."
+                  className="message-textarea"
+                  rows="1"
+              />
+                <button className="emoji-button">
+                  <Smile className="icon"/>
+                </button>
+              </div>
+
+              <button
+                  className={`send-button ${message.trim() ? 'active' : ''}`}
+                  onClick={handleSendMessage}
+                  disabled={!message.trim()}
+              >
+                <Send className="icon"/>
               </button>
             </div>
-
-            <button
-                className={`send-button ${message.trim() ? 'active' : ''}`}
-                onClick={handleSendMessage}
-                disabled={!message.trim()}
-            >
-              <Send className="icon"/>
-            </button>
           </div>
-        </div>
+        )}
       </div>
   );
 };
