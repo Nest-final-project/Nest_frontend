@@ -12,9 +12,7 @@ import MentorList from './components/MentorList';
 import MentorProfile from './components/MentorProfile';
 import Booking from './components/Booking';
 import Payment from './components/Payment';
-import Checkout from './components/Checkout';
-import Success from './components/Success';
-import Fail from './components/Fail';
+import TossPaymentApp from './components/TossPayment';
 import PaymentSuccess from './components/PaymentSuccess';
 import ChatRoom from './components/ChatRoom';
 import MyPage from './components/MyPage';
@@ -76,18 +74,21 @@ const App = () => {
     const orderId = urlParams.get('orderId');
     const amount = urlParams.get('amount');
     
-    // 결제 실패 처리
+    // 토스페이먼츠 결제 실패 처리
     const errorCode = urlParams.get('code');
     const errorMessage = urlParams.get('message');
     
+    // 토스 결제 성공/실패 URL 체크
+    const currentPath = window.location.pathname;
+    
     if (needsAdditionalInfo === 'true') {
       setCurrentPage('social-signup');
-    } else if (paymentKey && orderId && amount) {
-      // 결제 성공
-      setCurrentPage('success');
-    } else if (errorCode && errorMessage) {
-      // 결제 실패
-      setCurrentPage('fail');
+    } else if (currentPath === '/toss/success' || (paymentKey && orderId && amount)) {
+      // 토스페이먼츠 결제 성공
+      setCurrentPage('toss-success');
+    } else if (currentPath === '/toss/fail' || (errorCode && errorMessage)) {
+      // 토스페이먼츠 결제 실패
+      setCurrentPage('toss-fail');
     }
   }, []);
 
@@ -149,10 +150,10 @@ const App = () => {
     setCurrentPage('payment');
   };
 
-  // 토스페이 체크아웃 페이지로 이동
-  const handleCheckout = (data) => {
+  // TossPayment 페이지로 이동
+  const handleTossPayment = (data) => {
     setPaymentData(data);
-    setCurrentPage('checkout');
+    setCurrentPage('toss-payment');
   };
 
   // 채팅방으로 이동
@@ -167,14 +168,14 @@ const App = () => {
     setCurrentPage('payment-success');
   };
 
-  // 결제 성공 페이지로 이동
-  const handlePaymentSuccess = () => {
-    setCurrentPage('success');
+  // 토스페이 결제 페이지로 이동
+  const handleTossSuccess = () => {
+    setCurrentPage('toss-success');
   };
 
-  // 결제 실패 페이지로 이동
-  const handlePaymentFail = () => {
-    setCurrentPage('fail');
+  // 토스페이 결제 실패 페이지로 이동
+  const handleTossFail = () => {
+    setCurrentPage('toss-fail');
   };
 
   // 예약 페이지로 돌아가기
@@ -182,9 +183,9 @@ const App = () => {
     setCurrentPage('booking');
   };
 
-  // 결제 페이지로 돌아가기
-  const handleBackToPayment = () => {
-    setCurrentPage('payment');
+  // 토스페이 결제 페이지로 돌아가기
+  const handleBackToTossPayment = () => {
+    setCurrentPage('toss-payment');
   };
 
   // 멘토 프로필로 돌아가기
@@ -316,7 +317,7 @@ const App = () => {
         bookingData={bookingData}
         onBack={handleBackToBooking}
         onPaymentComplete={handlePaymentComplete}
-        onCheckout={handleCheckout}
+        onTossPayment={handleTossPayment}
       />
     );
   }
@@ -331,34 +332,42 @@ const App = () => {
     );
   }
 
-  // 토스페이 체크아웃 페이지 렌더링
-  if (currentPage === 'checkout') {
+  // 토스페이 결제 페이지 렌더링
+  if (currentPage === 'toss-payment') {
     return (
-      <Checkout 
-        paymentData={paymentData}
-        onBack={handleBackToPayment}
-        onSuccess={handlePaymentSuccess}
-        onFail={handlePaymentFail}
+      <TossPaymentApp 
+        currentTossPage="toss-payment"
+        bookingData={paymentData}
+        onBack={handleBackToTossPayment}
+        onTossSuccess={handleTossSuccess}
+        onTossFail={handleTossFail}
+        onHome={handleBackToHome}
+        onPaymentComplete={handlePaymentComplete}
       />
     );
   }
 
-  // 결제 성공 페이지 렌더링
-  if (currentPage === 'success') {
+  // 토스페이 결제 성공 페이지 렌더링
+  if (currentPage === 'toss-success') {
     return (
-      <Success 
+      <TossPaymentApp 
+        currentTossPage="toss-success"
         paymentData={paymentData}
+        onBack={handleBackToTossPayment}
         onHome={handleBackToHome}
+        onPaymentComplete={handlePaymentComplete}
       />
     );
   }
 
-  // 결제 실패 페이지 렌더링
-  if (currentPage === 'fail') {
+  // 토스페이 결제 실패 페이지 렌더링
+  if (currentPage === 'toss-fail') {
     return (
-      <Fail 
-        onBack={handleBackToPayment}
+      <TossPaymentApp 
+        currentTossPage="toss-fail"
+        onBack={handleBackToTossPayment}
         onHome={handleBackToHome}
+        onPaymentComplete={handlePaymentComplete}
       />
     );
   }
