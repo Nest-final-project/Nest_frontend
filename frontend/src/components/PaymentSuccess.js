@@ -3,6 +3,29 @@ import { CheckCircle, Calendar, Clock, User, CreditCard, Home, Receipt, Download
 import './PaymentSuccess.css';
 
 const PaymentSuccess = ({ paymentResult, onHome }) => {
+  // 🐛 디버깅: PaymentSuccess에서 받은 데이터 확인
+  React.useEffect(() => {
+    console.group('🔍 PaymentSuccess 컴포넌트 데이터 확인');
+    console.log('전체 paymentResult:', paymentResult);
+    console.log('paymentResult.booking:', paymentResult?.booking);
+    console.log('paymentResult.reservationId:', paymentResult?.reservationId);
+    console.log('paymentResult.ticketId:', paymentResult?.ticketId);
+    
+    if (paymentResult?.booking) {
+      console.log('멘토 이름:', paymentResult.booking.mentor?.name);
+      console.log('멘토 전문분야:', paymentResult.booking.mentor?.title);
+      console.log('예약 날짜:', paymentResult.booking.date);
+      console.log('시작 시간:', paymentResult.booking.startTime);
+      console.log('종료 시간:', paymentResult.booking.endTime);
+      console.log('서비스명:', paymentResult.booking.service);
+      console.log('소요시간:', paymentResult.booking.duration);
+      console.log('진행방식:', paymentResult.booking.meetingType);
+    } else {
+      console.warn('❌ booking 데이터가 없습니다!');
+    }
+    console.groupEnd();
+  }, [paymentResult]);
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString('ko-KR', {
@@ -72,26 +95,74 @@ const PaymentSuccess = ({ paymentResult, onHome }) => {
           <div className="card-content">
             <div className="mentor-info">
               <div className="mentor-avatar">
-                {paymentResult.booking.mentor?.name?.charAt(0) || 'M'}
+                {paymentResult?.booking?.mentor?.name?.charAt(0) || '?'}
               </div>
               <div className="mentor-details">
-                <span className="mentor-name">{paymentResult.booking.mentor?.name}</span>
-                <span className="mentor-title">시니어 개발자</span>
+                <span className="mentor-name">
+                  {paymentResult?.booking?.mentor?.name || '멘토 정보 로딩 중...'}
+                </span>
+                <span className="mentor-title">
+                  {paymentResult?.booking?.mentor?.title || '전문 멘토'}
+                </span>
               </div>
             </div>
             <div className="booking-details">
               <div className="detail-item">
                 <Calendar className="detail-icon" />
-                <span>{paymentResult.booking.date}</span>
+                <span>
+                  {paymentResult?.booking?.date ? 
+                    paymentResult.booking.date : 
+                    '날짜 정보 로딩 중...'
+                  }
+                </span>
               </div>
               <div className="detail-item">
                 <Clock className="detail-icon" />
-                <span>{paymentResult.booking.startTime} - {paymentResult.booking.endTime}</span>
+                <span>
+                  {paymentResult?.booking?.startTime && paymentResult?.booking?.endTime ? 
+                    `${paymentResult.booking.startTime} - ${paymentResult.booking.endTime}` : 
+                    '시간 정보 로딩 중...'
+                  }
+                </span>
               </div>
               <div className="detail-item">
                 <User className="detail-icon" />
-                <span>{paymentResult.booking.service}</span>
+                <span>
+                  {paymentResult?.booking?.service || '서비스 정보 로딩 중...'}
+                </span>
               </div>
+              {paymentResult?.booking?.duration && (
+                <div className="detail-item">
+                  <Clock className="detail-icon" />
+                  <span>소요시간: {paymentResult.booking.duration}분</span>
+                </div>
+              )}
+              {paymentResult?.booking?.meetingType && (
+                <div className="detail-item">
+                  <User className="detail-icon" />
+                  <span>진행방식: {paymentResult.booking.meetingType}</span>
+                </div>
+              )}
+              {paymentResult?.reservationId && (
+                <div className="detail-item">
+                  <Receipt className="detail-icon" />
+                  <span>예약번호: {paymentResult.reservationId}</span>
+                </div>
+              )}
+              {paymentResult?.ticketId && (
+                <div className="detail-item">
+                  <Receipt className="detail-icon" />
+                  <span>티켓번호: {paymentResult.ticketId}</span>
+                </div>
+              )}
+              
+              {/* 🐛 디버깅용: 데이터가 없을 때 표시 */}
+              {!paymentResult?.booking && (
+                <div className="detail-item" style={{color: 'red'}}>
+                  <User className="detail-icon" />
+                  <span>⚠️ 예약 데이터를 불러올 수 없습니다</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

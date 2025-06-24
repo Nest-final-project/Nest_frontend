@@ -172,16 +172,56 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
             refreshToken: refreshToken ? '있음' : '없음'
           });
           
+          console.log('🔍 사용자 정보 구성 상세 분석:');
+          console.log('responseData 전체:', responseData);
+          console.log('responseData를 JSON으로:', JSON.stringify(responseData, null, 2));
+          console.log('responseData의 모든 키:', Object.keys(responseData));
+          console.log('responseData.userRole:', responseData.userRole);
+          console.log('responseData.user?.userRole:', responseData.user?.userRole);
+          console.log('responseData.role:', responseData.role);
+          console.log('responseData.authority:', responseData.authority);
+          console.log('responseData.authorities:', responseData.authorities);
+          
+          // JWT 토큰에서 userRole 추출하는 함수
+          const decodeJWT = (token) => {
+            try {
+              const base64Url = token.split('.')[1];
+              const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+              const jsonPayload = decodeURIComponent(
+                atob(base64)
+                  .split('')
+                  .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                  .join('')
+              );
+              return JSON.parse(jsonPayload);
+            } catch (error) {
+              console.error('JWT 디코딩 실패:', error);
+              return null;
+            }
+          };
+          
+          // JWT에서 사용자 역할 추출
+          let userRoleFromToken = null;
+          if (accessToken) {
+            const tokenPayload = decodeJWT(accessToken);
+            console.log('🔓 JWT 토큰 디코딩 결과:', tokenPayload);
+            userRoleFromToken = tokenPayload?.userRole;
+            console.log('🔐 토큰에서 추출한 userRole:', userRoleFromToken);
+          }
+          
           // 사용자 정보 구성
           const userInfo = {
             id: responseData.userId || responseData.id || responseData.user?.id,
-            name: responseData.name || responseData.userName || responseData.user?.name,
+            name: responseData.name || responseData.userName || responseData.user?.name || responseData.nickName,
             email: responseData.email || responseData.user?.email || email,
             profileImage: responseData.profileImage || responseData.user?.profileImage,
-            userRole: responseData.userRole || responseData.user?.userRole,
+            userRole: responseData.userRole || responseData.user?.userRole || responseData.role || responseData.authority || userRoleFromToken,
             joinDate: responseData.joinDate || responseData.createdAt || responseData.user?.createdAt,
             token: accessToken
           };
+          
+          console.log('구성된 userInfo:', userInfo);
+          console.log('구성된 userInfo.userRole:', userInfo.userRole);
           
           // 토큰 저장 (authUtils 사용)
           console.log('💾 토큰 저장 시작...');
@@ -197,8 +237,13 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
           if (savedToken && savedUser) {
             console.log('✅ 저장 확인 성공');
             console.log('🔑 저장된 토큰 값:', savedToken);
+            console.log('👤 저장된 사용자 정보:', JSON.parse(savedUser));
+            console.log('🔐 사용자 역할:', userInfo.userRole);
+            
             if (onLoginSuccess) {
+              console.log('📞 onLoginSuccess 호출 시작, 전달할 userInfo:', userInfo);
               onLoginSuccess(userInfo);
+              console.log('📞 onLoginSuccess 호출 완료');
             }
           } else {
             console.error('❌ 저장 확인 실패');
