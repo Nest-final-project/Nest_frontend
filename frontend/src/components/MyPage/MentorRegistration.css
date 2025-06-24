@@ -1,0 +1,133 @@
+/* MentorRegistration - 트렌디 & 깔끔 리디자인 */
+.mentor-register-tab {
+  background: #fff;
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 6px 32px rgba(102, 126, 234, 0.10), 0 1.5px 6px rgba(118, 75, 162, 0.06);
+  margin-bottom: 2.5rem;
+  transition: box-shadow 0.2s;
+  border: 1.5px solid #e5e7eb;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mentor-register-tab .section-header {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1.5px solid #e5e7eb;
+}
+
+.mentor-register-tab .section-header::before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 8px;
+  margin-right: 0.5rem;
+}
+
+.mentor-profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.mentor-profile-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  background: #f9fafb;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(102, 126, 234, 0.10);
+  padding: 2rem 1.5rem;
+  border: 1.5px solid #e5e7eb;
+  transition: box-shadow 0.2s, transform 0.2s;
+  position: relative;
+}
+.mentor-profile-card:hover {
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.18);
+  transform: translateY(-4px) scale(1.02);
+}
+.mentor-profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbb6ce, #a3bffa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.10);
+}
+.mentor-profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.mentor-profile-info .mentor-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+.mentor-profile-info .mentor-stack {
+  display: inline-block;
+  background: linear-gradient(135deg, #e0e7ff, #f3e8ff);
+  color: #5a67d8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.2rem 0.8rem;
+  margin-bottom: 0.2rem;
+}
+.mentor-profile-info .mentor-desc {
+  color: #4a5568;
+  font-size: 0.97rem;
+  margin-bottom: 0.2rem;
+}
+.mentor-profile-info .mentor-date {
+  font-size: 0.85rem;
+  color: #a0aec0;
+}
+.mentor-profile-info .mentor-status {
+  font-size: 0.9rem;
+  color: #38a169;
+  font-weight: 600;
+}
+@media (max-width: 768px) {
+  .mentor-register-tab {
+    padding: 1.2rem 0.5rem;
+    border-radius: 16px;
+    max-width: 98vw;
+  }
+  .mentor-register-tab .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding-bottom: 0.5rem;
+  }
+  .mentor-register-tab .section-header::before {
+    height: 20px;
+    width: 4px;
+    margin-right: 0.3rem;
+  }
+  .mentor-profile-card {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.2rem 0.7rem;
+  }
+  .mentor-profile-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+  }
+} 
