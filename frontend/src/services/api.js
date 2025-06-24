@@ -388,6 +388,28 @@ export const ticketAPI = {
   deleteReview: (ticketId) => api.delete(`/api/admin/ticket/${ticketId}`),
 }
 
+// User Coupon API (사용자 쿠폰 API)
+export const userCouponAPI = {
+  // 사용자 쿠폰 목록 조회 (페이징 처리)
+  getUserCoupons: (params = {}) => {
+    // 기본 파라미터 설정
+    const defaultParams = {
+      page: 0,
+      size: 20, // Payment.js에서 사용할 수 있도록 충분한 개수
+      sort: 'createdAt,desc'
+    };
+
+    const finalParams = { ...defaultParams, ...params };
+    return api.get('/api/user-coupons', { params: finalParams });
+  },
+
+  // 사용자 쿠폰 등록 (쿠폰 코드 입력 등)
+  registerUserCoupon: (couponData) => api.post('/api/user-coupons', couponData),
+
+  // 사용자 쿠폰 사용 처리
+  useCoupon: (couponData) => api.patch('/api/user-coupons/use', couponData),
+};
+
 // Inquiry API (문의 API)
 export const inquiryAPI = {
   // [사용자] 문의 생성
