@@ -1,146 +1,97 @@
-import { EventSourcePolyfill } from 'event-source-polyfill';
+import sseService from './sseService';
 import { accessTokenUtils } from '../utils/tokenUtils';
 
 class NotificationService {
   constructor() {
-    this.eventSource = null;
-    this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 5;
-    this.reconnectDelay = 1000;
     this.listeners = new Map();
+    this.isConnected = false;
   }
 
   // SSE 연결 시작
   connect() {
-    if (this.eventSource) {
-      this.disconnect();
+    const accessToken = accessTokenUtils.getAccessToken();
+    
+    console.log('알림 서비스 연결 시작');
+    
+    if (!accessToken) {
+      console.warn('Access token이 없어 알림 서비스 연결 불가');
+      return;
     }
 
-    try {
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-      const sseUrl = `${baseUrl}/sse/notifications/subscribe`;
-      
-      // JWT 토큰을 Authorization 헤더에 포함
-      const accessToken = accessTokenUtils.getAccessToken();
-      const headers = {};
-      
-      console.log('=== SSE 연결 디버깅 정보 ===');
-      console.log('baseUrl:', baseUrl);
-      console.log('sseUrl:', sseUrl);
-      console.log('원본 accessToken:', accessToken);
-      console.log('accessToken 타입:', typeof accessToken);
-      console.log('accessToken 길이:', accessToken?.length);
-      
-      if (accessToken) {
-        // Bearer 접두사가 이미 포함되어 있는지 확인
-        if (accessToken.startsWith('Bearer ')) {
-          headers.Authorization = accessToken;
-        } else {
-          headers.Authorization = `Bearer ${accessToken}`;
-        }
-        console.log('최종 Authorization 헤더:', headers.Authorization);
-        console.log('토큰 앞부분:', headers.Authorization.substring(0, 50) + '...');
-      } else {
-        console.warn('⚠️ Access token이 없어 SSE 연결 시도 (인증 없이)');
-      }
-      
-      console.log('전송할 헤더들:', headers);
-      console.log('========================');
-      
-      // EventSourcePolyfill을 사용하여 헤더 포함 가능
-      this.eventSource = new EventSourcePolyfill(sseUrl, {
-        headers: headers,
-        heartbeatTimeout: 180000, // 3분으로 heartbeat 타임아웃 증가
-        connectionTimeout: 60000   // 1분 연결 타임아웃
-      });
-
-      this.eventSource.onopen = () => {
-        console.log('SSE 연결 성공');
-        this.reconnectAttempts = 0;
-        this.notifyListeners('connection', { status: 'connected' });
-      };
-
-      this.eventSource.onmessage = (event) => {
-        try {
-          const notification = JSON.parse(event.data);
-          this.handleNotification(notification);
-        } catch (error) {
-          console.error('알림 데이터 파싱 오류:', error);
-        }
-      };
-
-      this.eventSource.onerror = (error) => {
-        console.error('SSE 연결 오류:', error);
-        console.error('EventSource readyState:', this.eventSource?.readyState);
-        console.error('EventSource url:', this.eventSource?.url);
-        
-        // 연결 상태에 따른 상세 로그
-        if (this.eventSource) {
-          switch (this.eventSource.readyState) {
-            case EventSource.CONNECTING:
-              console.log('SSE 상태: 연결 중...');
-              break;
-            case EventSource.OPEN:
-              console.log('SSE 상태: 연결됨');
-              break;
-            case EventSource.CLOSED:
-              console.log('SSE 상태: 연결 종료됨');
-              break;
-            default:
-              console.log('SSE 상태: 알 수 없음');
-          }
-        }
-        
-        this.handleConnectionError();
-      };
-
-    } catch (error) {
-      console.error('SSE 연결 실패:', error);
-      this.handleConnectionError();
-    }
+    // SSE 서비스를 사용하여 연결
+    sseService.connect(
+      accessToken,
+      this.handleMessage.bind(this), // 메시지 수신 콜백
+      this.handleError.bind(this),   // 에러 콜백
+      this.handleOpen.bind(this)     // 연결 성공 콜백
+    );
   }
 
   // SSE 연결 종료
   disconnect() {
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = null;
-      this.notifyListeners('connection', { status: 'disconnected' });
+    sseService.disconnect();
+    this.isConnected = false;
+    this.notifyListeners('connection', { status: 'disconnected' });
+  }
+
+  // 연결 성공 처리
+  handleOpen(event) {
+    console.log('알림 서비스 연결 성공');
+    this.isConnected = true;
+    this.notifyListeners('connection', { status: 'connected' });
+  }
+
+  // 메시지 수신 처리
+  handleMessage(event) {
+    try {
+      // 특별한 이벤트 타입이 있는 경우 처리
+      if (event.eventType === 'chat-termination') {
+        const notificationData = event.parsedData || JSON.parse(event.data);
+        this.handleChatTerminationNotification(notificationData);
+        return;
+      }
+
+      // 일반 메시지 처리
+      const notification = JSON.parse(event.data);
+      this.handleNotification(notification);
+    } catch (error) {
+      console.error('알림 데이터 파싱 오류:', error);
     }
   }
 
-  // 연결 오류 처리 및 재연결
-  handleConnectionError() {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-      
-      console.log(`SSE 재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts} (${delay}ms 후)`);
-      
-      setTimeout(() => {
-        this.connect();
-      }, delay);
-    } else {
-      console.error('SSE 재연결 시도 횟수 초과');
-      this.notifyListeners('connection', { status: 'failed' });
+  // 에러 처리
+  handleError(event) {
+    console.error('알림 서비스 연결 오류:', event);
+    this.isConnected = false;
+    
+    // SSE 서비스가 재연결을 처리하므로 여기서는 상태만 업데이트
+    if (!sseService.isConnected()) {
+      this.notifyListeners('connection', { status: 'error' });
     }
   }
 
   // 알림 처리
   handleNotification(notification) {
-    // 알림 타입별 처리
+    // 채팅 종료 알림만 처리하도록 제한
     switch (notification.type) {
-      case 'session_ending':
-        this.handleSessionEndingNotification(notification);
+      case 'chat_termination':
+      case 'chat-termination':
+        this.handleChatTerminationNotification(notification);
         break;
-      case 'new_message':
-        this.handleNewMessageNotification(notification);
-        break;
-      case 'system_update':
-        this.handleSystemUpdateNotification(notification);
-        break;
+      // 다른 알림 타입들은 주석 처리하여 비활성화
+      // case 'session_ending':
+      //   this.handleSessionEndingNotification(notification);
+      //   break;
+      // case 'new_message':
+      //   this.handleNewMessageNotification(notification);
+      //   break;
+      // case 'system_update':
+      //   this.handleSystemUpdateNotification(notification);
+      //   break;
       default:
-        this.notifyListeners('notification', notification);
+        console.log('처리하지 않는 알림 타입:', notification.type);
+        // 기본 알림도 비활성화
+        // this.notifyListeners('notification', notification);
         break;
     }
   }
@@ -215,6 +166,26 @@ class NotificationService {
     this.notifyListeners('notification', updateNotification);
   }
 
+  // 채팅 종료 알림
+  handleChatTerminationNotification(notification) {
+    const terminationNotification = {
+      id: `termination_${Date.now()}`,
+      type: 'warning',
+      title: '채팅 종료 알림',
+      message: notification.content || notification.message || '채팅이 종료되었습니다.',
+      timestamp: notification.createdAt || new Date().toISOString(),
+      actions: [
+        {
+          label: '확인',
+          type: 'primary',
+          onClick: () => {}
+        }
+      ]
+    };
+
+    this.notifyListeners('notification', terminationNotification);
+  }
+
   // 세션 연장 요청
   async requestSessionExtension(sessionId) {
     try {
@@ -269,6 +240,16 @@ class NotificationService {
     window.location.hash = `#chat/${chatId}`;
   }
 
+  // 연결 상태 확인
+  isServiceConnected() {
+    return sseService.isConnected();
+  }
+
+  // 재연결 활성화
+  enableReconnect() {
+    sseService.enableReconnect();
+  }
+
   // 이벤트 리스너 등록
   addEventListener(event, callback) {
     if (!this.listeners.has(event)) {
@@ -301,9 +282,13 @@ class NotificationService {
     }
   }
 
-  // 테스트용 알림 생성 (개발 환경에서만)
+  // 테스트용 알림 생성 (개발 환경에서만) - 비활성화
   createTestNotifications() {
-    if ('development') return;
+    // 테스트 알림 비활성화 - 채팅 종료 알림만 받도록 함
+    console.log('테스트 알림 비활성화됨 - 채팅 종료 알림만 수신');
+    return;
+    
+    if (import.meta.env.MODE !== 'development') return;
 
     // 5초 후 세션 종료 알림
     setTimeout(() => {

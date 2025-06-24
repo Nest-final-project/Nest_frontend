@@ -583,6 +583,41 @@
   }
 }
 
+/* 종료된 채팅방 스타일 */
+.message-input-container.disabled {
+  background: rgba(239, 68, 68, 0.05);
+  border-top: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+.chat-closed-notice {
+  padding: 1rem;
+  text-align: center;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.chat-closed-notice span {
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* 종료된 채팅방에서 연결 상태 스타일 */
+.contact-status {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.contact-status.closed {
+  color: #dc2626;
+}
+
 /* 메시지 입력 영역 */
 .message-input-container {
   background: rgba(255, 255, 255, 0.95);

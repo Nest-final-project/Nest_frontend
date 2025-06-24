@@ -42,12 +42,12 @@ class SSEService {
     try {
       this.eventSource = new EventSourcePolyfill(sseUrl, {
         headers: headers,
-        heartbeatTimeout: 30000 // 30초 heartbeat
+        heartbeatTimeout: 3600000 // 30초 heartbeat
       });
 
       // 연결 성공
       this.eventSource.onopen = (event) => {
-        console.log('SSE 연결 성공:', event);
+        console.log('SSE 연결 성공');
         this.reconnectAttempts = 0; // 재연결 시도 횟수 초기화
         if (onOpen) onOpen(event);
       };
@@ -63,6 +63,7 @@ class SSEService {
         console.log('채팅 종료 알림 수신:', event);
         try {
           const data = JSON.parse(event.data);
+          console.log('파싱된 채팅 종료 데이터:', data);
           if (onMessage) onMessage({ ...event, parsedData: data, eventType: 'chat-termination' });
         } catch (error) {
           console.error('채팅 종료 알림 파싱 오류:', error);
