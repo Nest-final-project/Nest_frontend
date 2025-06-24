@@ -521,7 +521,10 @@ export const careerAPI = {
         },
       }
     )
-  }
+  },
+
+  // 경력 수정
+  updateCareer: (careerId, careerData) => api.patch(`/api/careers/${careerId}`, careerData),
 };
 
 // Keyword API
