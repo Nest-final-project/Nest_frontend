@@ -165,18 +165,26 @@ const Payment = ({ bookingData, onBack, onTossPayment }) => {
       couponDiscount
     });
     
+    // 🔍 onTossPayment prop 확인
+    console.log('🔍 [디버깅] onTossPayment prop 상태:', {
+      onTossPaymentExists: !!onTossPayment,
+      onTossPaymentType: typeof onTossPayment
+    });
+    
     // 필수 데이터 검증
     if (!bookingData?.reservationId && !bookingData?.reservation?.id) {
-      alert('예약 정보가 없습니다. 다시 예약해주세요.');
       console.error('❌ reservationId 누락:', bookingData);
+      alert('예약 정보가 없습니다. 다시 예약해주세요.');
       return;
     }
     
     if (!bookingData?.ticketId && !bookingData?.ticket?.id) {
-      alert('티켓 정보가 없습니다. 다시 선택해주세요.');
       console.error('❌ ticketId 누락:', bookingData);
+      alert('티켓 정보가 없습니다. 다시 선택해주세요.');
       return;
     }
+    
+    console.log('✅ 필수 데이터 검증 통과');
     
     // 토스 결제에 필요한 데이터 준비
     const tossPaymentData = {
@@ -211,9 +219,20 @@ const Payment = ({ bookingData, onBack, onTossPayment }) => {
     
     if (onTossPayment) {
       console.log('🎯 onTossPayment 호출 - App.js로 데이터 전달');
-      onTossPayment(tossPaymentData);
+      
+      // 🔥 isProcessing 상태를 설정해서 버튼 비활성화
+      setIsProcessing(true);
+      
+      try {
+        onTossPayment(tossPaymentData);
+        console.log('✅ onTossPayment 호출 완료');
+      } catch (error) {
+        console.error('❌ onTossPayment 호출 중 오류:', error);
+        setIsProcessing(false);
+      }
     } else {
       console.error('❌ onTossPayment prop이 없습니다!');
+      alert('결제 시스템 연결에 문제가 있습니다. 페이지를 새로고침해주세요.');
     }
   };
 
