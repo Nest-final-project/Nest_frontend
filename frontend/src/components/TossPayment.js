@@ -3,6 +3,7 @@ import './Payment.css'; // 기존 CSS 스타일 사용
 import './TossPayment.css'; // 토스 전용 CSS 추가
 import TossPaymentSuccess from './TossPaymentSuccess';
 import TossPaymentFail from './TossPaymentFail';
+import { userInfoUtils } from '../utils/tokenUtils'; // 사용자 정보 유틸 추가
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -80,69 +81,253 @@ function TossPaymentComponent({
     });
   }, []);
 
-  // bookingData가 변경되면 폼 데이터 업데이트
-  useEffect(() => {
-    if (bookingData) {
-
-      // ❌ 하드코딩 제거: DB 값만 사용
-      const dbAmount = bookingData.servicePrice || bookingData.totalPrice;
-      const dbOrderName = bookingData.serviceName || bookingData.orderName;
-
-      if (!dbAmount) {
-        alert('결제 금액 정보가 없습니다. 다시 예약해주세요.');
-        onBack();
-        return;
+  // 🔥 사용자 정보 API 조회 함수 추가
+  const fetchUserInfo = async () => {
+    try {
+      const tokenFromStorage = localStorage?.getItem("accessToken") || sessionStorage?.getItem("accessToken");
+      if (!tokenFromStorage) {
+        return null;
       }
 
-      if (!dbOrderName) {
-        alert('상품 정보가 없습니다. 다시 예약해주세요.');
-        onBack();
-        return;
-      }
-
-      setAmount(dbAmount);
-      setOrderName(dbOrderName);
-      setCustomerInfo({
-        email: bookingData.customer?.email || "",
-        name: bookingData.customer?.name || "",
-        phone: bookingData.customer?.phone || "",
+      const response = await fetch(`${BASE_URL}/api/v1/users/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${tokenFromStorage}`,
+          'Content-Type': 'application/json'
+        }
       });
 
+      if (response.ok) {
+        const userData = await response.json();
+        console.log('🔍 API에서 가져온 사용자 정보:', userData);
+        return userData;
+      } else {
+        console.warn('⚠️ 사용자 정보 API 조회 실패:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ 사용자 정보 API 조회 에러:', error);
+      return null;
     }
+  };
+
+  // bookingData가 변경되면 폼 데이터 업데이트
+  // bookingData가 변경되면 폼 데이터 업데이트
+  useEffect(() => {
+    const initializeCustomerInfo = async () => {
+      if (bookingData) {
+
+        // ❌ 하드코딩 제거: DB 값만 사용
+        const dbAmount = bookingData.servicePrice || bookingData.totalPrice;
+        const dbOrderName = bookingData.serviceName || bookingData.orderName;
+
+        if (!dbAmount) {
+          alert('결제 금액 정보가 없습니다. 다시 예약해주세요.');
+          onBack();
+          return;
+        }
+
+        if (!dbOrderName) {
+          alert('상품 정보가 없습니다. 다시 예약해주세요.');
+          onBack();
+          return;
+        }
+
+        setAmount(dbAmount);
+        setOrderName(dbOrderName);
+
+        // 🔥 현재 로그인한 사용자 정보에서 고객 정보 가져오기
+        const currentUser = userInfoUtils.getUserInfo();
+        console.log('🔍 현재 로그인한 사용자 정보 (토큰):', currentUser);
+
+        // 🔥 API를 통해 더 정확한 사용자 정보 조회
+        const apiUserInfo = await fetchUserInfo();
+        console.log('🔍 API에서 가져온 사용자 정보:', apiUserInfo);
+
+        // API 정보를 우선 사용, 없으면 토큰 정보 사용
+        const userInfo = apiUserInfo || currentUser;
+
+        // 🔍 사용자 정보 구조 상세 확인
+        console.group('🔍 사용자 정보 구조 분석');
+        console.log('userInfo 전체:', userInfo);
+        console.log('userInfo 키들:', userInfo ? Object.keys(userInfo) : []);
+        console.log('userInfo.name:', userInfo?.name);
+        console.log('userInfo.username:', userInfo?.username);
+        console.log('userInfo.nickname:', userInfo?.nickname);
+        console.log('userInfo.phone:', userInfo?.phone);
+        console.log('userInfo.phoneNumber:', userInfo?.phoneNumber);
+        console.log('userInfo.tel:', userInfo?.tel);
+        console.log('userInfo.mobile:', userInfo?.mobile);
+        console.log('userInfo.data?.phone:', userInfo?.data?.phone);
+        console.log('userInfo.data?.name:', userInfo?.data?.name);
+        console.log('userInfo.data 키들:', userInfo?.data ? Object.keys(userInfo.data) : []);
+        
+        // 모든 필드에서 phone 관련 키 찾기
+        const phoneFields = [];
+        const nameFields = [];
+        if (userInfo) {
+          Object.keys(userInfo).forEach(key => {
+            if (key.toLowerCase().includes('phone') || key.toLowerCase().includes('tel') || key.toLowerCase().includes('mobile')) {
+              phoneFields.push({key, value: userInfo[key]});
+            }
+            if (key.toLowerCase().includes('name')) {
+              nameFields.push({key, value: userInfo[key]});
+            }
+          });
+          
+          if (userInfo.data && typeof userInfo.data === 'object') {
+            Object.keys(userInfo.data).forEach(key => {
+              if (key.toLowerCase().includes('phone') || key.toLowerCase().includes('tel') || key.toLowerCase().includes('mobile')) {
+                phoneFields.push({key: `data.${key}`, value: userInfo.data[key]});
+              }
+              if (key.toLowerCase().includes('name')) {
+                nameFields.push({key: `data.${key}`, value: userInfo.data[key]});
+              }
+            });
+          }
+        }
+        
+        console.log('📞 발견된 전화번호 관련 필드들:', phoneFields);
+        console.log('👤 발견된 이름 관련 필드들:', nameFields);
+        console.groupEnd();
+
+        // 전화번호를 더 포괄적으로 찾기
+        let userPhone = "";
+        if (userInfo) {
+          // 1차: 직접 필드에서 찾기
+          const directFields = ['phone', 'phoneNumber', 'tel', 'mobile', 'cellPhone', 'mobilePhone'];
+          for (const field of directFields) {
+            if (userInfo[field]) {
+              userPhone = userInfo[field];
+              console.log(`📞 전화번호 발견 (직접 필드 ${field}):`, userPhone);
+              break;
+            }
+          }
+          
+          // 2차: data 객체에서 찾기
+          if (!userPhone && userInfo.data) {
+            for (const field of directFields) {
+              if (userInfo.data[field]) {
+                userPhone = userInfo.data[field];
+                console.log(`📞 전화번호 발견 (data.${field}):`, userPhone);
+                break;
+              }
+            }
+          }
+          
+          // 3차: 모든 키를 순회하면서 phone 관련 키 찾기
+          if (!userPhone) {
+            const allKeys = Object.keys(userInfo);
+            for (const key of allKeys) {
+              if (key.toLowerCase().includes('phone') || key.toLowerCase().includes('tel') || key.toLowerCase().includes('mobile')) {
+                if (userInfo[key]) {
+                  userPhone = userInfo[key];
+                  console.log(`📞 전화번호 발견 (동적 키 ${key}):`, userPhone);
+                  break;
+                }
+              }
+            }
+          }
+          
+          // 4차: data 객체의 모든 키 순회
+          if (!userPhone && userInfo.data) {
+            const dataKeys = Object.keys(userInfo.data);
+            for (const key of dataKeys) {
+              if (key.toLowerCase().includes('phone') || key.toLowerCase().includes('tel') || key.toLowerCase().includes('mobile')) {
+                if (userInfo.data[key]) {
+                  userPhone = userInfo.data[key];
+                  console.log(`📞 전화번호 발견 (동적 data.${key}):`, userPhone);
+                  break;
+                }
+              }
+            }
+          }
+        }
+        
+        // 5차: bookingData에서 찾기
+        if (!userPhone && bookingData?.customer?.phone) {
+          userPhone = bookingData.customer.phone;
+          console.log(`📞 전화번호 발견 (bookingData.customer.phone):`, userPhone);
+        }
+        
+        // 이름도 동일하게 포괄적으로 찾기
+        let userName = "";
+        if (userInfo) {
+          const nameFields = ['name', 'realName', 'fullName', 'displayName'];
+          for (const field of nameFields) {
+            if (userInfo[field]) {
+              userName = userInfo[field];
+              console.log(`👤 이름 발견 (직접 필드 ${field}):`, userName);
+              break;
+            }
+          }
+          
+          if (!userName && userInfo.data) {
+            for (const field of nameFields) {
+              if (userInfo.data[field]) {
+                userName = userInfo.data[field];
+                console.log(`👤 이름 발견 (data.${field}):`, userName);
+                break;
+              }
+            }
+          }
+          
+          // 마지막 후보로 username 사용
+          if (!userName && userInfo.username) {
+            userName = userInfo.username;
+            console.log(`👤 이름 발견 (username):`, userName);
+          }
+        }
+        
+        if (!userName && bookingData?.customer?.name) {
+          userName = bookingData.customer.name;
+          console.log(`👤 이름 발견 (bookingData.customer.name):`, userName);
+        }
+
+        const formattedPhone = formatPhoneNumber(userPhone);
+
+        // 이메일도 포괄적으로 찾기
+        let userEmail = "";
+        if (userInfo) {
+          userEmail = userInfo.email || userInfo.data?.email || userInfo.emailAddress || userInfo.data?.emailAddress || "";
+        }
+        if (!userEmail && bookingData?.customer?.email) {
+          userEmail = bookingData.customer.email;
+        }
+
+        setCustomerInfo({
+          email: userEmail,
+          name: userName,
+          phone: formattedPhone,
+        });
+
+        // 디버깅용 로그
+        console.log('📞 최종 설정된 고객 정보:', {
+          email: userEmail,
+          name: userName,
+          phone: formattedPhone,
+          originalPhone: userPhone
+        });
+      }
+    };
+
+    initializeCustomerInfo();
   }, [bookingData, onBack]);
 
-  // 전화번호 유효성 검사
-  const isValidPhone = (phone) => {
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
-    return cleanPhone.length >= 10 && cleanPhone.length <= 11 &&
-        (cleanPhone.startsWith('010') || cleanPhone.startsWith('011') ||
-            cleanPhone.startsWith('016') || cleanPhone.startsWith('017') ||
-            cleanPhone.startsWith('018') || cleanPhone.startsWith('019'));
-  };
-
-  // 전화번호 포맷팅 함수
-  const formatPhoneNumber = (value) => {
+  // 전화번호 포맷팅 함수 (표시용)
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return "";
     // 숫자만 추출
-    const numbers = value.replace(/[^0-9]/g, '');
-
-    // 11자리로 제한
-    const limited = numbers.slice(0, 11);
-
+    const numbers = phone.replace(/[^0-9]/g, '');
+    
     // 포맷팅 (010-1234-5678)
-    if (limited.length <= 3) {
-      return limited;
-    } else if (limited.length <= 7) {
-      return `${limited.slice(0, 3)}-${limited.slice(3)}`;
+    if (numbers.length <= 3) {
+      return numbers;
+    } else if (numbers.length <= 7) {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
     } else {
-      return `${limited.slice(0, 3)}-${limited.slice(3, 7)}-${limited.slice(
-          7)}`;
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
     }
-  };
-
-  // 전화번호 입력 핸들러
-  const handlePhoneChange = (e) => {
-    const formatted = formatPhoneNumber(e.target.value);
-    setCustomerInfo({...customerInfo, phone: formatted});
   };
 
   const generateCustomerKey = () => "customer_" + Math.random().toString(
@@ -168,19 +353,20 @@ function TossPaymentComponent({
     }
 
     if (!customerInfo.email || !customerInfo.name || !customerInfo.phone) {
-      return alert("고객 정보를 모두 입력해주세요.");
+      console.error('❌ 고객 정보 누락:', {
+        email: customerInfo.email,
+        name: customerInfo.name,
+        phone: customerInfo.phone,
+        userInfo,
+        apiUserInfo
+      });
+      return alert("회원 정보가 불완전합니다. 마이페이지에서 이름, 이메일, 전화번호를 등록해주세요.");
     }
 
-    // 전화번호 유효성 검사
+    // 전화번호 기본 검증 (숫자만 추출해서 확인)
     const cleanPhone = customerInfo.phone.replace(/[^0-9]/g, '');
     if (cleanPhone.length < 10 || cleanPhone.length > 11) {
-      return alert("전화번호는 10-11자리 숫자여야 합니다.");
-    }
-
-    if (!cleanPhone.startsWith('010') && !cleanPhone.startsWith('011') &&
-        !cleanPhone.startsWith('016') && !cleanPhone.startsWith('017') &&
-        !cleanPhone.startsWith('018') && !cleanPhone.startsWith('019')) {
-      return alert("올바른 휴대폰 번호를 입력해주세요.");
+      return alert("계정에 등록된 전화번호가 올바르지 않습니다. 마이페이지에서 수정해주세요.");
     }
 
     setIsLoading(true);
@@ -385,38 +571,39 @@ function TossPaymentComponent({
                   <input
                       type="email"
                       value={customerInfo.email}
-                      onChange={e => setCustomerInfo(
-                          {...customerInfo, email: e.target.value})}
                       placeholder="이메일 입력"
                       className="toss-form-input"
+                      readOnly
                   />
+                  <div className="toss-input-help">
+                    🔒 로그인한 계정의 이메일입니다 (수정 불가)
+                  </div>
                 </div>
                 <div className="toss-form-group">
                   <label className="toss-form-label">이름</label>
                   <input
                       type="text"
                       value={customerInfo.name}
-                      onChange={e => setCustomerInfo(
-                          {...customerInfo, name: e.target.value})}
                       placeholder="이름 입력"
                       className="toss-form-input"
+                      readOnly
                   />
+                  <div className="toss-input-help">
+                    🔒 로그인한 계정의 이름입니다 (수정 불가)
+                  </div>
                 </div>
                 <div className="toss-form-group">
                   <label className="toss-form-label">전화번호</label>
                   <input
                       type="tel"
                       value={customerInfo.phone}
-                      onChange={handlePhoneChange}
                       placeholder="010-1234-5678"
                       maxLength="13"
                       className="toss-form-input"
+                      readOnly
                   />
                   <div className="toss-input-help">
-                    {customerInfo.phone && !isValidPhone(customerInfo.phone) ?
-                        "❌ 올바른 휴대폰 번호를 입력해주세요" :
-                        "ℹ️ 하이픈은 자동으로 추가됩니다 (숫자만 입력)"
-                    }
+                    🔒 로그인한 계정의 전화번호입니다 (수정 불가)
                   </div>
                 </div>
               </div>

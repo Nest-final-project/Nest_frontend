@@ -16,6 +16,7 @@ import TossPaymentApp from './components/TossPayment';
 import Success from './components/Success';
 import Fail from './components/Fail';
 import PaymentSuccess from './components/PaymentSuccess';
+import PaymentComplete from './components/PaymentComplete';
 import ChatRoom from './components/ChatRoom';
 import MyPage from './components/MyPage.js';
 import ChatContainer from './components/ChatContainer';
@@ -265,7 +266,8 @@ const App = () => {
     // 🔥 예약 ID로 실제 DB에서 예약 정보 조회
     let actualBookingData = null;
     const reservationId = tossPaymentData?.reservationId ||
-                         tossPaymentData?.originalResponse?.reservationId;
+                         tossPaymentData?.originalResponse?.reservationId ||
+                         tossPaymentData?.originalResponse?.data?.orderId;
 
     if (reservationId) {
       try {
@@ -277,9 +279,20 @@ const App = () => {
         actualBookingData = reservationResponse.data;
 
         console.log('✅ 실제 DB에서 가져온 예약 정보:', actualBookingData);
+        
+        // 🔍 실제 DB 데이터 구조 확인
+        console.group('🔍 실제 DB 예약 데이터 구조 분석');
+        console.log('actualBookingData:', actualBookingData);
+        console.log('actualBookingData.mentor:', actualBookingData?.mentor);
+        console.log('actualBookingData.date:', actualBookingData?.date);
+        console.log('actualBookingData.startTime:', actualBookingData?.startTime);
+        console.log('actualBookingData.endTime:', actualBookingData?.endTime);
+        console.log('actualBookingData.ticket:', actualBookingData?.ticket);
+        console.log('actualBookingData.service:', actualBookingData?.service);
+        console.groupEnd();
       } catch (error) {
         console.error('❌ 예약 정보 조회 실패:', error);
-        console.warn('⚠️ 예약 정보 조회 실패 - 기본 데이터 사용');
+        console.warn('⚠️ 예약 정보 조회 실패 - 백업 데이터 사용');
       }
     } else {
       console.warn('⚠️ reservationId가 없어서 예약 정보를 조회할 수 없습니다');
@@ -317,17 +330,26 @@ const App = () => {
     // 추가: 현재 App.js에서 가지고 있는 bookingData도 확인
     console.log('📦 App.js bookingData:', bookingData);
 
+    // 추가: 현재 App.js에서 가지고 있는 bookingData도 확인
+    console.log('📦 App.js bookingData:', bookingData);
+
     // 실제 토스 승인 API 응답 데이터 활용
     const originalResponse = tossPaymentData?.originalResponse || {};
     const paymentResponse = originalResponse.payment || originalResponse;
     const apiBookingData = tossPaymentData?.apiBookingData || {};
     const backupBookingData = tossPaymentData?.backupBookingData || null;
+    
+    // 🔥 로그에서 확인된 실제 백업 데이터 직접 추출
+    const realBackupData = tossPaymentData?.originalBookingData || 
+                          tossPaymentData?.data?.originalBookingData ||
+                          tossPaymentData?._debug?.tossPaymentData?.originalBookingData;
 
     console.log('🔍 토스 승인 API 응답 분석:', {
       originalResponse,
       paymentResponse,
       apiBookingData,
       backupBookingData,
+      realBackupData,
       hasPaymentKey: !!tossPaymentData?.paymentKey,
       hasOrderId: !!tossPaymentData?.orderId,
       hasAmount: !!tossPaymentData?.amount
@@ -343,119 +365,105 @@ const App = () => {
     console.log('  - apiBookingData.booking:', apiBookingData.booking);
     console.log('  - apiBookingData.mentor:', apiBookingData.mentor);
     console.log('  - apiBookingData.ticket:', apiBookingData.ticket);
+    console.log('  - realBackupData (로그에서 확인된):', realBackupData);
     console.log('  - originalResponse.reservation:', originalResponse.reservation);
     console.log('  - originalResponse.mentor:', originalResponse.mentor);
     console.groupEnd();
 
-    // 토스 결제 데이터를 PaymentSuccess 컴포넌트가 기대하는 형태로 변환
-    const formattedPaymentResult = {
-      // 🔥 실제 토스 승인 API 응답 데이터 사용
+    // 🔥 실제 데이터 우선순위: 1) 실제 DB 데이터, 2) realBackupData, 3) tossPaymentData 백업, 4) 기본값
+    const getActualData = (dbField, backupPath, defaultValue) => {
+      return actualBookingData?.[dbField] || 
+             realBackupData?.[dbField] ||
+             tossPaymentData?.originalBookingData?.[dbField] ||
+             backupBookingData?.[dbField] || 
+             savedData?.bookingData?.[dbField] || 
+             bookingData?.[dbField] || 
+             defaultValue;
+    };
+
+    const getActualMentorData = (field, defaultValue) => {
+      return actualBookingData?.mentor?.[field] || 
+             realBackupData?.mentor?.[field] ||
+             tossPaymentData?.originalBookingData?.mentor?.[field] ||
+             backupBookingData?.mentor?.[field] || 
+             savedData?.bookingData?.mentor?.[field] || 
+             bookingData?.mentor?.[field] || 
+             defaultValue;
+    };
+
+    const getActualTicketData = (field, defaultValue) => {
+      return actualBookingData?.ticket?.[field] || 
+             realBackupData?.ticket?.[field] ||
+             tossPaymentData?.originalBookingData?.ticket?.[field] ||
+             backupBookingData?.ticket?.[field] || 
+             savedData?.bookingData?.ticket?.[field] || 
+             bookingData?.ticket?.[field] || 
+             defaultValue;
+    };
+
+    // 토스 결제 데이터를 PaymentComplete 컴포넌트가 기대하는 형태로 변환
+    const formattedPaymentData = {
+      // 🔥 토스 결제 기본 정보
       orderId: tossPaymentData?.orderId || paymentResponse?.orderId || savedData?.orderId || 'ORDER_UNKNOWN',
       amount: tossPaymentData?.amount || paymentResponse?.totalAmount || paymentResponse?.amount || savedData?.amount || 0,
+      paymentKey: tossPaymentData?.paymentKey || paymentResponse?.paymentKey || 'N/A',
       method: tossPaymentData?.method || paymentResponse?.method || '토스페이먼츠',
       approvedAt: tossPaymentData?.approvedAt || paymentResponse?.approvedAt || new Date().toISOString(),
-      paymentKey: tossPaymentData?.paymentKey || paymentResponse?.paymentKey || 'N/A',
       status: tossPaymentData?.status || paymentResponse?.status || 'DONE',
 
-      // 🏷️ 예약 정보 - API 응답 우선 사용
-      booking: {
+      // 🔥 PaymentComplete가 data 속성에서 추출하는 예약 정보 (실제 DB 데이터 우선 사용)
+      data: {
         mentor: {
-          name: // API 응답에서 멘토 정보 먼저 확인
-               apiBookingData.mentor?.name ||
-               originalResponse.mentor?.name ||
-               originalResponse.reservation?.mentor?.name ||
-               // 🔥 올바른 경로로 수정: savedData.bookingData.mentor → savedData.bookingData.mentor
-               savedData?.bookingData?.mentor?.name ||
-               bookingData?.mentor?.name ||
-               savedData?.customerInfo?.name ||
-               '멘토 정보 없음',
-          title: apiBookingData.mentor?.title ||
-                apiBookingData.mentor?.specialization ||
-                originalResponse.mentor?.title ||
-                originalResponse.mentor?.specialization ||
-                savedData?.bookingData?.mentor?.title ||
-                savedData?.bookingData?.mentor?.specialization ||
-                bookingData?.mentor?.title ||
-                bookingData?.mentor?.specialization ||
-                '전문 멘토',
-          profileImage: apiBookingData.mentor?.profileImage ||
-                       originalResponse.mentor?.profileImage ||
-                       savedData?.bookingData?.mentor?.profileImage ||
-                       bookingData?.mentor?.profileImage ||
-                       null,
+          name: getActualMentorData('name', '멘토 정보 없음')
         },
-        date: // API 응답에서 날짜 정보 먼저 확인
-             apiBookingData.reservation?.date ||
-             apiBookingData.booking?.date ||
-             originalResponse.reservation?.date ||
-             originalResponse.date ||
-             // 🔥 올바른 경로로 수정
-             savedData?.bookingData?.date ||
-             bookingData?.date ||
-             savedData?.date ||
-             '날짜 미정',
-        startTime: apiBookingData.reservation?.startTime ||
-                  apiBookingData.booking?.startTime ||
-                  originalResponse.reservation?.startTime ||
-                  originalResponse.startTime ||
-                  // 🔥 올바른 경로로 수정
-                  savedData?.bookingData?.startTime ||
-                  bookingData?.startTime ||
-                  savedData?.startTime ||
-                  '시간 미정',
-        endTime: apiBookingData.reservation?.endTime ||
-                apiBookingData.booking?.endTime ||
-                originalResponse.reservation?.endTime ||
-                originalResponse.endTime ||
-                // 🔥 올바른 경로로 수정
-                savedData?.bookingData?.endTime ||
-                bookingData?.endTime ||
-                savedData?.endTime ||
-                '시간 미정',
-        service: apiBookingData.reservation?.serviceName ||
-                apiBookingData.booking?.serviceName ||
-                apiBookingData.ticket?.name ||
-                originalResponse.serviceName ||
-                originalResponse.reservation?.serviceName ||
-                // 🔥 올바른 경로로 수정
-                savedData?.bookingData?.serviceName ||
-                savedData?.bookingData?.ticket?.name ||
-                savedData?.orderName ||
-                bookingData?.serviceName ||
-                bookingData?.orderName ||
-                '멘토링 서비스',
-        duration: apiBookingData.reservation?.duration ||
-                 apiBookingData.booking?.duration ||
-                 originalResponse.reservation?.duration ||
-                 // 🔥 올바른 경로로 수정
-                 savedData?.bookingData?.ticket?.duration ||
-                 savedData?.bookingData?.duration ||
-                 bookingData?.duration ||
-                 savedData?.duration ||
-                 null,
-        meetingType: apiBookingData.reservation?.meetingType ||
-                    apiBookingData.booking?.meetingType ||
-                    originalResponse.reservation?.meetingType ||
-                    // 🔥 올바른 경로로 수정
-                    savedData?.bookingData?.meetingType ||
-                    bookingData?.meetingType ||
-                    savedData?.meetingType ||
-                    '화상 미팅',
-        location: backupBookingData?.location ||
-                 apiBookingData.reservation?.location ||
-                 apiBookingData.booking?.location ||
-                 originalResponse.reservation?.location ||
-                 savedData?.bookingData?.location ||
-                 bookingData?.location ||
-                 savedData?.location ||
-                 null,
+        date: getActualData('date', null, '날짜 미정'),
+        startTime: getActualData('startTime', null, '시간 미정'),
+        endTime: getActualData('endTime', null, '시간 미정'),
+        time: getActualData('startTime', null, null) && getActualData('endTime', null, null) ? 
+              `${getActualData('startTime', null, '')} - ${getActualData('endTime', null, '')}` : 
+              '시간 미정',
+        service: getActualTicketData('name', null) || 
+                getActualData('serviceName', null, null) || 
+                getActualData('orderName', null, '멘토링 서비스'),
+        serviceName: getActualTicketData('name', null) || 
+                    getActualData('serviceName', null, null) || 
+                    getActualData('orderName', null, '멘토링 서비스'),
+        ticketName: getActualTicketData('name', null) || 
+                   getActualData('serviceName', null, null) || 
+                   getActualData('orderName', null, '멘토링 서비스'),
+        orderName: getActualData('orderName', null, null) || 
+                  getActualTicketData('name', null) || 
+                  '멘토링 서비스',
+        servicePrice: getActualData('servicePrice', null, null) || 
+                     getActualTicketData('price', null, null) || 
+                     tossPaymentData?.amount || 0,
+        originalAmount: getActualData('servicePrice', null, null) || 
+                       getActualTicketData('price', null, null) || 
+                       tossPaymentData?.amount || 0,
+        couponDiscount: getActualData('couponDiscount', null, 0),
+        discountAmount: getActualData('couponDiscount', null, 0)
       },
 
-      // 💰 실제 결제 금액들
-      servicePrice: savedData?.bookingData?.servicePrice || bookingData?.servicePrice || tossPaymentData?.amount || 0,
-      platformFee: 0, // 토스 결제에서는 별도 수수료 없음
-      couponDiscount: savedData?.bookingData?.couponDiscount || bookingData?.couponDiscount || 0,
-      selectedCoupon: savedData?.bookingData?.selectedCoupon || bookingData?.selectedCoupon || null,
+      // 🔥 추가 데이터 소스들 (PaymentComplete의 getBookingInfo에서 활용) - 실제 DB 데이터 포함
+      originalBookingData: actualBookingData || realBackupData || tossPaymentData?.originalBookingData || savedData?.bookingData,
+      apiBookingData: {
+        reservation: actualBookingData || realBackupData || tossPaymentData?.originalBookingData,
+        booking: actualBookingData || realBackupData || tossPaymentData?.originalBookingData,
+        mentor: actualBookingData?.mentor || realBackupData?.mentor || tossPaymentData?.originalBookingData?.mentor,
+        ticket: actualBookingData?.ticket || realBackupData?.ticket || tossPaymentData?.originalBookingData?.ticket
+      },
+      originalResponse: originalResponse,
+      paymentResult: {
+        booking: {
+          mentor: {
+            name: getActualMentorData('name', '멘토 정보 없음')
+          },
+          date: getActualData('date', null, '날짜 미정'),
+          startTime: getActualData('startTime', null, '시간 미정'),
+          endTime: getActualData('endTime', null, '시간 미정'),
+          mentorName: getActualMentorData('name', '멘토 정보 없음')
+        }
+      },
 
       // 🔗 추가 정보
       reservationId: tossPaymentData?.reservationId || originalResponse?.reservationId || savedData?.reservationId,
@@ -467,54 +475,48 @@ const App = () => {
         tossPaymentData,
         savedData,
         bookingData,
-        originalResponse
+        originalResponse,
+        apiBookingData
       }
     };
 
-    console.log('✅ 최종 변환된 결제 결과 (실제 승인 데이터):', formattedPaymentResult);
-    console.group('🔍 실제 데이터 소스 추적');
-    console.log('주문번호:', formattedPaymentResult.orderId, '(소스: ' + (tossPaymentData?.orderId ? '토스승인' : savedData?.orderId ? '세션저장' : '기본값') + ')');
-    console.log('결제금액:', formattedPaymentResult.amount, '(소스: ' + (tossPaymentData?.amount ? '토스승인' : savedData?.amount ? '세션저장' : '기본값') + ')');
-    console.log('결제방법:', formattedPaymentResult.method);
-    console.log('승인시각:', formattedPaymentResult.approvedAt);
+    console.log('✅ 최종 변환된 결제 데이터 (PaymentComplete용):', formattedPaymentData);
+    console.group('🔍 PaymentComplete 전용 데이터 소스 추적');
+    console.log('주문번호:', formattedPaymentData.orderId, '(소스: ' + (tossPaymentData?.orderId ? '토스승인' : savedData?.orderId ? '세션저장' : '기본값') + ')');
+    console.log('결제금액:', formattedPaymentData.amount, '(소스: ' + (tossPaymentData?.amount ? '토스승인' : savedData?.amount ? '세션저장' : '기본값') + ')');
+    console.log('결제방법:', formattedPaymentData.method);
+    console.log('승인시각:', formattedPaymentData.approvedAt);
     console.groupEnd();
 
-    console.group('📋 최종 예약 정보 데이터 소스 확인');
-    console.log('멘토 이름:', formattedPaymentResult.booking.mentor.name);
-    console.log('  - 소스:', backupBookingData?.mentor?.name ? 'backupBookingData.mentor.name' :
-                         savedData?.bookingData?.mentor?.name ? 'savedData.bookingData.mentor.name' :
-                         bookingData?.mentor?.name ? 'bookingData.mentor.name' :
-                         savedData?.customerInfo?.name ? 'savedData.customerInfo.name' : '기본값');
-    console.log('멘토 전문분야:', formattedPaymentResult.booking.mentor.title);
-    console.log('  - 소스:', backupBookingData?.mentor?.title ? 'backupBookingData.mentor.title' :
-                         savedData?.bookingData?.mentor?.title ? 'savedData.bookingData.mentor.title' :
-                         bookingData?.mentor?.title ? 'bookingData.mentor.title' :
-                         bookingData?.mentor?.specialization ? 'bookingData.mentor.specialization' : '기본값');
-    console.log('예약 날짜:', formattedPaymentResult.booking.date);
-    console.log('  - 소스:', backupBookingData?.date ? 'backupBookingData.date' :
-                         savedData?.bookingData?.date ? 'savedData.bookingData.date' :
-                         bookingData?.date ? 'bookingData.date' :
-                         savedData?.date ? 'savedData.date' : '기본값');
-    console.log('예약 시간:', `${formattedPaymentResult.booking.startTime} - ${formattedPaymentResult.booking.endTime}`);
-    console.log('  - 소스:', backupBookingData?.startTime ? 'backupBookingData' :
-                         savedData?.bookingData?.startTime ? 'savedData.bookingData' :
-                         bookingData?.startTime ? 'bookingData' :
-                         savedData?.startTime ? 'savedData' : '기본값');
-    console.log('서비스명:', formattedPaymentResult.booking.service);
-    console.log('  - 소스:', backupBookingData?.serviceName ? 'backupBookingData.serviceName' :
-                         backupBookingData?.ticket?.name ? 'backupBookingData.ticket.name' :
-                         savedData?.bookingData?.serviceName ? 'savedData.bookingData.serviceName' :
-                         savedData?.bookingData?.ticket?.name ? 'savedData.bookingData.ticket.name' :
-                         bookingData?.serviceName ? 'bookingData.serviceName' :
-                         bookingData?.orderName ? 'bookingData.orderName' :
-                         savedData?.orderName ? 'savedData.orderName' : '기본값');
-    console.log('예약번호:', formattedPaymentResult.reservationId);
-    console.log('티켓번호:', formattedPaymentResult.ticketId);
+    console.group('📋 PaymentComplete 예약 정보 데이터 소스 확인 (실제 DB 데이터 우선)');
+    console.log('멘토 이름:', formattedPaymentData.data.mentor.name);
+    console.log('  - 실제 DB 데이터 사용 여부:', !!actualBookingData?.mentor?.name);
+    console.log('  - realBackupData 사용 여부:', !!realBackupData?.mentor?.name);
+    console.log('예약 날짜:', formattedPaymentData.data.date);
+    console.log('  - 실제 DB 데이터 사용 여부:', !!actualBookingData?.date);
+    console.log('  - realBackupData 사용 여부:', !!realBackupData?.date);
+    console.log('예약 시간:', `${formattedPaymentData.data.startTime} - ${formattedPaymentData.data.endTime}`);
+    console.log('  - 실제 DB 데이터 사용 여부:', !!actualBookingData?.startTime && !!actualBookingData?.endTime);
+    console.log('  - realBackupData 사용 여부:', !!realBackupData?.startTime && !!realBackupData?.endTime);
+    console.log('서비스명:', formattedPaymentData.data.service);
+    console.log('  - 실제 DB 데이터 사용 여부:', !!actualBookingData?.ticket?.name || !!actualBookingData?.serviceName);
+    console.log('  - realBackupData 사용 여부:', !!realBackupData?.ticket?.name || !!realBackupData?.serviceName);
+    console.log('예약번호:', formattedPaymentData.reservationId);
+    console.log('티켓번호:', formattedPaymentData.ticketId);
+    
+    // 실제 DB 데이터 확인
+    if (actualBookingData) {
+      console.log('✅ 실제 DB 데이터 사용됨:', actualBookingData);
+    } else if (realBackupData) {
+      console.log('✅ realBackupData 사용됨:', realBackupData);
+    } else {
+      console.log('⚠️ 실제 DB 데이터 없음 - 다른 백업 데이터 사용');
+    }
     console.groupEnd();
 
     // PaymentComplete 페이지로 이동
-    setPaymentResult(formattedPaymentResult);
-    setCurrentPage('payment-success');
+    setPaymentResult(formattedPaymentData);
+    setCurrentPage('payment-complete');
   };
 
   // 토스 결제 실패 페이지로 이동
@@ -805,7 +807,18 @@ const App = () => {
     );
   }
 
-  // 결제 완료 페이지 렌더링
+  // 결제 완료 페이지 렌더링 (PaymentComplete)
+  if (currentPage === 'payment-complete') {
+    return (
+        <PaymentComplete
+            paymentData={paymentResult}
+            onHome={handleBackToHome}
+            onPaymentHistory={() => setCurrentPage('mypage')}
+        />
+    );
+  }
+
+  // 결제 완료 페이지 렌더링 (기존 PaymentSuccess)
   if (currentPage === 'payment-success') {
     return (
         <PaymentSuccess
