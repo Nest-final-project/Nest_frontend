@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   CheckCircle,
   Calendar,
@@ -7,18 +7,21 @@ import {
   CreditCard,
   Home,
   Receipt,
-  Download
+  ArrowLeft
 } from 'lucide-react';
-import './PaymentComplete.css';
+import './Payment.css'; // Payment.css 사용
+import ReceiptModal from './ReceiptModal'; // 영수증 모달 컴포넌트 import
 
 const PaymentComplete = ({paymentData, onHome, onPaymentHistory}) => {
+  // 영수증 모달 상태 관리
+  const [showReceipt, setShowReceipt] = useState(false);
+  
   // 🔍 받은 데이터 구조 확인 (개발 모드에서만)
   if (import.meta.env.DEV && paymentData) {
     console.group('🔍 PaymentComplete 받은 데이터 구조');
     console.log('전체 paymentData:', paymentData);
     console.log('paymentData.data:', paymentData.data);
-    console.log('paymentData.originalBookingData:',
-        paymentData.originalBookingData);
+    console.log('paymentData.originalBookingData:', paymentData.originalBookingData);
     console.log('paymentData.apiBookingData:', paymentData.apiBookingData);
     // paymentResult 객체 구조도 확인 추가
     console.log('paymentData.paymentResult:', paymentData.paymentResult);
@@ -46,14 +49,8 @@ const PaymentComplete = ({paymentData, onHome, onPaymentHistory}) => {
   };
 
   const handleDownloadReceipt = () => {
-    if (paymentData?.paymentKey) {
-      // 토스페이먼츠 영수증 URL로 이동
-      window.open(
-          `https://dashboard.tosspayments.com/receipt/${paymentData.paymentKey}`,
-          '_blank');
-    } else {
-      alert('영수증을 다운로드합니다.');
-    }
+    // 영수증 모달 열기
+    setShowReceipt(true);
   };
 
   // 예약 정보 추출 함수
@@ -163,192 +160,238 @@ const PaymentComplete = ({paymentData, onHome, onPaymentHistory}) => {
   // paymentData가 없는 경우 에러 처리
   if (!paymentData) {
     return (
-        <div className="payment-complete-container">
-          <div className="error-section">
-            <h2>결제 정보를 찾을 수 없습니다</h2>
-            <button onClick={onHome} className="home-button">
-              홈으로 돌아가기
+        <div className="payment-container">
+          <div className="payment-header">
+            <button onClick={onHome} className="back-button">
+              <ArrowLeft className="icon" />
             </button>
+            <h1>결제 완료</h1>
+          </div>
+          <div className="payment-content">
+            <div className="payment-section">
+              <h2>결제 정보를 찾을 수 없습니다</h2>
+              <button onClick={onHome} className="payment-button">
+                홈으로 돌아가기
+              </button>
+            </div>
           </div>
         </div>
     );
   }
 
   return (
-      <div className="payment-complete-container">
-        <div className="payment-complete-content">
+      <div className="payment-container">
+        <div className="payment-header">
+          <button className="back-button" onClick={onHome}>
+            <ArrowLeft className="icon" />
+          </button>
+          <h1>결제 완료</h1>
+        </div>
+
+        <div className="payment-content">
           {/* 성공 아이콘 및 메시지 */}
-          <div className="success-header">
-            <div className="success-icon">
-              <CheckCircle size={80}/>
+          <div className="payment-section">
+            <div className="success-header" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <div className="success-icon" style={{ marginBottom: '1rem' }}>
+                <CheckCircle size={80} style={{ color: '#22c55e' }}/>
+              </div>
+              <h2 className="success-title" style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>결제가 완료되었습니다!</h2>
+              <p className="success-subtitle" style={{ color: '#6b7280' }}>멘토링 예약이 성공적으로 완료되었습니다.</p>
             </div>
-            <h1 className="success-title">결제가 완료되었습니다!</h1>
-            <p className="success-subtitle">멘토링 예약이 성공적으로 완료되었습니다.</p>
           </div>
 
           {/* 결제 정보 카드 */}
-          <div className="info-card payment-info-card">
-            <div className="card-header">
-              <CreditCard className="header-icon"/>
-              <h3>결제 정보</h3>
-            </div>
-            <div className="card-content">
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="label">주문번호</span>
-                  <span className="value">{paymentData.orderId}</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">결제금액</span>
-                  <span className="value amount">{Number(
-                      paymentData.amount).toLocaleString()}원</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">결제방법</span>
-                  <span className="value">토스페이</span>
-                </div>
-                <div className="info-item">
-                  <span className="label">결제일시</span>
-                  <span className="value">{formatDate(
-                      paymentData.approvedAt || new Date())}</span>
+          <div className="payment-section">
+            <h3><CreditCard className="icon" /> 결제 정보</h3>
+            <div className="booking-summary">
+              <div className="summary-item">
+                <Receipt className="summary-icon" />
+                <div className="summary-info">
+                  <span className="summary-label">주문번호</span>
+                  <span className="summary-value">{paymentData.orderId}</span>
                 </div>
               </div>
-              <button className="receipt-button"
-                      onClick={handleDownloadReceipt}>
-                <Receipt className="button-icon"/>
-                영수증 보기
-              </button>
+              <div className="summary-item">
+                <CreditCard className="summary-icon" />
+                <div className="summary-info">
+                  <span className="summary-label">결제금액</span>
+                  <span className="summary-value">{Number(paymentData.amount).toLocaleString()}원</span>
+                </div>
+              </div>
+              <div className="summary-item">
+                <CreditCard className="summary-icon" />
+                <div className="summary-info">
+                  <span className="summary-label">결제방법</span>
+                  <span className="summary-value">토스페이</span>
+                </div>
+              </div>
+              <div className="summary-item">
+                <Clock className="summary-icon" />
+                <div className="summary-info">
+                  <span className="summary-label">결제일시</span>
+                  <span className="summary-value">{formatDate(paymentData.approvedAt || new Date())}</span>
+                </div>
+              </div>
             </div>
+            <button className="payment-button" onClick={handleDownloadReceipt} style={{ marginTop: '1rem' }}>
+              <Receipt className="icon" />
+              영수증 보기
+            </button>
           </div>
 
           {/* 예약 정보 카드 */}
-          <div className="info-card booking-info-card">
-            <div className="card-header">
-              <Calendar className="header-icon"/>
-              <h3>예약 정보</h3>
-            </div>
-            <div className="card-content">
-              <div className="mentor-info">
-                <div className="mentor-avatar">
-                  {/* 멘토 이름이 있을 경우 첫 글자, 없으면 'M' */}
-                  {bookingInfo.mentorName?.charAt(0) || 'M'}
-                </div>
-                <div className="mentor-details">
-                  <span className="mentor-name">{bookingInfo.mentorName
-                      || '멘토 정보 없음'}</span> {/* 기본값 명확히 변경 */}
-                  <span className="mentor-title">시니어 개발자</span> {/* 이 부분은 bookingInfo에 없으므로 고정 */}
+          <div className="payment-section">
+            <h3><Calendar className="icon" /> 예약 정보</h3>
+            <div className="booking-summary">
+              <div className="summary-item">
+                <User className="summary-icon" />
+                <div className="summary-info">
+                  <span className="summary-label">멘토</span>
+                  <span className="summary-value">{bookingInfo.mentorName || '멘토 정보 없음'}</span>
                 </div>
               </div>
-              <div className="booking-details">
-                <div className="detail-item">
-                  <Calendar className="detail-icon"/>
-                  <span>{bookingInfo.reservationDate || '예약 날짜 미정'}</span> {/* 기본값 명확히 변경 */}
+              <div className="summary-item">
+                <Calendar className="summary-icon" />
+                <div className="summary-info">
+                  <span className="summary-label">예약 날짜</span>
+                  <span className="summary-value">{bookingInfo.reservationDate || '예약 날짜 미정'}</span>
                 </div>
-                <div className="detail-item">
-                  <Clock className="detail-icon"/>
-                  <span>{bookingInfo.reservationTime || '예약 시간 미정'}</span> {/* 기본값 명확히 변경 */}
+              </div>
+              <div className="summary-item">
+                <Clock className="summary-icon" />
+                <div className="summary-info">
+                  <span className="summary-label">예약 시간</span>
+                  <span className="summary-value">{bookingInfo.reservationTime || '예약 시간 미정'}</span>
                 </div>
-                <div className="detail-item">
-                  <User className="detail-icon"/>
-                  <span>{bookingInfo.ticketName || '멘토링 서비스 미정'}</span> {/* 기본값 명확히 변경 */}
+              </div>
+              <div className="summary-item">
+                <User className="summary-icon" />
+                <div className="summary-info">
+                  <span className="summary-label">서비스</span>
+                  <span className="summary-value">{bookingInfo.ticketName || '멘토링 서비스 미정'}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* 결제 내역 상세 */}
-          <div className="info-card price-detail-card">
-            <div className="card-header">
-              <h3>💰 결제 내역</h3>
-            </div>
-            <div className="card-content">
-              <div className="price-breakdown">
-                <div className="price-item">
-                  <span>서비스 이용료</span>
-                  <span>{Number(bookingInfo.originalAmount
-                      || paymentData.amount).toLocaleString()}원</span>
-                </div>
-                {bookingInfo.discountAmount > 0 && (
-                    <div className="price-item discount">
-                      <span>🎫 쿠폰 할인</span>
-                      <span>-{Number(
-                          bookingInfo.discountAmount).toLocaleString()}원</span>
-                    </div>
-                )}
-                <div className="price-divider"></div>
-                <div className="price-item total">
-                  <span>총 결제금액</span>
-                  <span>{Number(paymentData.amount).toLocaleString()}원</span>
-                </div>
+          <div className="payment-section">
+            <h3>💰 결제 내역</h3>
+            <div className="price-breakdown">
+              <div className="price-item">
+                <span>서비스 이용료</span>
+                <span>{Number(bookingInfo.originalAmount || paymentData.amount).toLocaleString()}원</span>
+              </div>
+              {bookingInfo.discountAmount > 0 && (
+                  <div className="price-item discount">
+                    <span>🎫 쿠폰 할인</span>
+                    <span>-{Number(bookingInfo.discountAmount).toLocaleString()}원</span>
+                  </div>
+              )}
+              <div className="price-item total">
+                <span>총 결제금액</span>
+                <span>{Number(paymentData.amount).toLocaleString()}원</span>
               </div>
             </div>
           </div>
 
           {/* 안내사항 */}
-          <div className="info-card notice-card">
-            <div className="card-header">
-              <h3>📋 안내사항</h3>
-            </div>
-            <div className="card-content">
-              <ul className="notice-list">
-                <li>
-                  <strong>화상회의 링크</strong>는 멘토링 시작 10분 전에 이메일과 SMS로 발송됩니다.
-                </li>
-                <li>
-                  <strong>예약 취소</strong>는 멘토링 시작 2시간 전까지 가능하며, 취소 시 전액 환불됩니다.
-                </li>
-                <li>
-                  멘토링 진행 중 기술적 문제가 발생하면 <strong>고객센터 1588-1234</strong>로 연락주세요.
-                </li>
-                <li>
-                  멘토링 완료 후 <strong>리뷰 작성</strong>하시면 다음 멘토링에서 사용할 수 있는 쿠폰을 드립니다.
-                </li>
-              </ul>
+          <div className="payment-section">
+            <h3>📋 안내사항</h3>
+            <div className="payment-info">
+              <p><strong>화상회의 링크</strong>는 멘토링 시작 10분 전에 이메일과 SMS로 발송됩니다.</p>
+              <p><strong>예약 취소</strong>는 멘토링 시작 2시간 전까지 가능하며, 취소 시 전액 환불됩니다.</p>
+              <p>멘토링 진행 중 기술적 문제가 발생하면 <strong>고객센터 1588-1234</strong>로 연락주세요.</p>
+              <p>멘토링 완료 후 <strong>리뷰 작성</strong>하시면 다음 멘토링에서 사용할 수 있는 쿠폰을 드립니다.</p>
             </div>
           </div>
 
           {/* 다음 단계 안내 */}
-          <div className="next-steps">
+          <div className="payment-section">
             <h3>🚀 다음 단계</h3>
-            <div className="steps-grid">
-              <div className="step-item">
-                <div className="step-number">1</div>
-                <div className="step-content">
-                  <h4>준비하기</h4>
-                  <p>멘토링 전 질문을 미리 준비해보세요</p>
+            <div className="booking-summary">
+              <div className="summary-item">
+                <div className="summary-icon" style={{ 
+                  backgroundColor: '#3b82f6', 
+                  color: 'white', 
+                  borderRadius: '50%', 
+                  width: '32px', 
+                  height: '32px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}>1</div>
+                <div className="summary-info">
+                  <span className="summary-label">준비하기</span>
+                  <span className="summary-value">멘토링 전 질문을 미리 준비해보세요</span>
                 </div>
               </div>
-              <div className="step-item">
-                <div className="step-number">2</div>
-                <div className="step-content">
-                  <h4>참여하기</h4>
-                  <p>시간에 맞춰 화상회의에 참여하세요</p>
+              <div className="summary-item">
+                <div className="summary-icon" style={{ 
+                  backgroundColor: '#3b82f6', 
+                  color: 'white', 
+                  borderRadius: '50%', 
+                  width: '32px', 
+                  height: '32px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}>2</div>
+                <div className="summary-info">
+                  <span className="summary-label">참여하기</span>
+                  <span className="summary-value">시간에 맞춰 화상회의에 참여하세요</span>
                 </div>
               </div>
-              <div className="step-item">
-                <div className="step-number">3</div>
-                <div className="step-content">
-                  <h4>리뷰하기</h4>
-                  <p>멘토링 후 소중한 후기를 남겨주세요</p>
+              <div className="summary-item">
+                <div className="summary-icon" style={{ 
+                  backgroundColor: '#3b82f6', 
+                  color: 'white', 
+                  borderRadius: '50%', 
+                  width: '32px', 
+                  height: '32px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}>3</div>
+                <div className="summary-info">
+                  <span className="summary-label">리뷰하기</span>
+                  <span className="summary-value">멘토링 후 소중한 후기를 남겨주세요</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* 액션 버튼들 */}
-          <div className="action-buttons">
-            <button onClick={onHome} className="home-button primary">
-              <Home className="button-icon"/>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+            <button onClick={onHome} className="payment-button" style={{ flex: 1 }}>
+              <Home className="icon" />
               홈으로 돌아가기
             </button>
             {onPaymentHistory && (
-                <button className="secondary-button" onClick={onPaymentHistory}>
-                  <Calendar className="button-icon"/>
+                <button className="payment-button hover:bg-gray-600" onClick={onPaymentHistory} style={{ 
+                  flex: 1, 
+                  backgroundColor: '#6b7280'
+                }}>
+                  <Calendar className="icon" />
                   내 예약 보기
                 </button>
             )}
           </div>
         </div>
+
+        {/* 영수증 모달 */}
+        <ReceiptModal 
+          isOpen={showReceipt} 
+          onClose={() => setShowReceipt(false)} 
+          paymentData={paymentData}
+          bookingInfo={bookingInfo}
+        />
       </div>
   );
 };

@@ -18,16 +18,13 @@ const Payment = ({ bookingData, onBack, onTossPayment }) => {
     const fetchUserInfo = async () => {
       try {
         const response = await userAPI.getUser();
-        setUserInfo(response.data.data || response.data);
-        console.log('✅ 사용자 정보 로드 완료:', response.data);
+        const userData = response.data.data || response.data;
+        setUserInfo(userData);
+        console.log('✅ 사용자 정보 로드 완료:', userData);
       } catch (error) {
         console.error('❌ 사용자 정보 로드 실패:', error);
-        // 기본값 설정
-        setUserInfo({
-          email: 'customer@example.com',
-          phone: '010-0000-0000',
-          name: '고객'
-        });
+        // 기본값 설정하지 않고 null로 유지
+        setUserInfo(null);
       }
     };
 
@@ -202,9 +199,9 @@ const Payment = ({ bookingData, onBack, onTossPayment }) => {
       selectedCoupon,
       couponDiscount,
       customer: {
-        name: userInfo?.name || bookingData?.mentor?.name || '고객',
-        email: userInfo?.email || 'customer@example.com',
-        phone: userInfo?.phone || '010-0000-0000'
+        name: userInfo?.name || bookingData?.mentor?.name || '',
+        email: userInfo?.email || '',
+        phone: userInfo?.phone || ''
       }
     };
 
