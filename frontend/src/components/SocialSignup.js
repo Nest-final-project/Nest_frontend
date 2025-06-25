@@ -2,30 +2,48 @@ import React, { useState, useRef } from 'react';
 import { User, Phone } from 'lucide-react';
 import './SocialSignup.css';
 import logo from '../image/cool.png';
+import { userAPI } from '../services/api';
 
 const SocialSignup = () => {
   const [name, setName] = useState('');
   const [phone1, setPhone1] = useState('');
   const [phone2, setPhone2] = useState('');
   const [phone3, setPhone3] = useState('');
-  const [userType, setUserType] = useState('mentee');
+  const [userType, setUserType] = useState('');
 
   const phone2Ref = useRef(null);
   const phone3Ref = useRef(null);
 
+  const userDataStr = sessionStorage.getItem('userData');
+  let id = null;
+  if (userDataStr) {
+    try {
+      const userData = JSON.parse(userDataStr);
+      id = userData.id;
+    } catch (e) {
+      alert('사용자 정보를 불러올 수 없습니다.');
+      return;
+    }
+  }
+
   // 전화번호 입력 시 자동 포커스 이동
-  const handlePhoneInput = (value, setter, nextRef) => {
+  const handlePhoneInput = (value, setter, nextRef, maxLength) => {
     setter(value);
-    if (value.length === 3 && nextRef) {
+    if (value.length === maxLength && nextRef) {
       nextRef.current?.focus();
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const phone = `${phone1}-${phone2}-${phone3}`;
-    // TODO: 추가 정보 저장 API 호출
-    console.log('Additional Info:', { name, phone, userType });
+    const phoneNumber = `${phone1}-${phone2}-${phone3}`;
+    try {
+      await userAPI.updateExtraInfo({id, name, phoneNumber, userRole: userType.toUpperCase() });
+      // 성공 시 홈으로 이동
+      window.location.href = '/';
+    } catch (err) {
+      alert('추가 정보 저장에 실패했습니다.');
+    }
   };
 
   return (
@@ -69,7 +87,7 @@ const SocialSignup = () => {
                 value={phone1}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, '').slice(0, 3);
-                  handlePhoneInput(value, setPhone1, phone2Ref);
+                  handlePhoneInput(value, setPhone1, phone2Ref, 3);
                 }}
                 className="phone-field"
                 maxLength="3"
@@ -83,7 +101,7 @@ const SocialSignup = () => {
                 value={phone2}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, '').slice(0, 4);
-                  handlePhoneInput(value, setPhone2, phone3Ref);
+                  handlePhoneInput(value, setPhone2, phone3Ref, 4);
                 }}
                 className="phone-field"
                 maxLength="4"

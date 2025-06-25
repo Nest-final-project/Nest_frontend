@@ -146,5 +146,27 @@ export const authUtils = {
       console.log('- Access Token 확인:', accessTokenUtils.getAccessToken() ? '✅' : '❌');
       console.log('- User Info 확인:', userInfoUtils.getUserInfo() ? '✅' : '❌');
     }, 50);
+  },
+};
+
+// JWT 토큰에서 페이로드를 디코딩하는 함수
+export const decodeJWT = (token) => {
+  if (!token) {
+    console.warn('디코딩할 토큰이 없습니다.');
+    return null;
+  }
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+        atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('❌ JWT 디코딩 실패:', error);
+    return null;
   }
 };
