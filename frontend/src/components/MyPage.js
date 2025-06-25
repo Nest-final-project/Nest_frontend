@@ -59,6 +59,7 @@ const MyPage = ({ onBack, onLogout }) => {
           nickName: backendUserData.nickName,
           phoneNumber: backendUserData.phoneNumber,
           userRole: backendUserData.userRole,
+          socialType: backendUserData.socialType,
           createdAt: backendUserData.createdAt,
           profileImage: backendUserData.profileImage || '/default-profile.svg',
           bank: backendUserData.bank || '',
