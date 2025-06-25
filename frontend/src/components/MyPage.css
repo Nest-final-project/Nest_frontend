@@ -1,9 +1,9 @@
 /* ===== 컨테이너 기본 스타일 ===== */
 .mypage-container {
-  min-height: 100vh !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  position: relative !important;
-  overflow-x: hidden !important;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow-x: hidden;
 }
 
 .mypage-container::before {
@@ -69,6 +69,91 @@
   padding: 2rem;
 }
 
+/* ===== 프로필 섹션 ===== */
+.profile-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.profile-image-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.profile-edit-button {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.profile-edit-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.profile-edit-button .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-info h2 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.profile-info p {
+  margin: 0 0 0.75rem 0;
+  color: #718096;
+  font-size: 1rem;
+}
+
+.user-level {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* ===== 메인 레이아웃 ===== */
 .mypage-main {
   display: flex;
@@ -88,36 +173,46 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   position: sticky;
   top: 2rem;
-  height: fit-content;
+  height: calc(100vh - 4rem); /* 화면 높이에서 top 여백 제외 */
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.sidebar-header {
-  padding: 1.5rem 1.8rem 1rem 1.8rem !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+.sidebar .sidebar-header {
+  padding: 1.5rem 1.8rem 1rem 1.8rem;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.sidebar-header h3 {
-  margin: 0 !important;
-  color: #2d3748 !important;
-  font-size: 1.1rem !important;
-  font-weight: 700 !important;
+.sidebar .sidebar-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
-.sidebar-nav {
+.mypage-main .sidebar-nav {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: auto;
+  background: transparent;
+  backdrop-filter: none;
+  z-index: auto;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
   padding: 1rem 1.2rem;
+  flex: 1; /* 남은 공간을 모두 차지 */
 }
 
-.sidebar-divider {
+.mypage-main .sidebar-divider {
   height: 1px;
   background: #e2e8f0;
   margin: 0.8rem 0;
 }
 
-.sidebar-section-title {
+.mypage-main .sidebar-section-title {
   color: #718096;
   font-size: 0.85rem;
   font-weight: 600;
@@ -127,7 +222,7 @@
   letter-spacing: 0.5px;
 }
 
-.sidebar-item {
+.mypage-main .sidebar-item {
   display: flex;
   align-items: center;
   gap: 1.2rem;
@@ -144,19 +239,19 @@
   width: 100%;
 }
 
-.sidebar-item:hover {
+.mypage-main .sidebar-item:hover {
   background: rgba(102, 126, 234, 0.1);
   color: #667eea;
   transform: translateX(4px);
 }
 
-.sidebar-item.active {
+.mypage-main .sidebar-item.active {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-.sidebar-icon {
+.mypage-main .sidebar-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
@@ -164,52 +259,52 @@
 
 /* ===== 컨텐츠 영역 ===== */
 .content-area {
-  flex: 1 !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-radius: 20px !important;
-  padding: 2.5rem !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  min-height: 700px !important;
+  flex: 1 ;
+  background: rgba(255, 255, 255, 0.95) ;
+  border-radius: 20px ;
+  padding: 2.5rem ;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) ;
+  backdrop-filter: blur(20px) ;
+  -webkit-backdrop-filter: blur(20px) ;
+  border: 1px solid rgba(255, 255, 255, 0.3) ;
+  min-height: 700px ;
 }
 
 .section-header {
-  margin-bottom: 2rem !important;
-  padding-bottom: 1rem !important;
-  border-bottom: 2px solid #e2e8f0 !important;
+  margin-bottom: 2rem ;
+  padding-bottom: 1rem ;
+  border-bottom: 2px solid #e2e8f0 ;
 }
 
 .section-header h3 {
-  margin: 0 0 0.5rem 0 !important;
-  color: #2d3748 !important;
-  font-size: 1.5rem !important;
-  font-weight: 700 !important;
+  margin: 0 0 0.5rem 0 ;
+  color: #2d3748 ;
+  font-size: 1.5rem ;
+  font-weight: 700 ;
 }
 
 .section-header p {
-  margin: 0 !important;
-  color: #718096 !important;
-  font-size: 0.95rem !important;
+  margin: 0 ;
+  color: #718096 ;
+  font-size: 0.95rem ;
 }
 
 /* ===== 스피너 애니메이션 ===== */
 .spinner-small {
-  width: 16px !important;
-  height: 16px !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  border-top: 2px solid white !important;
-  border-radius: 50% !important;
-  animation: spin 1s linear infinite !important;
+  width: 16px ;
+  height: 16px ;
+  border: 2px solid rgba(255, 255, 255, 0.3) ;
+  border-top: 2px solid white ;
+  border-radius: 50% ;
+  animation: spin 1s linear infinite ;
 }
 
 @keyframes spin {
   0% {
-    transform: rotate(0deg) !important;
+    transform: rotate(0deg) ;
   }
   100% {
-    transform: rotate(360deg) !important;
+    transform: rotate(360deg) ;
   }
 }
 
@@ -273,35 +368,35 @@
 
 /* ===== 빈 상태 스타일 ===== */
 .empty-state {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 4rem 2rem !important;
-  color: #a0aec0 !important;
-  text-align: center !important;
+  display: flex ;
+  flex-direction: column ;
+  align-items: center ;
+  justify-content: center ;
+  padding: 4rem 2rem ;
+  color: #a0aec0 ;
+  text-align: center ;
 }
 
 .empty-icon {
-  width: 64px !important;
-  height: 64px !important;
-  margin-bottom: 1.5rem !important;
-  opacity: 0.5 !important;
-  color: #a0aec0 !important;
+  width: 64px ;
+  height: 64px ;
+  margin-bottom: 1.5rem ;
+  opacity: 0.5 ;
+  color: #a0aec0 ;
 }
 
 .empty-state h4 {
-  font-size: 1.3rem !important;
-  font-weight: 700 !important;
-  margin: 0 0 0.5rem 0 !important;
-  color: #4a5568 !important;
+  font-size: 1.3rem ;
+  font-weight: 700 ;
+  margin: 0 0 0.5rem 0 ;
+  color: #4a5568 ;
 }
 
 .empty-state p {
-  font-size: 1rem !important;
-  margin: 0 0 1.5rem 0 !important;
-  color: #718096 !important;
-  line-height: 1.5 !important;
+  font-size: 1rem ;
+  margin: 0 0 1.5rem 0 ;
+  color: #718096 ;
+  line-height: 1.5 ;
 }
 
 .empty-action-btn {
@@ -325,19 +420,19 @@
 
 /* ===== 텍스트 색상 안전장치 (모달 제외) ===== */
 .content-area * {
-  color: #2d3748 !important;
+  color: #2d3748 ;
 }
 
 .content-area h1, .content-area h2, .content-area h3, .content-area h4, .content-area h5, .content-area h6 {
-  color: #2d3748 !important;
+  color: #2d3748 ;
 }
 
 .content-area p, .content-area span, .content-area div {
-  color: #4a5568 !important;
+  color: #4a5568 ;
 }
 
 .content-area label {
-  color: #718096 !important;
+  color: #718096 ;
 }
 
 /* ===== 반응형 디자인 ===== */
@@ -348,6 +443,17 @@
 
   .mypage-header h1 {
     font-size: 1.5rem;
+  }
+
+  .profile-section {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .profile-info h2 {
+    font-size: 1.3rem;
   }
 
   .mypage-main {
@@ -373,5 +479,24 @@
 
   .mypage-header h1 {
     font-size: 1.3rem;
+  }
+
+  .profile-section {
+    padding: 1rem;
+  }
+
+  .profile-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .profile-edit-button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .profile-edit-button .icon {
+    width: 12px;
+    height: 12px;
   }
 }

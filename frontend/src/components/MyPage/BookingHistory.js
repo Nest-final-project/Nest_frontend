@@ -98,6 +98,13 @@ const BookingHistory = ({ userInfo }) => {
     }
   };
 
+  const formatTicketTime = (time) => {
+    if (typeof time === 'string' && time.startsWith('MINUTES_')) {
+      return time.replace('MINUTES_', '');
+    }
+    return time;
+  };
+
   const handleRetry = () => {
     setDataLoaded(false);
     setError(null);
@@ -178,7 +185,7 @@ const BookingHistory = ({ userInfo }) => {
                     </div>
                     <div className="info-row">
                       <span className="info-label">이용 시간</span>
-                      <span className="info-value">{reservation.ticketTime}분</span>
+                      <span className="info-value">{formatTicketTime(reservation.ticketTime)}분</span>
                     </div>
                   </div>
 

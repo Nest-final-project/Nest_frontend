@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import  {categoryAPI, keywordAPI} from '../../services/api';
+import './MentorProfileModal.css';
 
 
 const MentorProfileModal = ({ onClose, onSubmit }) => {
@@ -78,8 +79,8 @@ const MentorProfileModal = ({ onClose, onSubmit }) => {
   };
 
   return (
-      <div className="mentor-profile-modal-backdrop">
-        <div className="mentor-profile-modal">
+      <div className="mentor-profile-registration-modal-backdrop">
+        <div className="mentor-profile-registration-modal">
           <h2>멘토 프로필 등록</h2>
           <form onSubmit={handleSubmit}>
             <label>

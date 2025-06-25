@@ -1,133 +1,489 @@
-/* MentorRegistration - 트렌디 & 깔끔 리디자인 */
-.mentor-register-tab {
-  background: #fff;
-  border-radius: 24px;
-  padding: 2.5rem 2rem;
-  box-shadow: 0 6px 32px rgba(102, 126, 234, 0.10), 0 1.5px 6px rgba(118, 75, 162, 0.06);
-  margin-bottom: 2.5rem;
-  transition: box-shadow 0.2s;
-  border: 1.5px solid #e5e7eb;
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-}
+/* MentorRegistration.css - 모던하고 트렌디한 스타일 */
 
-.mentor-register-tab .section-header {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  margin-bottom: 2rem;
-  padding-bottom: 0.7rem;
-  border-bottom: 1.5px solid #e5e7eb;
-}
-
-.mentor-register-tab .section-header::before {
-  content: '';
-  display: block;
-  width: 6px;
-  height: 32px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 8px;
-  margin-right: 0.5rem;
-}
-
-.mentor-profile-list {
+/* MyPage 컨테이너 내부에서의 우선순위 확보 */
+.content-area .mentor-registration-container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  margin-top: 2rem;
+  gap: 24px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0;
+  margin: -2.5rem;
+  margin-top: -1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 16px;
 }
 
-.mentor-profile-card {
+/* 섹션 헤더 */
+.content-area .section-header {
+  background: white;
+  border-radius: 16px 16px 0 0;
+  padding: 32px;
+  border-bottom: 1px solid #e2e8f0;
+  margin: 0;
+}
+
+.content-area .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.content-area .header-text h3 {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e293b 0%, #64748b 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 8px 0;
+  color: transparent;
+}
+
+.content-area .header-text p {
+  color: #64748b;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.content-area .header-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.content-area .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e0f2fe 100%);
+  padding: 16px 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  min-width: 100px;
+}
+
+.content-area .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3b82f6;
+  line-height: 1;
+}
+
+.content-area .stat-label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* 로딩 상태 */
+.content-area .loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e0f2fe 100%);
+  border-radius: 16px;
+  margin: 24px;
+}
+
+.content-area .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0f2fe;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: mentorSpin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+.content-area .loading-state p {
+  color: #64748b;
+  font-weight: 500;
+  margin: 0;
+  font-size: 16px;
+}
+
+/* 에러 상태 */
+.content-area .mentor-profile-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fef7f0 100%);
+  border-radius: 16px;
+  margin: 24px;
+  padding: 48px;
+  text-align: center;
+}
+
+.content-area .error-icon {
+  margin-bottom: 24px;
+  opacity: 0.7;
+}
+
+.content-area .error-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #991b1b;
+  margin-bottom: 8px;
+}
+
+.content-area .error-desc {
+  color: #991b1b;
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+.content-area .mentor-profile-error button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.content-area .mentor-profile-error button:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* 멘토 프로필 리스트 */
+.content-area .mentor-profile-list {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 멘토 프로필 카드 */
+.content-area .mentor-profile-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.content-area .mentor-profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.content-area .mentor-profile-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  border-color: #cbd5e1;
+}
+
+.content-area .mentor-profile-card:hover::before {
+  opacity: 1;
+}
+
+/* 프로필 카드 헤더 */
+.content-area .profile-card-header {
   display: flex;
   align-items: flex-start;
-  gap: 2rem;
-  background: #f9fafb;
-  border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(102, 126, 234, 0.10);
-  padding: 2rem 1.5rem;
-  border: 1.5px solid #e5e7eb;
-  transition: box-shadow 0.2s, transform 0.2s;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.content-area .profile-avatar {
   position: relative;
+  flex-shrink: 0;
 }
-.mentor-profile-card:hover {
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.18);
-  transform: translateY(-4px) scale(1.02);
-}
-.mentor-profile-avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #fbb6ce, #a3bffa);
+
+.content-area .avatar-initials {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
+  font-size: 20px;
   font-weight: 700;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.10);
+  color: white;
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
 }
-.mentor-profile-info {
+
+.content-area .status-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: #10b981;
+  border: 3px solid white;
+  border-radius: 50%;
+}
+
+.content-area .profile-basic-info {
   flex: 1;
+}
+
+.content-area .profile-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+
+.content-area .profile-title {
+  color: #64748b;
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.content-area .category-badge {
+  display: inline-block;
+  background: linear-gradient(135d, #dbeafe 0%, #e0e7ff 100%);
+  color: #3730a3;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 프로필 카드 본문 */
+.content-area .profile-card-body {
+  margin-bottom: 20px;
+}
+
+.content-area .introduction-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.content-area .section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 8px 0;
+}
+
+.content-area .introduction-text {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 프로필 카드 푸터 */
+.content-area .profile-card-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.content-area .profile-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.content-area .profile-action-btn.primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.content-area .profile-action-btn.primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #5b21b6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.content-area .profile-action-btn.secondary {
+  background: white;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.content-area .profile-action-btn.secondary:hover {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+/* 빈 상태 */
+.content-area .mentor-profile-empty {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e0f2fe 100%);
+  border-radius: 16px;
+  margin: 24px;
+  padding: 48px;
+  text-align: center;
 }
-.mentor-profile-info .mentor-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #2d3748;
+
+.content-area .empty-icon {
+  margin-bottom: 24px;
+  opacity: 0.7;
 }
-.mentor-profile-info .mentor-stack {
-  display: inline-block;
-  background: linear-gradient(135deg, #e0e7ff, #f3e8ff);
-  color: #5a67d8;
-  font-size: 0.9rem;
+
+.content-area .empty-title {
+  font-size: 20px;
   font-weight: 600;
-  border-radius: 10px;
-  padding: 0.2rem 0.8rem;
-  margin-bottom: 0.2rem;
+  color: #475569;
+  margin-bottom: 8px;
 }
-.mentor-profile-info .mentor-desc {
-  color: #4a5568;
-  font-size: 0.97rem;
-  margin-bottom: 0.2rem;
+
+.content-area .empty-desc {
+  color: #64748b;
+  margin-bottom: 24px;
+  max-width: 400px;
+  line-height: 1.5;
+  font-size: 16px;
 }
-.mentor-profile-info .mentor-date {
-  font-size: 0.85rem;
-  color: #a0aec0;
-}
-.mentor-profile-info .mentor-status {
-  font-size: 0.9rem;
-  color: #38a169;
+
+.content-area .mentor-register-btn,
+.content-area .mentor-add-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
+
+.content-area .mentor-register-btn:hover,
+.content-area .mentor-add-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #5b21b6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.content-area .mentor-add-btn {
+  margin: 0 24px 24px auto;
+  display: block;
+}
+
+/* 카드 글로우 효과 */
+.content-area .card-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+  border-radius: 20px;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+.content-area .mentor-profile-card:hover .card-glow {
+  opacity: 0.1;
+}
+
+/* 애니메이션 */
+@keyframes mentorSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 카드 등장 애니메이션 */
+.content-area .mentor-profile-card {
+  animation: slideInUp 0.4s ease-out;
+}
+
+.content-area .mentor-profile-card[data-delay="1"] {
+  animation-delay: 0.1s;
+}
+
+.content-area .mentor-profile-card[data-delay="2"] {
+  animation-delay: 0.2s;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 반응형 디자인 */
 @media (max-width: 768px) {
-  .mentor-register-tab {
-    padding: 1.2rem 0.5rem;
-    border-radius: 16px;
-    max-width: 98vw;
+  .content-area .mentor-registration-container {
+    margin: -1.5rem;
   }
-  .mentor-register-tab .section-header {
+  
+  .content-area .section-header {
+    padding: 24px;
+  }
+  
+  .content-area .header-content {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.7rem;
-    padding-bottom: 0.5rem;
+    gap: 16px;
   }
-  .mentor-register-tab .section-header::before {
-    height: 20px;
-    width: 4px;
-    margin-right: 0.3rem;
+  
+  .content-area .mentor-profile-list {
+    padding: 16px;
   }
-  .mentor-profile-card {
+  
+  .content-area .mentor-profile-card {
+    padding: 16px;
+  }
+  
+  .content-area .profile-card-header {
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    padding: 1.2rem 0.7rem;
+    text-align: center;
+    gap: 12px;
   }
-  .mentor-profile-avatar {
-    width: 56px;
-    height: 56px;
-    font-size: 1.5rem;
+  
+  .content-area .profile-card-footer {
+    justify-content: stretch;
   }
-} 
+  
+  .content-area .profile-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
