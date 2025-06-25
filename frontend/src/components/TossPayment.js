@@ -394,7 +394,7 @@ function TossPaymentComponent({
         throw new Error("로그인이 필요합니다.");
       }
 
-      const prepareResponse = await fetch(`${BASE_URL}/api/v1/payments/prepare`,
+      const prepareResponse = await fetch(`${BASE_URL}/api/payments/prepare`,
           {
             method: "POST",
             headers: {
