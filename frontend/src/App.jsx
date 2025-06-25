@@ -686,19 +686,6 @@ const AppContent = () => {
     return (
         <div className="app">
           <ParticleBackground />
-          <Header
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              onLoginClick={() => setIsLoginOpen(true)}
-              onCategorySelect={handleCategorySelect}
-              onProfileClick={handleProfileClick}
-              onInquiry={handleInquiry}
-              isLoggedIn={isLoggedIn}
-              userInfo={userInfo}
-              onChatRoom={handleChatRoom}
-              onLogout={handleLogout}
-              onAdminDashboard={handleAdminDashboard}
-          />
           <MentorList
               category={category}
               onBack={handleBackToHome}
@@ -729,19 +716,6 @@ const AppContent = () => {
 
   const SSEDemoPage = () => (
       <div className="min-h-screen bg-gray-50">
-        <Header
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
-            onLoginClick={() => setIsLoginOpen(true)}
-            onCategorySelect={handleCategorySelect}
-            onProfileClick={handleProfileClick}
-            isLoggedIn={isLoggedIn}
-            userInfo={userInfo}
-            onChatRoom={handleChatRoom}
-            onLogout={handleLogout}
-            onSSEDemo={handleSSEDemo}
-            onAdminDashboard={handleAdminDashboard}
-        />
         <SSEExample/>
         <Login
             isOpen={isLoginOpen}
@@ -770,19 +744,22 @@ const AppContent = () => {
   return (
       <div className="app">
         <ParticleBackground />
-        <Header
-            isMenuOpen={isMenuOpen}
-            setIsMenuOpen={setIsMenuOpen}
-            onLoginClick={() => setIsLoginOpen(true)}
-            onCategorySelect={handleCategorySelect}
-            onProfileClick={handleProfileClick}
-            onInquiry={handleInquiry}
-            isLoggedIn={isLoggedIn}
-            userInfo={userInfo}
-            onChatRoom={handleChatRoom}
-            onLogout={handleLogout}
-            onAdminDashboard={handleAdminDashboard}
-        />
+        {/* Header는 메인 페이지에서만 표시 */}
+        {location.pathname === '/' && (
+          <Header
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onLoginClick={() => setIsLoginOpen(true)}
+              onCategorySelect={handleCategorySelect}
+              onProfileClick={handleProfileClick}
+              onInquiry={handleInquiry}
+              isLoggedIn={isLoggedIn}
+              userInfo={userInfo}
+              onChatRoom={handleChatRoom}
+              onLogout={handleLogout}
+              onAdminDashboard={handleAdminDashboard}
+          />
+        )}
         <Routes>
           <Route
               path="/"
