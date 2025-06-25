@@ -50,7 +50,8 @@ api.interceptors.request.use(
         '/api/auth/login',
         '/api/auth/signup',
         '/api/mentors/profiles', // 멘토 목록 조회 (로그인 없이도 볼 수 있음)
-        '/api/oauth2/login'
+        '/api/oauth2/login',
+        '/api/oauth2/callback',
       ];
 
       // 현재 요청 URL이 공개 엔드포인트인지 확인
@@ -195,7 +196,8 @@ export const authAPI = {
   },
 
   // OAuth2 로그인 URL 가져오기
-  getOAuth2LoginUrl: (provider) => api.get(`/api/oauth2/login/${provider}`),
+  getOAuth2CallbackUrl: (code) => api.get(`/oauth2/callback`, {params: {code}}),
+  
 };
 
 // User API
@@ -216,7 +218,7 @@ export const userAPI = {
       passwordData),
 
   // 추가정보 입력
-  updateExtraInfo: (extraInfoData) => api.patch('/api/users/me/extra-info',
+  updateExtraInfo: (extraInfoData) => api.patch('/api/users/me/extraInfo',
       extraInfoData),
 
   // 회원 탈퇴

@@ -251,11 +251,6 @@ const BookingHistory = ({ userInfo }) => {
               ? '멘티들이 예약을 하면 여기에서 확인할 수 있어요!'
               : '멘토링을 예약하고 성장해보세요!'}
           </p>
-          {userInfo.userRole === 'MENTEE' && (
-            <button className="empty-action-btn">
-              멘토 찾아보기
-            </button>
-          )}
         </div>
       )}
     </div>

@@ -4,6 +4,7 @@ import './Login.css';
 import logo from '../image/cool.png';
 import api, { authAPI } from '../services/api';
 import { authUtils } from '../utils/tokenUtils';
+import { decodeJWT } from "../utils/tokenUtils";
 
 const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   const [email, setEmail] = useState('');
@@ -182,24 +183,6 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
           console.log('responseData.authority:', responseData.authority);
           console.log('responseData.authorities:', responseData.authorities);
           
-          // JWT 토큰에서 userRole 추출하는 함수
-          const decodeJWT = (token) => {
-            try {
-              const base64Url = token.split('.')[1];
-              const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-              const jsonPayload = decodeURIComponent(
-                atob(base64)
-                  .split('')
-                  .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                  .join('')
-              );
-              return JSON.parse(jsonPayload);
-            } catch (error) {
-              console.error('JWT 디코딩 실패:', error);
-              return null;
-            }
-          };
-          
           // JWT에서 사용자 역할 추출
           let userRoleFromToken = null;
           if (accessToken) {
@@ -293,12 +276,16 @@ const Login = ({ isOpen, onClose, onLoginSuccess }) => {
   };
 
   const handleKakaoLogin = () => {
+    console.log('🟡 카카오 소셜 로그인 시작...');
     // 백엔드 OAuth2 카카오 로그인 URL로 리다이렉트
+    // 백엔드에서 성공 후 쿠키나 세션으로 토큰 설정하고 프론트로 리다이렉트
     window.location.href = 'http://localhost:8080/oauth2/login/kakao';
   };
 
   const handleNaverLogin = () => {
+    console.log('🟢 네이버 소셜 로그인 시작...');
     // 백엔드 OAuth2 네이버 로그인 URL로 리다이렉트
+    // 백엔드에서 성공 후 쿠키나 세션으로 토큰 설정하고 프론트로 리다이렉트
     window.location.href = 'http://localhost:8080/oauth2/login/naver';
   };
 
