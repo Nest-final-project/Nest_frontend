@@ -25,14 +25,16 @@ import Inquiry from './components/Inquiry';
 import AdminDashboard from './components/AdminDashboard';
 import {authUtils, userInfoUtils} from './utils/tokenUtils';
 import {registerDebugFunctions} from './utils/websocketDebug';
-import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 'react-router-dom';
+import SSEExample from './components/SSEExample';
 import MentorProfilePage from './components/MentorProfilePage';
 import OAuth2CallbackPage from "./components/OAuth2CallbackPage";
 
-const App = () => {
+const AppContent = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home');
   const [currentTossPage, setCurrentTossPage] = useState('toss-payment');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedMentor, setSelectedMentor] = useState(null);
@@ -60,27 +62,27 @@ const App = () => {
           console.log('세션에서 로그인 상태 복원됨:', userData);
 
           // 🔐 ADMIN 사용자인 경우 즉시 관리자 대시보드로 이동
-          if (userData.userRole === 'ADMIN') {
+          if (userData.userRole === 'ADMIN' && location.pathname === '/') {
             console.log('🔐 ADMIN 사용자 감지됨 - 바로 관리자 대시보드로 이동');
-            setCurrentPage('admin-dashboard');
+            navigate('/admin', { replace: true });
             setIsInitializing(false);
             return; // 다른 로직 실행하지 않음
           }
         }
 
-      // 개발용: 전역 디버깅 함수 추가
-      window.checkAuth = () => {
-        console.group('🔍 현재 인증 상태');
-        console.log('sessionStorage accessToken:',
-            sessionStorage.getItem('accessToken') ? '존재' : '없음');
-        console.log('sessionStorage userData:',
-            sessionStorage.getItem('userData') ? '존재' : '없음');
-        console.log('localStorage refreshToken:',
-            localStorage.getItem('refreshToken') ? '존재' : '없음');
-        console.log('React isLoggedIn 상태:', isLoggedIn);
-        console.log('User Role:', userData?.userRole || '없음');
-        console.groupEnd();
-      };
+        // 개발용: 전역 디버깅 함수 추가
+        window.checkAuth = () => {
+          console.group('🔍 현재 인증 상태');
+          console.log('sessionStorage accessToken:',
+              sessionStorage.getItem('accessToken') ? '존재' : '없음');
+          console.log('sessionStorage userData:',
+              sessionStorage.getItem('userData') ? '존재' : '없음');
+          console.log('localStorage refreshToken:',
+              localStorage.getItem('refreshToken') ? '존재' : '없음');
+          console.log('React isLoggedIn 상태:', isLoggedIn);
+          console.log('User Role:', userData?.userRole || '없음');
+          console.groupEnd();
+        };
 
         console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
 
@@ -106,34 +108,32 @@ const App = () => {
         const errorMessage = urlParams.get('message');
 
         if (needsAdditionalInfo === 'true') {
-          setCurrentPage('social-signup');
+          navigate('/social-signup', { replace: true });
         } else if (currentPath === '/toss/success' && paymentKey && orderId && amount) {
           // 토스 결제 성공 - 새로운 플로우 (경로 기반)
           console.log('✅ 토스 결제 성공 (경로):', {paymentKey, orderId, amount, reservationId});
           setCurrentTossPage('toss-success');
-          setCurrentPage('toss-payment');
         } else if (currentPath === '/toss/fail') {
           // 토스 결제 실패 - 새로운 플로우 (경로 기반)
           console.log('❌ 토스 결제 실패 (경로):', {errorCode, errorMessage});
           setCurrentTossPage('toss-fail');
-          setCurrentPage('toss-payment');
         } else if (pageParam === 'toss-success' && paymentKey && orderId && amount) {
           // 토스 결제 성공 - 새로운 플로우 (파라미터 기반 - 폴백)
           console.log('✅ 토스 결제 성공 (파라미터):', {paymentKey, orderId, amount, reservationId});
           setCurrentTossPage('toss-success');
-          setCurrentPage('toss-payment');
+          navigate('/toss/success', { replace: true });
         } else if (pageParam === 'toss-fail') {
           // 토스 결제 실패 - 새로운 플로우 (파라미터 기반 - 폴백)
           console.log('❌ 토스 결제 실패 (파라미터):', {errorCode, errorMessage});
           setCurrentTossPage('toss-fail');
-          setCurrentPage('toss-payment');
+          navigate('/toss/fail', { replace: true });
         } else if (paymentKey && orderId && amount && reservationId) {
           // 기존 결제 성공 - 기존 플로우 유지
           console.log('✅ 기존 결제 성공 파라미터:', {paymentKey, orderId, amount, reservationId});
-          setCurrentPage('success');
+          navigate('/payment/success', { replace: true });
         } else if (errorCode && errorMessage) {
           // 기존 결제 실패 - 기존 플로우 유지
-          setCurrentPage('fail');
+          navigate('/payment/fail', { replace: true });
         }
       } catch (error) {
         console.error('App 초기화 에러:', error);
@@ -156,23 +156,23 @@ const App = () => {
     console.log('🔍 userInfo useEffect 실행됨:', {
       userInfo: userInfo,
       userRole: userInfo?.userRole,
-      currentPage: currentPage,
+      currentPath: location.pathname,
       isAdmin: userInfo?.userRole === 'ADMIN'
     });
 
-    if (userInfo && userInfo.userRole === 'ADMIN' && currentPage !== 'admin-dashboard') {
+    if (userInfo && userInfo.userRole === 'ADMIN' && location.pathname === '/') {
       console.log('🔐 userInfo 업데이트 감지 - ADMIN 사용자를 관리자 대시보드로 이동');
-      console.log('현재 페이지:', currentPage, '→ admin-dashboard로 변경');
-      setCurrentPage('admin-dashboard');
+      console.log('현재 페이지:', location.pathname, '→ /admin으로 변경');
+      navigate('/admin', { replace: true });
     }
-  }, [userInfo, currentPage]);
+  }, [userInfo, location.pathname, navigate]);
 
   // 로그인 성공 처리
   const handleLoginSuccess = (userData) => {
     console.log('🎉 handleLoginSuccess 호출됨!');
     console.log('📦 받은 userData:', userData);
     console.log('🔐 사용자 역할:', userData?.userRole);
-    console.log('📄 현재 페이지:', currentPage);
+    console.log('📄 현재 페이지:', location.pathname);
 
     setIsLoggedIn(true);
     setUserInfo(userData);
@@ -183,7 +183,7 @@ const App = () => {
     // 관리자 역할인 경우 자동으로 관리자 대시보드로 이동
     if (userData.userRole === 'ADMIN') {
       console.log('🔐 관리자 로그인 감지 - 관리자 대시보드로 이동');
-      setCurrentPage('admin-dashboard');
+      navigate('/admin');
     }
   };
 
@@ -194,7 +194,7 @@ const App = () => {
     authUtils.clearAllAuthData();
     setIsLoggedIn(false);
     setUserInfo(null);
-    setCurrentPage('home');
+    navigate('/');
     console.log('클라이언트 로그아웃 완료 - 모든 토큰과 사용자 정보 삭제됨');
   };
 
@@ -203,43 +203,43 @@ const App = () => {
     // ADMIN 사용자인 경우 직접 관리자 대시보드로 이동
     if (userInfo && userInfo.userRole === 'ADMIN') {
       console.log('🔐 프로필 클릭 시 ADMIN 사용자 감지됨 - 관리자 대시보드로 이동');
-      setCurrentPage('admin-dashboard');
+      navigate('/admin');
     } else {
-      setCurrentPage('mypage');
+      navigate('/mypage');
     }
   };
 
   // 카테고리별 멘토 리스트 페이지로 이동
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
-    setCurrentPage('mentor-list');
+    navigate(`/mentors?category=${category}`);
   };
 
   // 멘토 프로필 페이지로 이동
   const handleMentorSelect = (mentor) => {
     setSelectedMentor(mentor);
-    setCurrentPage('mentor-profile');
+    navigate(`/mentor/${mentor.userId}/profile/${mentor.id}`);
   };
 
   // 홈으로 돌아가기
   const handleBackToHome = () => {
-    setCurrentPage('home');
+    navigate('/');
   };
 
   // 멘토 리스트로 돌아가기
   const handleBackToList = () => {
-    setCurrentPage('mentor-list');
+    navigate(`/mentors?category=${selectedCategory}`);
   };
 
   // 예약 페이지로 이동
   const handleBooking = () => {
-    setCurrentPage('booking');
+    navigate('/booking');
   };
 
   // 결제 페이지로 이동
   const handlePayment = (data) => {
     setBookingData(data);
-    setCurrentPage('payment');
+    navigate('/payment');
   };
 
   // 토스 결제 페이지로 이동 (새로 추가)
@@ -254,7 +254,7 @@ const App = () => {
 
     setBookingData(finalBookingData);
     setCurrentTossPage('toss-payment');
-    setCurrentPage('toss-payment');
+    navigate('/toss/payment');
 
     console.log('🎯 토스 결제 페이지로 이동 완료');
   };
@@ -267,8 +267,8 @@ const App = () => {
     // 🔥 예약 ID로 실제 DB에서 예약 정보 조회
     let actualBookingData = null;
     const reservationId = tossPaymentData?.reservationId ||
-                         tossPaymentData?.originalResponse?.reservationId ||
-                         tossPaymentData?.originalResponse?.data?.orderId;
+        tossPaymentData?.originalResponse?.reservationId ||
+        tossPaymentData?.originalResponse?.data?.orderId;
 
     if (reservationId) {
       try {
@@ -280,7 +280,7 @@ const App = () => {
         actualBookingData = reservationResponse.data;
 
         console.log('✅ 실제 DB에서 가져온 예약 정보:', actualBookingData);
-        
+
         // 🔍 실제 DB 데이터 구조 확인
         console.group('🔍 실제 DB 예약 데이터 구조 분석');
         console.log('actualBookingData:', actualBookingData);
@@ -339,11 +339,11 @@ const App = () => {
     const paymentResponse = originalResponse.payment || originalResponse;
     const apiBookingData = tossPaymentData?.apiBookingData || {};
     const backupBookingData = tossPaymentData?.backupBookingData || null;
-    
+
     // 🔥 로그에서 확인된 실제 백업 데이터 직접 추출
-    const realBackupData = tossPaymentData?.originalBookingData || 
-                          tossPaymentData?.data?.originalBookingData ||
-                          tossPaymentData?._debug?.tossPaymentData?.originalBookingData;
+    const realBackupData = tossPaymentData?.originalBookingData ||
+        tossPaymentData?.data?.originalBookingData ||
+        tossPaymentData?._debug?.tossPaymentData?.originalBookingData;
 
     console.log('🔍 토스 승인 API 응답 분석:', {
       originalResponse,
@@ -373,33 +373,33 @@ const App = () => {
 
     // 🔥 실제 데이터 우선순위: 1) 실제 DB 데이터, 2) realBackupData, 3) tossPaymentData 백업, 4) 기본값
     const getActualData = (dbField, backupPath, defaultValue) => {
-      return actualBookingData?.[dbField] || 
-             realBackupData?.[dbField] ||
-             tossPaymentData?.originalBookingData?.[dbField] ||
-             backupBookingData?.[dbField] || 
-             savedData?.bookingData?.[dbField] || 
-             bookingData?.[dbField] || 
-             defaultValue;
+      return actualBookingData?.[dbField] ||
+          realBackupData?.[dbField] ||
+          tossPaymentData?.originalBookingData?.[dbField] ||
+          backupBookingData?.[dbField] ||
+          savedData?.bookingData?.[dbField] ||
+          bookingData?.[dbField] ||
+          defaultValue;
     };
 
     const getActualMentorData = (field, defaultValue) => {
-      return actualBookingData?.mentor?.[field] || 
-             realBackupData?.mentor?.[field] ||
-             tossPaymentData?.originalBookingData?.mentor?.[field] ||
-             backupBookingData?.mentor?.[field] || 
-             savedData?.bookingData?.mentor?.[field] || 
-             bookingData?.mentor?.[field] || 
-             defaultValue;
+      return actualBookingData?.mentor?.[field] ||
+          realBackupData?.mentor?.[field] ||
+          tossPaymentData?.originalBookingData?.mentor?.[field] ||
+          backupBookingData?.mentor?.[field] ||
+          savedData?.bookingData?.mentor?.[field] ||
+          bookingData?.mentor?.[field] ||
+          defaultValue;
     };
 
     const getActualTicketData = (field, defaultValue) => {
-      return actualBookingData?.ticket?.[field] || 
-             realBackupData?.ticket?.[field] ||
-             tossPaymentData?.originalBookingData?.ticket?.[field] ||
-             backupBookingData?.ticket?.[field] || 
-             savedData?.bookingData?.ticket?.[field] || 
-             bookingData?.ticket?.[field] || 
-             defaultValue;
+      return actualBookingData?.ticket?.[field] ||
+          realBackupData?.ticket?.[field] ||
+          tossPaymentData?.originalBookingData?.ticket?.[field] ||
+          backupBookingData?.ticket?.[field] ||
+          savedData?.bookingData?.ticket?.[field] ||
+          bookingData?.ticket?.[field] ||
+          defaultValue;
     };
 
     // 토스 결제 데이터를 PaymentComplete 컴포넌트가 기대하는 형태로 변환
@@ -420,27 +420,27 @@ const App = () => {
         date: getActualData('date', null, '날짜 미정'),
         startTime: getActualData('startTime', null, '시간 미정'),
         endTime: getActualData('endTime', null, '시간 미정'),
-        time: getActualData('startTime', null, null) && getActualData('endTime', null, null) ? 
-              `${getActualData('startTime', null, '')} - ${getActualData('endTime', null, '')}` : 
-              '시간 미정',
-        service: getActualTicketData('name', null) || 
-                getActualData('serviceName', null, null) || 
-                getActualData('orderName', null, '멘토링 서비스'),
-        serviceName: getActualTicketData('name', null) || 
-                    getActualData('serviceName', null, null) || 
-                    getActualData('orderName', null, '멘토링 서비스'),
-        ticketName: getActualTicketData('name', null) || 
-                   getActualData('serviceName', null, null) || 
-                   getActualData('orderName', null, '멘토링 서비스'),
-        orderName: getActualData('orderName', null, null) || 
-                  getActualTicketData('name', null) || 
-                  '멘토링 서비스',
-        servicePrice: getActualData('servicePrice', null, null) || 
-                     getActualTicketData('price', null, null) || 
-                     tossPaymentData?.amount || 0,
-        originalAmount: getActualData('servicePrice', null, null) || 
-                       getActualTicketData('price', null, null) || 
-                       tossPaymentData?.amount || 0,
+        time: getActualData('startTime', null, null) && getActualData('endTime', null, null) ?
+            `${getActualData('startTime', null, '')} - ${getActualData('endTime', null, '')}` :
+            '시간 미정',
+        service: getActualTicketData('name', null) ||
+            getActualData('serviceName', null, null) ||
+            getActualData('orderName', null, '멘토링 서비스'),
+        serviceName: getActualTicketData('name', null) ||
+            getActualData('serviceName', null, null) ||
+            getActualData('orderName', null, '멘토링 서비스'),
+        ticketName: getActualTicketData('name', null) ||
+            getActualData('serviceName', null, null) ||
+            getActualData('orderName', null, '멘토링 서비스'),
+        orderName: getActualData('orderName', null, null) ||
+            getActualTicketData('name', null) ||
+            '멘토링 서비스',
+        servicePrice: getActualData('servicePrice', null, null) ||
+            getActualTicketData('price', null, null) ||
+            tossPaymentData?.amount || 0,
+        originalAmount: getActualData('servicePrice', null, null) ||
+            getActualTicketData('price', null, null) ||
+            tossPaymentData?.amount || 0,
         couponDiscount: getActualData('couponDiscount', null, 0),
         discountAmount: getActualData('couponDiscount', null, 0)
       },
@@ -504,7 +504,7 @@ const App = () => {
     console.log('  - realBackupData 사용 여부:', !!realBackupData?.ticket?.name || !!realBackupData?.serviceName);
     console.log('예약번호:', formattedPaymentData.reservationId);
     console.log('티켓번호:', formattedPaymentData.ticketId);
-    
+
     // 실제 DB 데이터 확인
     if (actualBookingData) {
       console.log('✅ 실제 DB 데이터 사용됨:', actualBookingData);
@@ -517,7 +517,7 @@ const App = () => {
 
     // PaymentComplete 페이지로 이동
     setPaymentResult(formattedPaymentData);
-    setCurrentPage('payment-complete');
+    navigate('/payment/complete');
   };
 
   // 토스 결제 실패 페이지로 이동
@@ -528,371 +528,260 @@ const App = () => {
   // 채팅방으로 이동
   const handleChatRoom = (mentor) => {
     setSelectedMentor(mentor);
-    setCurrentPage('chat');
+    navigate('/chat');
   };
 
   // 결제 완료 페이지로 이동
   const handlePaymentComplete = (result) => {
     setPaymentResult(result);
-    setCurrentPage('payment-success');
+    navigate('/payment/success');
   };
 
   // 결제 성공 페이지로 이동
   const handlePaymentSuccess = () => {
-    setCurrentPage('success');
+    navigate('/payment/success');
   };
 
   // 결제 실패 페이지로 이동
   const handlePaymentFail = () => {
-    setCurrentPage('fail');
+    navigate('/payment/fail');
   };
 
   // 예약 페이지로 돌아가기
   const handleBackToBooking = () => {
-    setCurrentPage('booking');
+    navigate('/booking');
   };
 
   // 결제 페이지로 돌아가기
   const handleBackToPayment = () => {
-    setCurrentPage('payment');
+    navigate('/payment');
   };
 
   // 멘토 프로필로 돌아가기
   const handleBackToProfile = () => {
-    setCurrentPage('mentor-profile');
+    if (selectedMentor) {
+      navigate(`/mentor/${selectedMentor.userId}/profile/${selectedMentor.id}`);
+    } else {
+      navigate(-1); // 이전 페이지로
+    }
   };
 
   // 초기화 중일 때 로딩 화면 표시
   if (isInitializing) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        backgroundColor: '#f9fafb'
-      }}>
-        <div style={{ fontSize: '48px', marginBottom: '24px' }}>⚡</div>
-        <h1 style={{ marginBottom: '16px', fontSize: '24px', color: '#374151' }}>
-          MentorConnect 시작 중...
-        </h1>
         <div style={{
-          width: '32px',
-          height: '32px',
-          border: '3px solid #e5e7eb',
-          borderTop: '3px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <style>
-          {`
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          backgroundColor: '#f9fafb'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '24px' }}>⚡</div>
+          <h1 style={{ marginBottom: '16px', fontSize: '24px', color: '#374151' }}>
+            MentorConnect 시작 중...
+          </h1>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            border: '3px solid #e5e7eb',
+            borderTop: '3px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <style>
+            {`
             @keyframes spin {
               0% { transform: rotate(0deg); }
               100% { transform: rotate(360deg); }
             }
           `}
-        </style>
-      </div>
+          </style>
+        </div>
     );
   }
 
   // 앱 에러 상태 표시
   if (appError) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        padding: '20px',
-        textAlign: 'center',
-        backgroundColor: '#f9fafb'
-      }}>
-        <div style={{ fontSize: '64px', marginBottom: '24px' }}>💥</div>
-        <h1 style={{ color: '#ef4444', marginBottom: '16px', fontSize: '24px' }}>
-          애플리케이션 오류
-        </h1>
-        <p style={{ color: '#6b7280', marginBottom: '24px', maxWidth: '500px' }}>
-          {appError}
-        </p>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            페이지 새로고침
-          </button>
-          <button
-            onClick={() => {
-              localStorage.clear();
-              sessionStorage.clear();
-              window.location.reload();
-            }}
-            style={{
-              backgroundColor: '#ef4444',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            모든 데이터 초기화
-          </button>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          padding: '20px',
+          textAlign: 'center',
+          backgroundColor: '#f9fafb'
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '24px' }}>💥</div>
+          <h1 style={{ color: '#ef4444', marginBottom: '16px', fontSize: '24px' }}>
+            애플리케이션 오류
+          </h1>
+          <p style={{ color: '#6b7280', marginBottom: '24px', maxWidth: '500px' }}>
+            {appError}
+          </p>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+                onClick={() => window.location.reload()}
+                style={{
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+            >
+              페이지 새로고침
+            </button>
+            <button
+                onClick={() => {
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.reload();
+                }}
+                style={{
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+            >
+              모든 데이터 초기화
+            </button>
+          </div>
         </div>
-      </div>
     );
   }
 
   // 문의 페이지로 이동
   const handleInquiry = (tabType = 'inquiries') => {
     setInquiryTab(tabType);
-    setCurrentPage('inquiry');
+    navigate(`/inquiry?tab=${tabType}`);
   };
-
-  // 문의 페이지 렌더링
-  if (currentPage === 'inquiry') {
-    return (
-        <Inquiry
-            onBack={handleBackToHome}
-            initialTab={inquiryTab}
-        />
-    );
-  }
-
-  // 관리자 대시보드 렌더링
-  if (currentPage === 'admin-dashboard') {
-    return (
-        <AdminDashboard
-            onBack={() => {
-              // 관리자에서 나올 때는 완전 로그아웃 처리
-              handleLogout();
-            }}
-            userInfo={userInfo}
-        />
-    );
-  }
 
   // 관리자 대시보드로 이동
   const handleAdminDashboard = () => {
     if (userInfo?.userRole === 'ADMIN') {
-      setCurrentPage('admin-dashboard');
+      navigate('/admin');
     }
   };
 
   // SSE 데모 페이지로 이동
   const handleSSEDemo = () => {
-    setCurrentPage('sse-demo');
+    navigate('/sse-demo');
   };
 
-  // SSE 데모 페이지 렌더링
-  if (currentPage === 'sse-demo') {
+  // URL 기반으로 값 추출을 위한 컴포넌트들
+  const MentorListPage = () => {
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const category = searchParams.get('category') || 'all';
+
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="app">
+          <ParticleBackground />
           <Header
               isMenuOpen={isMenuOpen}
               setIsMenuOpen={setIsMenuOpen}
               onLoginClick={() => setIsLoginOpen(true)}
               onCategorySelect={handleCategorySelect}
               onProfileClick={handleProfileClick}
+              onInquiry={handleInquiry}
               isLoggedIn={isLoggedIn}
               userInfo={userInfo}
               onChatRoom={handleChatRoom}
               onLogout={handleLogout}
-              onSSEDemo={handleSSEDemo}
               onAdminDashboard={handleAdminDashboard}
           />
-          <SSEExample/>
+          <MentorList
+              category={category}
+              onBack={handleBackToHome}
+              onMentorSelect={handleMentorSelect}
+          />
           <Login
               isOpen={isLoginOpen}
               onClose={() => setIsLoginOpen(false)}
               onLoginSuccess={handleLoginSuccess}
           />
+          <NotificationContainer isLoggedIn={isLoggedIn} />
         </div>
     );
-  }
+  };
 
-  // 소셜 회원가입 페이지 렌더링
-  if (currentPage === 'social-signup') {
-    return <SocialSignup/>;
-  }
+  const InquiryPage = () => {
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const tab = searchParams.get('tab') || 'inquiries';
 
-  // 마이페이지 렌더링
-  if (currentPage === 'mypage') {
     return (
-        <MyPage
+        <Inquiry
             onBack={handleBackToHome}
-            onLogout={handleLogout}
+            initialTab={tab}
         />
     );
-  }
+  };
 
-  // 멘토 리스트 페이지 렌더링
-  if (currentPage === 'mentor-list') {
-    return (
-      <div className="app">
-        <ParticleBackground />
+  const SSEDemoPage = () => (
+      <div className="min-h-screen bg-gray-50">
         <Header
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          onLoginClick={() => setIsLoginOpen(true)}
-          onCategorySelect={handleCategorySelect}
-          onProfileClick={handleProfileClick}
-          onInquiry={handleInquiry}
-          isLoggedIn={isLoggedIn}
-          userInfo={userInfo}
-          onChatRoom={handleChatRoom}
-          onLogout={handleLogout}
-          onAdminDashboard={handleAdminDashboard}
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            onLoginClick={() => setIsLoginOpen(true)}
+            onCategorySelect={handleCategorySelect}
+            onProfileClick={handleProfileClick}
+            isLoggedIn={isLoggedIn}
+            userInfo={userInfo}
+            onChatRoom={handleChatRoom}
+            onLogout={handleLogout}
+            onSSEDemo={handleSSEDemo}
+            onAdminDashboard={handleAdminDashboard}
         />
-        <MentorList
-          category={selectedCategory} 
-          onBack={handleBackToHome}
-          onMentorSelect={handleMentorSelect}
+        <SSEExample/>
+        <Login
+            isOpen={isLoginOpen}
+            onClose={() => setIsLoginOpen(false)}
+            onLoginSuccess={handleLoginSuccess}
         />
-        <Login 
-          isOpen={isLoginOpen} 
-          onClose={() => setIsLoginOpen(false)}
-          onLoginSuccess={handleLoginSuccess}
-        />
-        
-        {/* 알림 컨테이너 - 로그인된 사용자만 */}
-        <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
-    );
-  }
+  );
 
-  // 채팅방 페이지 렌더링
-  if (currentPage === 'chat') {
-    return (
-        <div>
-          <ChatContainer
-              onBack={handleBackToHome}
-              isLoggedIn={isLoggedIn}
-          />
-        </div>
-    );
-  }
+  // MentorProfilePage는 이미 URL 파라미터를 처리하므로 직접 사용
 
-  // 예약 페이지 렌더링
-  if (currentPage === 'booking') {
-    return (
-        <Booking
-            mentor={selectedMentor}
-            onBack={handleBackToProfile}
-            onBooking={handlePayment}
-        />
-    );
-  }
-
-  // 결제 페이지 렌더링
-  if (currentPage === 'payment') {
-    return (
-        <Payment
-            bookingData={bookingData}
-            onBack={handleBackToBooking}
-            onPaymentComplete={handlePaymentComplete}
-            onTossPayment={handleTossPayment}
-        />
-    );
-  }
-
-  // 결제 완료 페이지 렌더링 (PaymentComplete)
-  if (currentPage === 'payment-complete') {
-    return (
-        <PaymentComplete
-            paymentData={paymentResult}
-            onHome={handleBackToHome}
-            onPaymentHistory={() => setCurrentPage('mypage')}
-        />
-    );
-  }
-
-  // 결제 완료 페이지 렌더링 (기존 PaymentSuccess)
-  if (currentPage === 'payment-success') {
-    return (
-        <PaymentSuccess
-            paymentResult={paymentResult}
-            onHome={handleBackToHome}
-        />
-    );
-  }
-
-  // 토스 결제 페이지 렌더링 (새로 추가)
-  if (currentPage === 'toss-payment') {
-    return (
-        <TossPaymentApp
-            currentTossPage={currentTossPage}
-            bookingData={bookingData}
-            paymentData={paymentData}
-            onBack={() => setCurrentPage('payment')}
-            onHome={handleBackToHome}
-            onTossSuccess={handleTossSuccess}
-            onTossFail={handleTossFail}
-            onPaymentComplete={handlePaymentComplete}
-        />
-    );
-  }
-
-  // 결제 성공 페이지 렌더링
-  if (currentPage === 'success') {
-    return (
-        <Success
-            paymentData={paymentData}
-            onHome={handleBackToHome}
-        />
-    );
-  }
-
-  // 결제 실패 페이지 렌더링
-  if (currentPage === 'fail') {
-    return (
-        <Fail
-            onBack={handleBackToPayment}
-            onHome={handleBackToHome}
-        />
-    );
-  }
-
-  // 멘토 프로필 페이지 렌더링
-  if (currentPage === 'mentor-profile') {
-    return (
-        <MentorProfile
-            mentor={selectedMentor}
-            onBack={handleBackToList}
-            onBooking={handleBooking}
-        />
-    );
-  }
+  const TossPaymentPage = () => (
+      <TossPaymentApp
+          currentTossPage={currentTossPage}
+          bookingData={bookingData}
+          paymentData={paymentData}
+          onBack={() => navigate('/payment')}
+          onHome={handleBackToHome}
+          onTossSuccess={handleTossSuccess}
+          onTossFail={handleTossFail}
+          onPaymentComplete={handlePaymentComplete}
+      />
+  );
 
   // 메인 페이지 렌더링
   return (
-      <BrowserRouter>
       <div className="app">
         <ParticleBackground />
-        <Header 
-          isMenuOpen={isMenuOpen} 
-          setIsMenuOpen={setIsMenuOpen}
-          onLoginClick={() => setIsLoginOpen(true)}
-          onCategorySelect={handleCategorySelect}
-          onProfileClick={handleProfileClick}
-          onInquiry={handleInquiry}
-          isLoggedIn={isLoggedIn}
-          userInfo={userInfo}
-          onChatRoom={handleChatRoom}
-          onLogout={handleLogout}
-          onAdminDashboard={handleAdminDashboard}
+        <Header
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            onLoginClick={() => setIsLoginOpen(true)}
+            onCategorySelect={handleCategorySelect}
+            onProfileClick={handleProfileClick}
+            onInquiry={handleInquiry}
+            isLoggedIn={isLoggedIn}
+            userInfo={userInfo}
+            onChatRoom={handleChatRoom}
+            onLogout={handleLogout}
+            onAdminDashboard={handleAdminDashboard}
         />
         <Routes>
           <Route
@@ -906,27 +795,40 @@ const App = () => {
                 </main>
               }
           />
-          <Route
-              path="/mentor/:userId/profile/:profileId"
-              element={<MentorProfilePage />}
-          />
-          <Route
-              path="/oauth2/callback"
-              element={<OAuth2CallbackPage />}
-          />
-          <Route
-              path="social-signup"
-              element={<SocialSignup />}
-          />
+          <Route path="/mentors" element={<MentorListPage />} />
+          <Route path="/mentor/:userId/profile/:profileId" element={<MentorProfilePage />} />
+          <Route path="/booking" element={<Booking mentor={selectedMentor} onBack={handleBackToProfile} onBooking={handlePayment} />} />
+          <Route path="/payment" element={<Payment bookingData={bookingData} onBack={handleBackToBooking} onPaymentComplete={handlePaymentComplete} onTossPayment={handleTossPayment} />} />
+          <Route path="/payment/complete" element={<PaymentComplete paymentData={paymentResult} onHome={handleBackToHome} onPaymentHistory={() => navigate('/mypage')} />} />
+          <Route path="/payment/success" element={<PaymentSuccess paymentResult={paymentResult} onHome={handleBackToHome} />} />
+          <Route path="/payment/fail" element={<Fail onBack={handleBackToPayment} onHome={handleBackToHome} />} />
+          <Route path="/toss/payment" element={<TossPaymentPage />} />
+          <Route path="/toss/success" element={<TossPaymentPage />} />
+          <Route path="/toss/fail" element={<TossPaymentPage />} />
+          <Route path="/success" element={<Success paymentData={paymentData} onHome={handleBackToHome} />} />
+          <Route path="/fail" element={<Fail onBack={handleBackToPayment} onHome={handleBackToHome} />} />
+          <Route path="/chat" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
+          <Route path="/mypage" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
+          <Route path="/inquiry" element={<InquiryPage />} />
+          <Route path="/admin" element={<AdminDashboard onBack={() => { handleLogout(); }} userInfo={userInfo} />} />
+          <Route path="/sse-demo" element={<SSEDemoPage />} />
+          <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
+          <Route path="/social-signup" element={<SocialSignup />} />
         </Routes>
         <Login
             isOpen={isLoginOpen}
             onClose={() => setIsLoginOpen(false)}
             onLoginSuccess={handleLoginSuccess}
         />
-      </div>
-        {/* 알림 컨테이너 - 로그인된 사용자만 */}
         <NotificationContainer isLoggedIn={isLoggedIn} />
+      </div>
+  );
+};
+
+const App = () => {
+  return (
+      <BrowserRouter>
+        <AppContent />
       </BrowserRouter>
   );
 };
