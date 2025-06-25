@@ -354,52 +354,57 @@
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2) !important;
 }
 
-/* ===== 비밀번호 필드 ===== */
+/* ===== 비밀번호 입력란/모달 트렌디하게 개선 ===== */
 .password-field {
-  margin-bottom: 1.5rem !important;
-}
-
-.password-field label {
-  display: block !important;
-  color: #2d3748 !important;
-  font-weight: 600 !important;
-  margin-bottom: 0.5rem !important;
-  font-size: 0.9rem !important;
+  margin-bottom: 1.5rem;
 }
 
 .password-input-container {
-  position: relative !important;
-  display: flex !important;
-  align-items: center !important;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.10);
+  border: 1.5px solid #d1d5db;
+  padding: 0.7rem 1.2rem;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.password-input-container:focus-within {
+  border: 1.5px solid #667eea;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
 }
 
 .password-input {
-  width: 100% !important;
-  padding: 0.8rem 3rem 0.8rem 1rem !important;
-  border: 2px solid rgba(226, 232, 240, 0.8) !important;
-  border-radius: 12px !important;
-  background: #ffffff !important;
-  color: #2d3748 !important;
-  font-size: 1rem !important;
-  transition: all 0.3s ease !important;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 1.1rem;
+  flex: 1;
+  color: #2d3748;
+  padding: 0.2rem 0;
 }
 
-.password-input:focus {
-  outline: none !important;
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+.password-input::placeholder {
+  color: #a0aec0;
+  opacity: 1;
+  font-size: 1rem;
 }
 
 .password-toggle {
-  position: absolute !important;
-  right: 1rem !important;
-  background: none !important;
-  border: none !important;
-  color: #718096 !important;
-  cursor: pointer !important;
-  padding: 0.5rem !important;
-  border-radius: 6px !important;
-  transition: all 0.3s ease !important;
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: #764ba2;
 }
 
 /* ===== 경고 메시지 ===== */
@@ -469,4 +474,97 @@
   .profile-info h2 {
     font-size: 1.5rem;
   }
+}
+
+/* 소셜 로그인 사용자는 비밀번호 관련 UI 숨김 */
+.hide-on-social {
+  display: none !important;
+}
+
+/* ===== 커스텀 비밀번호 입력란/모달 트렌디하게 개선 (모든 속성에 !important) ===== */
+.custom-password-input-container {
+  display: flex !important;
+  align-items: center !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.10) !important;
+  border: 1.5px solid #d1d5db !important;
+  padding: 0.7rem 1.2rem !important;
+  transition: border 0.2s, box-shadow 0.2s !important;
+}
+
+.custom-password-input-container:focus-within {
+  border: 1.5px solid #667eea !important;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18) !important;
+}
+
+.custom-password-input {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  font-size: 1.1rem !important;
+  flex: 1 !important;
+  color: #2d3748 !important;
+  padding: 0.2rem 0 !important;
+}
+
+.custom-password-input::placeholder {
+  color: #a0aec0 !important;
+  opacity: 1 !important;
+  font-size: 1rem !important;
+}
+
+.custom-password-toggle {
+  background: none !important;
+  border: none !important;
+  color: #667eea !important;
+  cursor: pointer !important;
+  margin-left: 0.5rem !important;
+  font-size: 1.2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: color 0.2s !important;
+}
+
+.custom-password-toggle:hover {
+  color: #764ba2 !important;
+}
+
+/* ===== 모달 전체 트렌디하게 개선 ===== */
+.modal-container {
+  background: #fff !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 40px rgba(102, 126, 234, 0.18) !important;
+  padding: 2.5rem 2rem !important;
+  max-width: 380px !important;
+  margin: 0 auto !important;
+}
+
+.modal-header h3 {
+  color: #667eea !important;
+  font-weight: 800 !important;
+  font-size: 1.3rem !important;
+  margin-bottom: 1.2rem !important;
+}
+
+.modal-btn {
+  border-radius: 10px !important;
+  padding: 0.7rem 1.5rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  margin: 0 0.5rem !important;
+  transition: background 0.2s !important;
+}
+
+.modal-btn.cancel {
+  background: #e2e8f0 !important;
+  color: #667eea !important;
+}
+
+.modal-btn.confirm, .modal-btn.delete {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #fff !important;
 }

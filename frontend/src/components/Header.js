@@ -5,6 +5,7 @@ import './Header.css';
 import logo from '../image/cool.png';
 import { categoryAPI, authAPI } from '../services/api';
 import { accessTokenUtils, refreshTokenUtils } from '../utils/tokenUtils';
+import {decodeToken} from "../utils/authUtils.js";
 
 const Header = ({
   onLoginClick,

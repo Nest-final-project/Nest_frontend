@@ -89,7 +89,7 @@ function TossPaymentComponent({
         return null;
       }
 
-      const response = await fetch(`${BASE_URL}/api/v1/users/me`, {
+      const response = await fetch(`${BASE_URL}/api/users/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${tokenFromStorage}`,

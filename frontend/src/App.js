@@ -27,6 +27,7 @@ import {authUtils, userInfoUtils} from './utils/tokenUtils';
 import {registerDebugFunctions} from './utils/websocketDebug';
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import MentorProfilePage from './components/MentorProfilePage';
+import OAuth2CallbackPage from "./components/OAuth2CallbackPage";
 
 const App = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -908,6 +909,14 @@ const App = () => {
           <Route
               path="/mentor/:userId/profile/:profileId"
               element={<MentorProfilePage />}
+          />
+          <Route
+              path="/oauth2/callback"
+              element={<OAuth2CallbackPage />}
+          />
+          <Route
+              path="social-signup"
+              element={<SocialSignup />}
           />
         </Routes>
         <Login

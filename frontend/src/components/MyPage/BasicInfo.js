@@ -45,6 +45,10 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
     '제주은행', 'SC제일은행', '한국씨티은행', 'HSBC은행'
   ];
 
+  // userData에서 socialType 확인
+  const userDataStr = sessionStorage.getItem('userData');
+  const userData = userDataStr ? JSON.parse(userDataStr) : null;
+
   // 필드 편집 관련 함수들
   const handleEditField = (field) => {
     setEditingField(field);
@@ -204,9 +208,13 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
   };
 
   const handleAccountDelete = async () => {
-    if (!deletePassword.trim()) {
-      alert('현재 비밀번호를 입력해주세요.');
-      return;
+
+    // LOCAL: 비밀번호 입력 필요
+    if (userData?.socialType === 'LOCAL') {
+      if (!deletePassword.trim()) {
+        alert('현재 비밀번호를 입력해주세요.');
+        return;
+      }
     }
 
     const confirmDelete = window.confirm(
@@ -221,10 +229,9 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
       setModalLoading(true);
 
       const refreshToken = sessionStorage.getItem('refreshToken');
-      const deleteData = {
-        password: deletePassword,
-        refreshToken: refreshToken
-      };
+      const deleteData = userData?.socialType === 'LOCAL'
+          ? { password: deletePassword, refreshToken }
+          : { refreshToken };
 
       await userAPI.deleteUser(deleteData);
 
@@ -451,13 +458,15 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
 
       {/* 계정 관리 버튼들 */}
       <div className="account-actions">
-        <button
-          className="password-change-btn"
-          onClick={openPasswordModal}
-        >
-          <Key className="icon" />
-          🔐 비밀번호 수정
-        </button>
+        {userData?.socialType === 'LOCAL' && (
+          <button
+            className="password-change-btn"
+            onClick={openPasswordModal}
+          >
+            <Key className="icon" />
+            🔐 비밀번호 수정
+          </button>
+        )}
 
         <button
           className="account-delete-btn"
@@ -469,7 +478,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
       </div>
 
       {/* 비밀번호 변경 모달 */}
-      {showPasswordModal && (
+      {showPasswordModal && userData?.socialType === 'LOCAL' && (
         <div className="modal-overlay" onClick={closePasswordModal}>
           <div className="modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
@@ -480,9 +489,9 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
             </div>
 
             <div className="modal-body">
-              <div className="password-field">
+              <div className="password-field"> {/* 현재 비밀번호 */}
                 <label>현재 비밀번호</label>
-                <div className="password-input-container">
+                <div className="custom-password-input-container">
                   <input
                     type={showPasswords.current ? "text" : "password"}
                     value={passwordData.currentPassword}
@@ -491,11 +500,11 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                       currentPassword: e.target.value
                     })}
                     placeholder="현재 비밀번호를 입력하세요"
-                    className="password-input"
+                    className="custom-password-input"
                   />
                   <button
                     type="button"
-                    className="password-toggle"
+                    className="custom-password-toggle"
                     onClick={() => togglePasswordVisibility('current')}
                   >
                     {showPasswords.current ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -503,9 +512,9 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                 </div>
               </div>
 
-              <div className="password-field">
+              <div className="password-field"> {/* 새 비밀번호 */}
                 <label>새 비밀번호</label>
-                <div className="password-input-container">
+                <div className="custom-password-input-container">
                   <input
                     type={showPasswords.new ? "text" : "password"}
                     value={passwordData.newPassword}
@@ -514,11 +523,11 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                       newPassword: e.target.value
                     })}
                     placeholder="새 비밀번호를 입력하세요 (8자 이상)"
-                    className="password-input"
+                    className="custom-password-input"
                   />
                   <button
                     type="button"
-                    className="password-toggle"
+                    className="custom-password-toggle"
                     onClick={() => togglePasswordVisibility('new')}
                   >
                     {showPasswords.new ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -577,25 +586,27 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                 </ul>
               </div>
 
-              <div className="password-field">
-                <label>현재 비밀번호를 입력하여 본인임을 확인해주세요</label>
-                <div className="password-input-container">
-                  <input
-                    type={showPasswords.delete ? "text" : "password"}
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    placeholder="현재 비밀번호를 입력하세요"
-                    className="password-input"
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => togglePasswordVisibility('delete')}
-                  >
-                    {showPasswords.delete ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
+              {userData?.socialType === 'LOCAL' && (
+                <div className="password-field">
+                  <label>현재 비밀번호를 입력하여 본인임을 확인해주세요</label>
+                  <div className="custom-password-input-container">
+                    <input
+                      type={showPasswords.delete ? "text" : "password"}
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      placeholder="현재 비밀번호를 입력하세요"
+                      className="custom-password-input"
+                    />
+                    <button
+                      type="button"
+                      className="custom-password-toggle"
+                      onClick={() => togglePasswordVisibility('delete')}
+                    >
+                      {showPasswords.delete ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="modal-footer">
@@ -609,7 +620,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               <button
                 className="modal-btn delete"
                 onClick={handleAccountDelete}
-                disabled={modalLoading || !deletePassword}
+                disabled={modalLoading || (userData?.socialType === 'LOCAL' && !deletePassword)}
               >
                 {modalLoading ? (
                   <div className="spinner-small"></div>
