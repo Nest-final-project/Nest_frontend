@@ -62,7 +62,7 @@ const OAuth2CallbackPage = () => {
 
             await authUtils.setAuthData(accessToken, refreshToken, userInfo)
             navigate('/');
-            // window.location.reload();
+            window.location.reload();
           }
 
         } catch (error) {
