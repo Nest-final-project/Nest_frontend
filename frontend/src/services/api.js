@@ -336,10 +336,10 @@ export const messageAPI = {
 // Payment API
 export const paymentAPI = {
   // 결제 요청
-  createPayment: (paymentData) => api.post('/api/payments', paymentData),
+  createPayment: (paymentData) => api.post('/api/v1/payments', paymentData),
 
   // 토스페이먼츠 결제 승인
-  confirmPayment: (confirmData) => api.post('/api/payments/confirm',
+  confirmPayment: (confirmData) => api.post('/api/v1/payments/confirm',
       confirmData),
 
   // 결제 확인
@@ -347,7 +347,7 @@ export const paymentAPI = {
 
   // 결제 취소
   cancelPayment: (paymentId, cancelData) => api.post(
-      `/api/payments/${paymentId}/cancel`, cancelData),
+      `/api/v1/payments/${paymentId}/cancel`, cancelData),
 
   // 결제 내역 조회
   getPaymentHistory: () => api.get(`/api/v1/payments`),
