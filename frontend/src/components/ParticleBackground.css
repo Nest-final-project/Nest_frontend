@@ -3,7 +3,7 @@
   inset: 0;
   background: linear-gradient(90deg, #81C784 50%, #A5D6A7 100%);
 
-  z-index: 0;
+  z-index: -1; /*여기*/
 }
 
 
@@ -18,7 +18,7 @@
 .particles-container {
   position: fixed;
   inset: 0;
-  z-index: 1;
+  z-index: 0; /*여기*/
   pointer-events: none;
 }
 

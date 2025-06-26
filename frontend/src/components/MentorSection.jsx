@@ -208,7 +208,7 @@ const MentorSection = ({onCategorySelect, onMentorSelect}) => {
                     className={`category-tab ${selectedCategory
                     === category.id
                         ? 'active' : ''}`}
-                    onClick={() => onMentorSelect(category.id)}
+                    onClick={() => setSelectedCategory(category.id)}
                 >
                   {category.name}
                 </button>
