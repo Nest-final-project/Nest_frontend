@@ -364,7 +364,7 @@
   transition: all 0.3s ease;
 }
 
-.service-card:hover {
+/*.service-card:hover {
   border-color: #007bff;
   box-shadow: 0 8px 24px rgba(0,123,255,0.15);
   transform: translateY(-4px);
@@ -383,7 +383,7 @@
 
 .service-card.selected::before {
   background: linear-gradient(90deg, #007bff, #20bf6b);
-}
+}*/
 
 .service-card.popular {
   border-color: #28a745;

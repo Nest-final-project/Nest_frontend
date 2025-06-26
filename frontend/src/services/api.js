@@ -405,14 +405,14 @@ export const ticketAPI = {
   // 티켓 단건 조회
   getTicket: (ticketId) => api.get(`/api/ticket/${ticketId}`),
 
-  // 타캣 작성
+  // 티캣 작성
   createTicket: (ticketData) => api.post('/api/admin/ticket', ticketData),
 
-  // 리뷰 수정
+  // 티켓 수정
   updateTicket: (ticketId, ticketData) =>
       api.patch(`/api/admin/ticket/${ticketId}`, ticketData),
 
-  // 리뷰 삭제
+  // 티켓 삭제
   deleteReview: (ticketId) => api.delete(`/api/admin/ticket/${ticketId}`),
 }
 
@@ -546,6 +546,42 @@ export const adminAPI = {
   // [관리자] 문의 답변 수정
   updateInquiryStatus: (complaintId, status) =>
       api.patch(`/api/admin/answers/{answerId}`, {status}),
+
+  // [관리자] 쿠폰 등록
+  registerCoupon: (couponData) => api.post('/api/admin/coupons', couponData),
+
+  // [관리자] 쿠폰 목록 조회
+  findCoupons: (params) => {
+    console.log('🔍 [adminAPI.findCoupons] 요청 시작, params:', params);
+    return api.get('/api/admin/coupons', {params})
+      .then(response => {
+        console.log('✅ [adminAPI.findCoupons] 성공:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('❌ [adminAPI.findCoupons] 실패:', error);
+        throw error;
+      });
+  },
+
+  // [관리자] 쿠폰 수정
+  updateCoupon: (couponId, couponData) => api.patch(`/api/admin/coupons/${couponId}`, couponData),
+
+  // [관리자] 쿠폰 삭제
+  deleteCoupon: (couponId) => api.delete(`/api/admin/coupons/${couponId}`),
+
+  // [관리자] 키워드 등록
+  createKeyword: (keywordData) => api.post('/api/admin/keywords', keywordData),
+
+  // [관리자] 키워드 수정
+  updateKeyword: (keywordId, keywordData) => api.patch(`/api/admin/keywords/${keywordId}`, keywordData),
+
+  // [관리자] 키워드 삭제
+  deleteKeyword: (keywordId) => api.delete(`/api/admin/keywords/${keywordId}`),
+
+
+
+
 };
 
 
