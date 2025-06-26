@@ -6,9 +6,9 @@ import logo from '../image/cool.png';
 import { categoryAPI, authAPI } from '../services/api';
 import { accessTokenUtils, refreshTokenUtils } from '../utils/tokenUtils';
 import {decodeToken} from "../utils/authUtils.js";
+import { useNavigate } from 'react-router-dom';
 
 const Header = ({
-  onLoginClick,
   onCategorySelect,
   onChatRoom,
   onProfileClick,
@@ -23,6 +23,7 @@ const Header = ({
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [hasNotifications, setHasNotifications] = useState(true); // 알림 상태
   const [categories, setCategories] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isNavOpen && isCategoryOpen) {
@@ -43,7 +44,7 @@ const Header = ({
 
   const handleLoginClick = () => {
     setIsNavOpen(false);
-    onLoginClick();
+    navigate('/login');
   };
 
   const handleLogoutClick = async () => {
@@ -123,7 +124,7 @@ const Header = ({
               ) : (
                   <button
                       className="login-button glass-effect"
-                      onClick={onLoginClick}
+                      onClick={handleLoginClick}
                   >
                     로그인
                   </button>

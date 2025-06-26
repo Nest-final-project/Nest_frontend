@@ -153,7 +153,7 @@ const MentorSection = ({onCategorySelect, onMentorSelect}) => {
   // 로딩 중이거나 에러 발생 시 표시할 UI
   if (loadingCategories || loadingMentors || selectedCategory === null) {
     return (
-        <section className="mentor-section">
+        <section className="mentor-profile-section">
           <div className="mentor-container">
             <h2 className="section-title mento-text">카테고리별 추천 멘토</h2>
             <div className="category-tabs">
@@ -171,7 +171,7 @@ const MentorSection = ({onCategorySelect, onMentorSelect}) => {
 
   if (error) {
     return (
-        <section className="mentor-section">
+        <section className="mentor-profile-section">
           <div className="mentor-container">
             <h2 className="section-title mento-text">카테고리별 추천 멘토</h2>
             <div className="category-tabs">
@@ -196,7 +196,7 @@ const MentorSection = ({onCategorySelect, onMentorSelect}) => {
     );
   }
   return (
-      <section className="mentor-section" id="category">
+      <section className="mentor-profile-section" id="category">
         <div className="mentor-container">
           <h2 className="section-title mento-text">카테고리별 추천 멘토</h2>
 

@@ -29,6 +29,7 @@ import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 
 import SSEExample from './components/SSEExample.jsx';
 import MentorProfilePage from './components/MentorProfilePage.jsx';
 import OAuth2CallbackPage from "./components/OAuth2CallbackPage.jsx";
+import Signup from './components/Signup';
 import ReviewWrite from './components/ReviewWrite.jsx';
 
 const AppContent = () => {
@@ -714,11 +715,13 @@ const AppContent = () => {
               onBack={handleBackToHome}
               onMentorSelect={handleMentorSelect}
           />
-          <Login
-              isOpen={isLoginOpen}
-              onClose={() => setIsLoginOpen(false)}
-              onLoginSuccess={handleLoginSuccess}
-          />
+          {isLoginOpen && (
+            <Login
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+                onLoginSuccess={handleLoginSuccess}
+            />
+          )}
           <NotificationContainer isLoggedIn={isLoggedIn} />
         </div>
     );
@@ -809,20 +812,16 @@ const AppContent = () => {
           <Route path="/fail" element={<Fail onBack={handleBackToPayment} onHome={handleBackToHome} />} />
           <Route path="/chat" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
           <Route path="/chat/:chatRoomId" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
-          <Route path="/mypage/*" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
           <Route path="/review/write" element={<ReviewWrite />} />
-          <Route path="/mypage" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
+          <Route path="/mypage/*" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
           <Route path="/inquiry" element={<InquiryPage />} />
           <Route path="/admin" element={<AdminDashboard onBack={() => { handleLogout(); }} userInfo={userInfo} />} />
           <Route path="/sse-demo" element={<SSEDemoPage />} />
           <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
           <Route path="/social-signup" element={<SocialSignup />} />
+          <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/signup" element={<Signup />} />
         </Routes>
-        <Login
-            isOpen={isLoginOpen}
-            onClose={() => setIsLoginOpen(false)}
-            onLoginSuccess={handleLoginSuccess}
-        />
         <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
   );
