@@ -22,7 +22,7 @@ import MyPage from './components/MyPage.jsx';
 import ChatContainer from './components/ChatContainer.jsx';
 import NotificationContainer from './components/NotificationContainer.jsx';
 import Inquiry from './components/Inquiry.jsx';
-import AdminDashboard from './components/AdminDashboard.jsx';
+import AdminDashboard from './components/admin/AdminDashboard.jsx';
 import {authUtils, userInfoUtils} from './utils/tokenUtils';
 import {registerDebugFunctions} from './utils/websocketDebug';
 import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 'react-router-dom';
