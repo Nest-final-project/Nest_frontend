@@ -20,12 +20,34 @@ import CouponsTab from './CouponsTab';
 
 
 const AdminDashboard = ({ onBack, userInfo }) => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // URL 쿼리스트링을 통한 탭 상태 관리
+  const [searchParams, setSearchParams] = useState(new URLSearchParams(window.location.search));
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isRealTimeMode, setIsRealTimeMode] = useState(true);
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+
+  // 탭 변경 시 URL 업데이트
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    const newSearchParams = new URLSearchParams(window.location.search);
+    newSearchParams.set('tab', tabId);
+    const newUrl = `${window.location.pathname}?${newSearchParams.toString()}`;
+    window.history.pushState(null, '', newUrl);
+  };
+
+  // 브라우저 뒤로가기/앞으로가기 처리
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setActiveTab(params.get('tab') || 'dashboard');
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const [stats, setStats] = useState({
     totalUsers: 1255,
@@ -186,7 +208,7 @@ const AdminDashboard = ({ onBack, userInfo }) => {
                 return (
                     <button
                         key={item.id}
-                        onClick={() => setActiveTab(item.id)}
+                        onClick={() => handleTabChange(item.id)}
                         className={`group relative w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                             isActive
                                 ? isDarkMode
