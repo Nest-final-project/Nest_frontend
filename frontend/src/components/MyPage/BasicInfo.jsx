@@ -45,8 +45,8 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
     '제주은행', 'SC제일은행', '한국씨티은행', 'HSBC은행'
   ];
 
-  // userData에서 socialType 확인
-  const userDataStr = sessionStorage.getItem('userData');
+  // mappedUserInfo에서 socialType 확인
+  const userDataStr = sessionStorage.getItem('mappedUserInfo');
   const userData = userDataStr ? JSON.parse(userDataStr) : null;
 
   // 필드 편집 관련 함수들
@@ -232,6 +232,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
       const deleteData = userData?.socialType === 'LOCAL'
           ? { password: deletePassword, refreshToken }
           : { refreshToken };
+
 
       await userAPI.deleteUser(deleteData);
 
