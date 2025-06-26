@@ -526,9 +526,13 @@ const AppContent = () => {
   };
 
   // 채팅방으로 이동
-  const handleChatRoom = (mentor) => {
+  const handleChatRoom = (mentor, chatRoomId = null) => {
     setSelectedMentor(mentor);
-    navigate('/chat');
+    if (chatRoomId) {
+      navigate(`/chat/${chatRoomId}`);
+    } else {
+      navigate('/chat');
+    }
   };
 
   // 결제 완료 페이지로 이동
@@ -785,6 +789,7 @@ const AppContent = () => {
           <Route path="/success" element={<Success paymentData={paymentData} onHome={handleBackToHome} />} />
           <Route path="/fail" element={<Fail onBack={handleBackToPayment} onHome={handleBackToHome} />} />
           <Route path="/chat" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
+          <Route path="/chat/:chatRoomId" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
           <Route path="/mypage" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
           <Route path="/inquiry" element={<InquiryPage />} />
           <Route path="/admin" element={<AdminDashboard onBack={() => { handleLogout(); }} userInfo={userInfo} />} />

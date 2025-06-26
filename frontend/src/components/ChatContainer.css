@@ -1,7 +1,8 @@
 .chat-container {
   display: flex;
   height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
 }
 
 .chat-sidebar {
@@ -22,8 +23,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
+  background: white;
 }
 
 .no-chat-content {
@@ -41,7 +41,7 @@
 .no-chat-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #2d3748;
+  color: #1f2937;
   margin: 0 0 1rem 0;
 }
 

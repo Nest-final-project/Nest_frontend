@@ -240,29 +240,33 @@ const MentorSection = ({onCategorySelect, onMentorSelect}) => {
                         >
                           <div className="mentor-card glass-effect">
                             <div className="mentor-card-shimmer"></div>
-                            <div className={`mentor-avatar`}>
-                              {mentor.avatar}
-                            </div>
-                            <h3 className="mentor-name">{mentor.name}</h3>
-                            <p className="mentor-profileTitle">{mentor.title}</p>
-                            <p className="mentor-categoryName">{mentor.categoryName}</p>
+                            <div className="mentor-card-content">
+                              <div>
+                                <div className={`mentor-avatar`}>
+                                  {mentor.avatar}
+                                </div>
+                                <h3 className="mentor-name">{mentor.name}</h3>
+                                <p className="mentor-profileTitle">{mentor.title}</p>
+                                <p className="mentor-categoryName">{mentor.categoryName}</p>
+                              </div>
 
-                            <div className="mentor-tags">
-                              {mentor.tags && Array.isArray(mentor.tags)
-                                  && mentor.tags.map((tag, tagIndex) => (
-                                      <span key={tagIndex}
-                                            className="mentor-tag">
-                          {tag}
-                        </span>
-                                  ))}
-                            </div>
+                              <div className="mentor-tags">
+                                {mentor.tags && Array.isArray(mentor.tags)
+                                    && mentor.tags.map((tag, tagIndex) => (
+                                        <span key={tagIndex}
+                                              className="mentor-tag">
+                            {tag}
+                          </span>
+                                    ))}
+                              </div>
 
-                            <div className="mentor-footer">
-                              <button
-                                  className="reservation-button"
-                                  onClick={() => handleMentorClick(mentor)}>
-                                조회하기
-                              </button>
+                              <div className="mentor-footer">
+                                <button
+                                    className="reservation-button"
+                                    onClick={() => handleMentorClick(mentor)}>
+                                  조회하기
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>

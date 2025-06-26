@@ -2,15 +2,15 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 /* 채팅 헤더 */
 .chat-header {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(144, 198, 149, 0.05);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
@@ -57,10 +57,11 @@
   height: 50px;
   border-radius: 50%;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66BB6A, #4CAF50);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(102, 187, 106, 0.25);
 }
 
 .contact-avatar img {
@@ -153,8 +154,45 @@
 .contact-name {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #2d3748;
+  color: #1f2937;
   margin: 0;
+}
+
+.contact-status {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.status-indicator-closed {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+}
+
+.contact-status.closed {
+  color: #ef4444;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .contact-status.session-ended {
@@ -342,11 +380,12 @@
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #4a5568;
+  color: #64748b;
 }
 
 .action-button:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(102, 187, 106, 0.1);
+  color: #66BB6A;
 }
 
 .action-button .icon {
@@ -368,7 +407,56 @@
   padding: 1rem;
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* 날짜 구분선 */
+.date-separator {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
   gap: 1rem;
+}
+
+.date-separator-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.date-separator-text {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  background: rgba(249, 250, 251, 0.9);
+  padding: 0.375rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  font-weight: 500;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+/* 메시지가 없을 때 */
+.no-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.no-messages-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.no-messages-text {
+  font-size: 1rem;
+  color: #9ca3af;
+  font-weight: 500;
 }
 
 .message {
@@ -376,6 +464,15 @@
   align-items: flex-end;
   gap: 0.75rem;
   max-width: 85%;
+  margin-bottom: 0.25rem;
+}
+
+.message.consecutive {
+  margin-bottom: 0.125rem;
+}
+
+.message.consecutive.received .message-avatar {
+  visibility: hidden;
 }
 
 .message.sent {
@@ -392,7 +489,7 @@
   height: 32px;
   border-radius: 50%;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66BB6A, #4CAF50);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -434,7 +531,7 @@
 }
 
 .message.sent .message-bubble {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66BB6A, #4CAF50);
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -585,26 +682,84 @@
 
 /* 종료된 채팅방 스타일 */
 .message-input-container.disabled {
-  background: rgba(239, 68, 68, 0.05);
-  border-top: 2px solid rgba(239, 68, 68, 0.2);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
 }
 
 .chat-closed-notice {
-  padding: 1rem;
-  text-align: center;
-  background: rgba(239, 68, 68, 0.1);
-  border-radius: 12px;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
 }
 
-.chat-closed-notice span {
-  color: #dc2626;
-  font-size: 0.875rem;
-  font-weight: 500;
+.chat-closed-notice::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ef4444, #f87171, #fca5a5);
+  border-radius: 20px 20px 0 0;
+}
+
+.chat-closed-visual {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 14px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.chat-closed-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(248, 113, 113, 0.02));
+  border-radius: 14px;
+}
+
+.chat-closed-icon {
+  color: #dc2626;
+  z-index: 1;
+  position: relative;
+}
+
+.chat-closed-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.chat-closed-title {
+  color: #1f2937;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.chat-closed-subtitle {
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+  opacity: 0.9;
 }
 
 /* 종료된 채팅방에서 연결 상태 스타일 */
@@ -620,9 +775,9 @@
 
 /* 메시지 입력 영역 */
 .message-input-container {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(144, 198, 149, 0.03);
   backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
   padding: 1rem 1.5rem;
 }
 
@@ -644,7 +799,8 @@
 }
 
 .attachment-button:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(102, 187, 106, 0.1);
+  color: #66BB6A;
 }
 
 .attachment-button .icon {
@@ -656,20 +812,21 @@
   flex: 1;
   display: flex;
   align-items: flex-end;
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
+  background: white;
+  border: 2px solid #e5e7eb;
   border-radius: 20px;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   transition: all 0.2s ease;
+  min-height: 52px;
 }
 
 .text-input-container:focus-within {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #66BB6A;
+  box-shadow: 0 0 0 3px rgba(102, 187, 106, 0.1);
 }
 
 .message-textarea {
-  color:#000000;
+  color: #000000;
   flex: 1;
   background: transparent;
   border: none;
@@ -681,6 +838,8 @@
   max-height: 120px;
   overflow-y: auto;
   font-family: inherit;
+  transition: height 0.1s ease;
+  padding: 0;
 }
 
 .message-textarea::placeholder {
@@ -698,7 +857,7 @@
 }
 
 .emoji-button:hover {
-  color: #667eea;
+  color: #66BB6A;
 }
 
 .emoji-button .icon {
@@ -718,14 +877,15 @@
 }
 
 .send-button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #66BB6A, #4CAF50);
   color: white;
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 187, 106, 0.25);
 }
 
 .send-button:hover.active {
   transform: scale(1.1);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 16px rgba(102, 187, 106, 0.35);
 }
 
 .send-button .icon {
@@ -743,12 +903,12 @@
 }
 
 .messages-list::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(102, 187, 106, 0.3);
   border-radius: 3px;
 }
 
 .messages-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(102, 187, 106, 0.5);
 }
 
 /* 반응형 디자인 */
