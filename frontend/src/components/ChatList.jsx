@@ -14,6 +14,9 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
   const [initialLoading, setInitialLoading] = useState(true);
   const chatListRef = useRef(null);
 
+  // URL로 직접 접근한 채팅방 처리를 위한 상태
+  const [hasTriggeredInitialSelect, setHasTriggeredInitialSelect] = useState(false);
+
   // 채팅방 상태 확인 함수
   const checkChatRoomStatus = async (chatRoomId) => {
     try {
@@ -293,6 +296,32 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
   useEffect(() => {
     fetchChatRooms(true);
   }, []);
+
+  // currentChatId가 변경될 때 초기 선택 상태 리셋
+  useEffect(() => {
+    setHasTriggeredInitialSelect(false);
+  }, [currentChatId]);
+
+  // URL로 직접 접근한 채팅방이 있을 때 자동 선택
+  useEffect(() => {
+    if (currentChatId && chatRooms.length > 0 && !hasTriggeredInitialSelect) {
+      const targetChat = chatRooms.find(chat => 
+        chat.id.toString() === currentChatId.toString()
+      );
+      
+      if (targetChat) {
+        console.log('🎯 URL에서 지정한 채팅방 자동 선택:', targetChat);
+        onChatSelect(targetChat);
+        setHasTriggeredInitialSelect(true);
+      } else {
+        console.warn('⚠️ URL에서 지정한 채팅방을 찾을 수 없음:', currentChatId);
+        console.log('📋 사용 가능한 채팅방 목록:', chatRooms.map(chat => ({
+          id: chat.id,
+          name: chat.contact.name
+        })));
+      }
+    }
+  }, [currentChatId, chatRooms, hasTriggeredInitialSelect, onChatSelect]);
 
   // 스크롤 이벤트 등록
   useEffect(() => {

@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
 import ChatList from './ChatList';
 import ChatRoom from './ChatRoom';
 import NotificationContainer from './NotificationContainer';
@@ -7,6 +8,19 @@ import './ChatContainer.css';
 
 const ChatContainer = ({onBack, isLoggedIn = true}) => {
   const [selectedChat, setSelectedChat] = useState(null);
+  const { chatRoomId } = useParams();
+  const navigate = useNavigate();
+
+  // URL 파라미터가 변경될 때 선택된 채팅방 업데이트
+  useEffect(() => {
+    if (chatRoomId) {
+      // URL에 채팅방 ID가 있어도 ChatList에서 실제 정보를 가져올 때까지 대기
+      // 임시 정보는 설정하지 않음
+      console.log('🔗 URL에서 채팅방 ID 감지:', chatRoomId);
+    } else {
+      setSelectedChat(null);
+    }
+  }, [chatRoomId]);
 
   // JWT 토큰에서 사용자 ID 추출
   const getCurrentUserId = () => {
@@ -39,18 +53,16 @@ const ChatContainer = ({onBack, isLoggedIn = true}) => {
       return;
     }
 
-    // 채팅방 변경 - key prop으로 인해 컴포넌트가 완전히 재마운트됨
+    // 채팅방 변경 - URL도 함께 변경
     console.log(`🔄 채팅방 변경: ${selectedChat?.id} → ${chat?.id}`);
     setSelectedChat(chat);
+    navigate(`/chat/${chat.id}`);
   };
 
   const handleBackToList = () => {
     // 모바일에서는 채팅 목록으로, 데스크톱에서는 선택 해제
-    if (window.innerWidth <= 768) {
-      setSelectedChat(null);
-    } else {
-      setSelectedChat(null);
-    }
+    setSelectedChat(null);
+    navigate('/chat');
   };
 
   return (
@@ -59,7 +71,7 @@ const ChatContainer = ({onBack, isLoggedIn = true}) => {
         <div className={`chat-sidebar ${selectedChat ? 'hidden-mobile' : ''}`}>
           <ChatList
               onChatSelect={handleChatSelect}
-              currentChatId={selectedChat?.id}
+              currentChatId={selectedChat?.id || chatRoomId}
               onBack={onBack}
           />
         </div>
@@ -85,7 +97,19 @@ const ChatContainer = ({onBack, isLoggedIn = true}) => {
                     onBackToHome={onBack}
                 />
               </>
+          ) : chatRoomId ? (
+              // URL에는 채팅방 ID가 있지만 아직 로드되지 않은 경우
+              <div className="no-chat-selected">
+                <div className="no-chat-content">
+                  <div className="no-chat-icon">🔄</div>
+                  <h3 className="no-chat-title">채팅방을 불러오는 중...</h3>
+                  <p className="no-chat-description">
+                    잠시만 기다려주세요.
+                  </p>
+                </div>
+              </div>
           ) : (
+              // 일반적인 채팅방 선택 안내
               <div className="no-chat-selected">
                 <div className="no-chat-content">
                   <div className="no-chat-icon">💬</div>
