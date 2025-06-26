@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { profileAPI, categoryAPI, keywordAPI } from '../../services/api';
 import { authUtils } from '../../utils/tokenUtils';
-import ProfileEditModal from './ProfileEditModal.js';
-import ProfilePreviewModal from './ProfilePreviewModal.js';
+import ProfileEditModal from './ProfileEditModal.jsx';
+import ProfilePreviewModal from './ProfilePreviewModal.jsx';
 import MentorProfileModal from './MentorProfileModal';
 import './MentorRegistration.css';
 

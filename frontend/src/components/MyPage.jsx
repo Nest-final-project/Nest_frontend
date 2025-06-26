@@ -13,14 +13,14 @@ import {
 import './MyPage.css';
 import { userInfoUtils, authUtils } from '../utils/tokenUtils.js';
 import { userAPI, authAPI } from '../services/api.js';
-import BookingHistory from './MyPage/BookingHistory.js';
-import PaymentHistory from './MyPage/PaymentHistory.js';
+import BookingHistory from './MyPage/BookingHistory.jsx';
+import PaymentHistory from './MyPage/PaymentHistory.jsx';
 
 // Lazy load components for better performance
-const BasicInfo = lazy(() => import('./MyPage/BasicInfo.js'));
-const CareerHistory = lazy(() => import('./MyPage/CareerHistory.js'));
-const MentorRegistration = lazy(() => import('./MyPage/MentorRegistration.js'));
-const ConsultationTime = lazy(() => import('./MyPage/ConsultationTime.js'));
+const BasicInfo = lazy(() => import('./MyPage/BasicInfo.jsx'));
+const CareerHistory = lazy(() => import('./MyPage/CareerHistory.jsx'));
+const MentorRegistration = lazy(() => import('./MyPage/MentorRegistration.jsx'));
+const ConsultationTime = lazy(() => import('./MyPage/ConsultationTime.jsx'));
 
 const MyPage = ({ onBack, onLogout }) => {
   const [userInfo, setUserInfo] = useState(null);
