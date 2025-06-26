@@ -509,13 +509,6 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
                       <span>더 많은 채팅방을 불러오는 중...</span>
                     </div>
                 )}
-
-                {/* 더 이상 로드할 데이터가 없을 때 */}
-                {!hasNext && chatRooms.length > 0 && (
-                    <div className="end-of-list">
-                      <span>모든 채팅방을 확인했습니다</span>
-                    </div>
-                )}
               </>
           )}
         </div>

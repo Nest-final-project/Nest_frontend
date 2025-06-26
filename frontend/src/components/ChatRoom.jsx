@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, Fragment} from 'react';
 import {
   ArrowLeft,
   Send,
@@ -303,6 +303,13 @@ const ChatRoom = ({
     }
   }, [messages]);
 
+  // 입력창 초기 설정
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '24px'; // 초기 높이 설정
+    }
+  }, []);
+
   // 메시지 전송
   const handleSendMessage = async () => {
     console.log('🚀 메시지 전송 시도:', {
@@ -326,8 +333,10 @@ const ChatRoom = ({
     const messageContent = message.trim();
     setMessage('');
 
+    // 입력창 높이 초기화
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = '24px'; // 기본 높이로 복원
     }
 
     // 즉시 화면에 낙관적 업데이트 (Optimistic Update)
@@ -381,6 +390,13 @@ const ChatRoom = ({
 
       // 입력창에 메시지 복원
       setMessage(messageContent);
+      
+      // 입력창 높이도 복원
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
+        textareaRef.current.style.height = newHeight + 'px';
+      }
     }
   };
 
@@ -392,6 +408,17 @@ const ChatRoom = ({
     }
   };
 
+  // 텍스트 입력시 자동 높이 조절
+  const handleTextareaChange = (e) => {
+    const textarea = e.target;
+    setMessage(textarea.value);
+    
+    // 높이 자동 조절
+    textarea.style.height = 'auto';
+    const newHeight = Math.min(textarea.scrollHeight, 120); // 최대 120px
+    textarea.style.height = newHeight + 'px';
+  };
+
   // 시간 포맷팅
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -400,6 +427,59 @@ const ChatRoom = ({
       minute: '2-digit',
       hour12: true
     });
+  };
+
+  // 날짜 포맷팅 (구분선용)
+  const formatDateSeparator = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    });
+  };
+
+  // 같은 날인지 확인하는 함수
+  const isSameDay = (date1, date2) => {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    return d1.toDateString() === d2.toDateString();
+  };
+
+  // 연속 메시지인지 확인하는 함수 (같은 사람이 연속으로 보낸 메시지)
+  const isConsecutiveMessage = (currentMessage, previousMessage) => {
+    if (!previousMessage) return false;
+    
+    // 같은 발신자이고, 5분 이내에 보낸 메시지인지 확인
+    const timeDiff = new Date(currentMessage.timestamp) - new Date(previousMessage.timestamp);
+    const fiveMinutes = 5 * 60 * 1000; // 5분을 밀리초로
+    
+    return currentMessage.sender === previousMessage.sender && 
+           timeDiff < fiveMinutes &&
+           isSameDay(currentMessage.timestamp, previousMessage.timestamp);
+  };
+
+  // 연속 메시지의 마지막인지 확인하는 함수
+  const isLastInConsecutiveGroup = (currentMessage, nextMessage) => {
+    if (!nextMessage) return true; // 마지막 메시지는 항상 시간 표시
+    
+    // 다음 메시지와 연속되지 않으면 현재 메시지가 그룹의 마지막
+    const timeDiff = new Date(nextMessage.timestamp) - new Date(currentMessage.timestamp);
+    const fiveMinutes = 5 * 60 * 1000;
+    
+    return currentMessage.sender !== nextMessage.sender || 
+           timeDiff >= fiveMinutes ||
+           !isSameDay(currentMessage.timestamp, nextMessage.timestamp);
+  };
+
+  // 날짜 구분선이 필요한지 확인하는 함수
+  const shouldShowDateSeparator = (currentMessage, previousMessage) => {
+    // 메시지가 없으면 날짜 구분선도 표시하지 않음
+    if (messages.length === 0) return false;
+    
+    if (!previousMessage) return true; // 첫 번째 메시지는 항상 날짜 표시
+    return !isSameDay(currentMessage.timestamp, previousMessage.timestamp);
   };
 
   // 에러 상태
@@ -467,18 +547,19 @@ const ChatRoom = ({
               </div>
               <div className="contact-details">
                 <h3 className="contact-name">{contact?.name || '김밤'}</h3>
-                <span className="contact-status">
-                  {isChatRoomClosed ? '채팅 종료됨' : '대화 중'}
+                <span className={`contact-status ${isChatRoomClosed ? 'closed' : ''}`}>
+                  {isChatRoomClosed ? (
+                    <>
+                      <div className="status-indicator-closed"></div>
+                      <span>멘토링 종료</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="status-indicator"></div>
+                      <span>멘토링 중</span>
+                    </>
+                  )}
                 </span>
-                {/* 활성 채팅방에만 연결 상태 표시 */}
-                {!isChatRoomClosed && (
-                  <div className="connection-status">
-                    <span className={`ws-status ${isConnected ? 'connected'
-                        : 'disconnected'}`}>
-                      {isConnected ? '🟢 실시간 연결됨' : '🔴 연결 끊김'}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -499,39 +580,64 @@ const ChatRoom = ({
           )}
 
           <div className="messages-list">
-            {messages.map((msg) => (
-                <div
-                    key={msg.id}
-                    className={`message ${msg.sender === 'user' ? 'sent'
-                        : 'received'}`}
-                >
-                  {msg.sender === 'other' && (
-                      <div className="message-avatar">
-                        {contact?.profileImage ? (
-                            <img src={contact.profileImage} alt={contact.name}/>
-                        ) : (
-                            <User className="avatar-icon"/>
-                        )}
+            {messages.length > 0 ? (
+              messages.map((msg, index) => (
+                <Fragment key={msg.id}>
+                  {/* 날짜 구분선 */}
+                  {shouldShowDateSeparator(msg, messages[index - 1]) && (
+                    <div className="date-separator">
+                      <div className="date-separator-line"></div>
+                      <div className="date-separator-text">
+                        {formatDateSeparator(msg.timestamp)}
                       </div>
-                  )}
-
-                  <div className="message-content">
-                    <div className="message-bubble">
-                      <span style={{whiteSpace: 'pre-wrap'}}>{msg.text}</span>
+                      <div className="date-separator-line"></div>
                     </div>
-                    <div className="message-info">
-                      <span className="message-time">{formatTime(
-                          msg.timestamp)}</span>
-                      {msg.sender === 'user' && (
-                          <span className={`message-status ${msg.status}`}>
-                      {msg.status === 'sending' && '⏳'}
-                            {msg.status === 'sent' && '✓'}
-                    </span>
+                  )}
+                  
+                  {/* 메시지 */}
+                  <div
+                      className={`message ${msg.sender === 'user' ? 'sent'
+                          : 'received'} ${isConsecutiveMessage(msg, messages[index - 1]) ? 'consecutive' : ''}`}
+                  >
+                    {msg.sender === 'other' && (
+                        <div className="message-avatar">
+                          {contact?.profileImage ? (
+                              <img src={contact.profileImage} alt={contact.name}/>
+                          ) : (
+                              <User className="avatar-icon"/>
+                          )}
+                        </div>
+                    )}
+
+                    <div className="message-content">
+                      <div className="message-bubble">
+                        <span style={{whiteSpace: 'pre-wrap'}}>{msg.text}</span>
+                      </div>
+                      {/* 연속 메시지의 마지막에만 시간과 상태 표시 */}
+                      {isLastInConsecutiveGroup(msg, messages[index + 1]) && (
+                        <div className="message-info">
+                          <span className="message-time">{formatTime(
+                              msg.timestamp)}</span>
+                          {msg.sender === 'user' && (
+                              <span className={`message-status ${msg.status}`}>
+                          {msg.status === 'sending' && '⏳'}
+                                {msg.status === 'sent' && '✓'}
+                        </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
+                </Fragment>
+              ))
+            ) : (
+              <div className="no-messages">
+                <div className="no-messages-icon">💬</div>
+                <div className="no-messages-text">
+                  대화를 시작해보세요!
                 </div>
-            ))}
+              </div>
+            )}
 
             <div ref={messagesEndRef}/>
           </div>
@@ -541,7 +647,19 @@ const ChatRoom = ({
         {isChatRoomClosed ? (
           <div className="message-input-container disabled">
             <div className="chat-closed-notice">
-              <span>📫 이 채팅방은 종료되었습니다. 메시지를 읽을 수만 있습니다.</span>
+              <div className="chat-closed-visual">
+                <div className="chat-closed-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <circle cx="12" cy="16" r="1"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </div>
+              </div>
+              <div className="chat-closed-content">
+                <span className="chat-closed-title">멘토링이 종료되었습니다</span>
+                <span className="chat-closed-subtitle">대화 내용은 계속 확인하실 수 있습니다</span>
+              </div>
             </div>
           </div>
         ) : (
@@ -555,7 +673,7 @@ const ChatRoom = ({
               <textarea
                   ref={textareaRef}
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={handleTextareaChange}
                   onKeyPress={handleKeyPress}
                   placeholder="메시지를 입력하세요..."
                   className="message-textarea"
