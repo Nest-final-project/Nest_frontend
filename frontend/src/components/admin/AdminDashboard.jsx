@@ -139,17 +139,6 @@ const AdminDashboard = ({ onBack, userInfo }) => {
           <div className="flex items-center justify-between p-6">
             {!sidebarCollapsed && (
                 <div className="flex items-center gap-3">
-                  <button
-                      onClick={onBack}
-                      className={`p-2 rounded-lg transition-colors ${
-                          isDarkMode
-                              ? 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
-                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
-                      }`}
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
                       <Shield size={20} className="text-white" />

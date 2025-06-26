@@ -457,25 +457,6 @@ export const inquiryAPI = {
   // // [사용자] 내 문의 삭제
   deleteUserInquiry: (complaintId) => api.delete(
       `/api/complaints/${complaintId}`),
-
-  // [관리자] 전체 문의 목록 조회
-  getAllInquiries: (params) => api.get('/api/admin/complaints', {params}),
-
-  // [관리자] 문의 상세 조회
-  getInquiryDetail: (complaintId) => api.get(
-      `/api/admin/complaints/${complaintId}`),
-
-  // [관리자] 문의 답변 등록
-  createInquiryAnswer: (complaintId, answerData) =>
-      api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
-
-  // [관리자] 문의 삭제
-  deleteInquiry: (complaintId) => api.delete(
-      `/api/admin/complaints/${complaintId}`),
-
-  // [관리자] 문의 답변 수정
-  updateInquiryStatus: (complaintId, status) =>
-      api.patch(`/api/admin/answers/{answerId}`, {status}),
 };
 
 // 파일 업로드 전용 axios 인스턴스 (Content-Type 미지정)
@@ -534,6 +515,39 @@ export const keywordAPI = {
   // 키워드 조회
   getKeywords: () => api.get('/api/keywords'),
 }
+
+// === 관리자 전용 API ===
+export const adminAPI = {
+  // 1. 멘토 경력 전체 목록 조회
+  getMentorCareers: (params) => api.get('/api/admin/mentor-careers', { params }),
+
+  // 2. 멘토 경력 단건 조회
+  getMentorCareerDetail: (careerId) => api.get(`/api/admin/mentor-careers/${careerId}`),
+
+  // 3. 멘토 경력 상태 변경(승인/거절)
+  updateMentorCareerStatus: (careerId, status) =>
+      api.patch(`/api/admin/mentor-careers/${careerId}/status`, { status }),
+
+  // [관리자] 전체 문의 목록 조회
+  getAllInquiries: (params) => api.get('/api/admin/complaints', {params}),
+
+  // [관리자] 문의 상세 조회
+  getInquiryDetail: (complaintId) => api.get(
+      `/api/admin/complaints/${complaintId}`),
+
+  // [관리자] 문의 답변 등록
+  createInquiryAnswer: (complaintId, answerData) =>
+      api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
+
+  // [관리자] 문의 삭제
+  deleteInquiry: (complaintId) => api.delete(
+      `/api/admin/complaints/${complaintId}`),
+
+  // [관리자] 문의 답변 수정
+  updateInquiryStatus: (complaintId, status) =>
+      api.patch(`/api/admin/answers/{answerId}`, {status}),
+};
+
 
 
 export default api;
