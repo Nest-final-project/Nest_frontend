@@ -1,6 +1,5 @@
 import React, {useState, useRef, useEffect, Fragment} from 'react';
 import {
-  ArrowLeft,
   Send,
   Paperclip,
   Smile,
@@ -22,7 +21,8 @@ const ChatRoom = ({
   onBack,
   onBackToHome,
   userId,
-  reservationId
+  reservationId,
+  userRole // 'mentor' 또는 'mentee'를 받거나
 }) => {
   // 상태 변수들을 가장 먼저 선언
   const [error, setError] = useState(null);
@@ -31,6 +31,16 @@ const ChatRoom = ({
   const [loading, setLoading] = useState(false);
   const [isChatRoomClosed, setIsChatRoomClosed] = useState(false);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [hasClosedModal, setHasClosedModal] = useState(false);
+  const [reservationStatus, setReservationStatus] = useState(null);
+  const [reservationLoading, setReservationLoading] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [hasWrittenReview, setHasWrittenReview] = useState(false); // 실제로 리뷰를 작성했는지 추적
+
+  // 현재 사용자가 멘토인지 확인 (부모 컴포넌트에서 전달받은 userRole 사용)
+  const isMentor = userRole === 'MENTOR';
 
   // Refs
   const messagesEndRef = useRef(null);
@@ -57,6 +67,145 @@ const ChatRoom = ({
     }
     setError(null);
   }, [contact, chatRoomId]);
+
+  // 채팅방 상태가 종료되거나 예약이 완료될 때 리뷰 모달 표시 (멘티만, 리뷰 작성까지)
+  useEffect(() => {
+    const shouldShowModal = (isChatRoomClosed || reservationStatus === 'COMPLETE') && 
+                           !statusLoading && 
+                           !reservationLoading && 
+                           !hasClosedModal && 
+                           !showReviewModal &&
+                           !hasWrittenReview && // 아직 리뷰를 작성하지 않았어야 함
+                           !isMentor; // 멘토가 아닌 경우에만
+
+    if (shouldShowModal) {
+      const reason = isChatRoomClosed ? '채팅방 종료' : '예약 완료';
+      console.log(`📝 ${reason}으로 리뷰 모달을 표시합니다 (리뷰 작성까지 반복)`);
+      
+      // 사용자가 변화를 충분히 인지할 수 있도록 적절한 딜레이
+      const delay = hasClosedModal ? 1000 : (isChatRoomClosed ? 3000 : 1500); // 이미 한번 닫았으면 1초, 처음이면 기존 딜레이
+      
+      const timer = setTimeout(() => {
+        setShowReviewModal(true);
+      }, delay);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isChatRoomClosed, reservationStatus, statusLoading, reservationLoading, hasClosedModal, showReviewModal, hasWrittenReview, isMentor]);
+
+  // 리뷰 모달 키보드 이벤트 (ESC 키로 닫기) 및 접근성
+  useEffect(() => {
+    if (showReviewModal) {
+      const handleEscKey = (event) => {
+        if (event.key === 'Escape') {
+          console.log('⌨️ ESC 키로 리뷰 모달을 닫습니다.');
+          handleReviewModalClose();
+        }
+      };
+
+      document.addEventListener('keydown', handleEscKey);
+      
+      // 모달이 열렸을 때 body 스크롤 방지
+      document.body.style.overflow = 'hidden';
+      
+      // 모달에 포커스 설정 (접근성)
+      const modalElement = document.querySelector('.review-modal');
+      if (modalElement) {
+        modalElement.focus();
+        // 포커스 트랩 설정
+        const focusableElements = modalElement.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        
+        const trapFocus = (e) => {
+          if (e.key === 'Tab') {
+            if (e.shiftKey) {
+              if (document.activeElement === firstElement) {
+                e.preventDefault();
+                lastElement.focus();
+              }
+            } else {
+              if (document.activeElement === lastElement) {
+                e.preventDefault();
+                firstElement.focus();
+              }
+            }
+          }
+        };
+        
+        document.addEventListener('keydown', trapFocus);
+        
+        // 첫 번째 요소에 포커스
+        setTimeout(() => {
+          if (firstElement) firstElement.focus();
+        }, 100);
+        
+        return () => {
+          document.removeEventListener('keydown', handleEscKey);
+          document.removeEventListener('keydown', trapFocus);
+          document.body.style.overflow = 'unset';
+        };
+      }
+      
+      return () => {
+        document.removeEventListener('keydown', handleEscKey);
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [showReviewModal]);
+
+  // 오버레이 클릭 시 모달 닫기
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      console.log('🖱️ 오버레이 클릭으로 리뷰 모달을 닫습니다.');
+      handleReviewModalClose();
+    }
+  };
+
+  // 예약 상태 확인
+  const checkReservationStatus = async (reservationId) => {
+    if (!reservationId) {
+      console.warn('❌ checkReservationStatus: 예약 ID가 없습니다');
+      return null;
+    }
+
+    try {
+      setReservationLoading(true);
+      console.log(`🔍 예약 ${reservationId}의 상태 확인 중...`);
+
+      const response = await axios.get(
+          `/api/reservations/${reservationId}/status`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
+            }
+          }
+      );
+
+      console.log('📋 예약 상태 API 응답:', response.data);
+
+      const status = response.data.status; // 예: "PENDING", "IN_PROGRESS", "COMPLETE", "CANCELLED"
+      setReservationStatus(status);
+      
+      console.log(`✅ 예약 ${reservationId} 상태: ${status}`);
+      console.log(`🔧 reservationStatus 상태 설정됨:`, status);
+
+      return status;
+
+    } catch (err) {
+      console.error(`❌ 예약 ${reservationId} 상태 확인 실패:`, err);
+      console.error('에러 상세:', err.response?.data || err.message);
+      
+      // 상태 확인 실패 시 null로 설정
+      setReservationStatus(null);
+      console.log('🔧 에러로 인해 reservationStatus를 null로 설정');
+      return null;
+    } finally {
+      setReservationLoading(false);
+    }
+  };
 
   // 채팅방 상태 확인
   const checkChatRoomStatus = async (chatRoomId) => {
@@ -159,9 +308,10 @@ const ChatRoom = ({
 
   // WebSocket 연결 및 메시지 수신
   useEffect(() => {
-    // 채팅방이 종료된 경우 WebSocket 연결하지 않음
-    if (isChatRoomClosed) {
-      console.log(`🚫 채팅방 ${chatRoomId}이 종료되어 WebSocket 연결을 시도하지 않습니다.`);
+    // 채팅방이 종료되거나 예약이 완료된 경우 WebSocket 연결하지 않음
+    if (isChatRoomClosed || reservationStatus === 'COMPLETE') {
+      const reason = isChatRoomClosed ? '채팅방 종료' : '예약 완료';
+      console.log(`🚫 ${reason}으로 인해 채팅방 ${chatRoomId}에서 WebSocket 연결을 시도하지 않습니다.`);
       return;
     }
 
@@ -255,18 +405,27 @@ const ChatRoom = ({
         unsubscribe();
       }
     };
-  }, [isConnected, connect, onMessage, chatRoomId, userId, isChatRoomClosed]);
+  }, [isConnected, connect, onMessage, chatRoomId, userId, isChatRoomClosed, reservationStatus]);
 
   // 컴포넌트 unmount 시 정리
   useEffect(() => {
-    console.log(`🚀 ChatRoom 마운트 - 채팅방: ${chatRoomId}`);
     return () => {
-      console.log(`🧹 ChatRoom 언마운트 - 채팅방: ${chatRoomId}`);
+      // 상태 초기화
       setMessages([]);
       setError(null);
       setLoading(false);
       setIsChatRoomClosed(false);
       setStatusLoading(false);
+      setShowReviewModal(false);
+      setHasClosedModal(false);
+      setReservationStatus(null);
+      setReservationLoading(false);
+      setSelectedRating(0);
+      setIsSubmittingRating(false);
+      setHasWrittenReview(false);
+      
+      // body 스크롤 복원 (모달이 열려있던 경우를 대비)
+      document.body.style.overflow = 'unset';
     };
   }, []);
 
@@ -279,18 +438,39 @@ const ChatRoom = ({
       setError(null);
       setLoading(true);
       setIsChatRoomClosed(false);
+      setShowReviewModal(false);
+      setHasClosedModal(false);
+      setReservationStatus(null);
+      setReservationLoading(false);
+      setSelectedRating(0);
+      setIsSubmittingRating(false);
+      setHasWrittenReview(false);
 
-      // 채팅방 상태 확인 후 메시지 가져오기
+      console.log('🔄 리뷰 모달 및 예약 상태를 초기화했습니다.');
+
+      // 1. 먼저 채팅방 상태 확인 후 메시지 가져오기
       const loadChatRoom = async () => {
         try {
-          // 1. 먼저 채팅방 상태 확인
+          // 1. 채팅방 상태 확인
           const isClosed = await checkChatRoomStatus(chatRoomId);
           
-          // 2. 메시지 가져오기 (종료된 채팅방이어도 기존 메시지는 볼 수 있음)
+          // 2. 채팅방이 종료된 경우에만 예약 상태 확인
+          let reservationComplete = false;
+          if (isClosed && reservationId) {
+            console.log('📋 채팅방이 종료되어 예약 상태를 확인합니다...');
+            const status = await checkReservationStatus(reservationId);
+            reservationComplete = status === 'COMPLETE';
+          }
+          
+          // 3. 메시지 가져오기 (종료된 채팅방이나 완료된 예약이어도 기존 메시지는 볼 수 있음)
           await fetchMessages(chatRoomId);
           
           if (isClosed) {
             console.log(`🔒 채팅방 ${chatRoomId}이 종료되었습니다. 읽기 전용 모드입니다.`);
+          }
+          
+          if (reservationComplete) {
+            console.log(`✅ 예약 ${reservationId}이 완료되었습니다.`);
           }
         } catch (error) {
           console.error('채팅방 로딩 실패:', error);
@@ -330,10 +510,15 @@ const ChatRoom = ({
       return;
     }
 
-    // 채팅방이 종료된 경우 메시지 전송 차단
-    if (isChatRoomClosed) {
-      console.log('🚫 채팅방이 종료되어 메시지 전송 차단');
-      alert('종료된 채팅방에서는 메시지를 보낼 수 없습니다.');
+    // 채팅방이 종료되거나 예약이 완료된 경우 메시지 전송 차단
+    if (isChatRoomClosed || reservationStatus === 'COMPLETE') {
+      const reason = isChatRoomClosed ? '종료된 채팅방' : '완료된 예약';
+      console.log(`🚫 ${reason}에서는 메시지 전송 차단`);
+      
+      const message = isChatRoomClosed 
+        ? '종료된 채팅방에서는 메시지를 보낼 수 없습니다.'
+        : '완료된 멘토링에서는 메시지를 보낼 수 없습니다.';
+      alert(message);
       return;
     }
 
@@ -424,6 +609,72 @@ const ChatRoom = ({
     textarea.style.height = 'auto';
     const newHeight = Math.min(textarea.scrollHeight, 120); // 최대 120px
     textarea.style.height = newHeight + 'px';
+  };
+
+  // 리뷰 모달 관련 함수들
+  const handleReviewModalClose = () => {
+    console.log('❌ 사용자가 리뷰 모달을 닫았습니다.');
+    setShowReviewModal(false);
+    setHasClosedModal(true);
+    setSelectedRating(0); // 별점 초기화
+  };
+
+  const handleStarClick = async (rating) => {
+    console.log(`⭐ 사용자가 ${rating}점을 선택했습니다.`);
+    setSelectedRating(rating);
+    
+    // 간단한 만족도 제출 (선택사항)
+    if (!isSubmittingRating) {
+      setIsSubmittingRating(true);
+      try {
+        // 간단한 만족도 점수만 먼저 제출
+        const response = await axios.post(
+          `/api/reviews/rating`,
+          {
+            reservationId: reservationId,
+            chatRoomId: chatRoomId,
+            rating: rating,
+            mentorId: contact?.id || contact?.mentorId
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
+            }
+          }
+        );
+        console.log('✅ 만족도 점수 제출 완료:', response.data);
+      } catch (error) {
+        console.error('❌ 만족도 점수 제출 실패:', error);
+        // 실패해도 사용자 경험을 해치지 않도록 조용히 처리
+      } finally {
+        setIsSubmittingRating(false);
+      }
+    }
+  };
+
+  const handleGoToReview = () => {
+    console.log('📝 리뷰 작성 페이지로 이동합니다.');
+    console.log('✅ 리뷰 작성 시도로 hasWrittenReview = true 설정');
+    
+    const mentorId = contact?.id || contact?.mentorId;
+    const mentorName = contact?.name || contact?.mentorName;
+    
+    if (mentorId) {
+      // 리뷰 작성 완료로 표시
+      setHasWrittenReview(true);
+      setShowReviewModal(false);
+      setHasClosedModal(true);
+      
+      // 선택된 별점과 예약 ID도 URL에 포함
+      const ratingParam = selectedRating > 0 ? `&rating=${selectedRating}` : '';
+      const reservationParam = reservationId ? `&reservationId=${reservationId}` : '';
+      
+      // 리뷰 페이지로 이동
+      window.location.href = `/review/write?mentorId=${mentorId}&mentorName=${encodeURIComponent(mentorName || '멘토')}&chatRoomId=${chatRoomId}${ratingParam}${reservationParam}`;
+    } else {
+      console.error('❌ 멘토 ID를 찾을 수 없습니다:', contact);
+      alert('리뷰 작성 페이지로 이동할 수 없습니다. 멘토 정보가 없습니다.');
+    }
   };
 
   // 시간 포맷팅
@@ -536,12 +787,105 @@ const ChatRoom = ({
   // 메인 렌더링
   return (
       <div className="chat-room-container">
+        {/* 리뷰 작성 모달 */}
+        {showReviewModal && (
+          <div 
+            className="review-modal-overlay" 
+            onClick={handleOverlayClick}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+            aria-describedby="modal-description"
+          >
+            <div 
+              className="review-modal" 
+              onClick={(e) => e.stopPropagation()}
+              tabIndex="-1"
+              role="document"
+            >
+              <div className="review-modal-header">
+                <h2 id="modal-title">🎉 멘토링이 완료되었습니다!</h2>
+                <button 
+                  className="modal-close-button" 
+                  onClick={handleReviewModalClose}
+                  aria-label="모달 닫기"
+                >
+                  <X className="icon" />
+                </button>
+              </div>
+              
+              <div className="review-modal-content" id="modal-description">
+                <div className="mentor-info">
+                  <div className="mentor-avatar">
+                    {contact?.profileImage ? (
+                      <img src={contact.profileImage} alt={`${contact.name} 프로필`} />
+                    ) : (
+                      <User className="avatar-icon" />
+                    )}
+                  </div>
+                  <div className="mentor-details">
+                    <h3>{contact?.name || contact?.mentorName || '멘토'}님과의 멘토링</h3>
+                    <p>소중한 시간을 함께해 주셔서 감사합니다!</p>
+                  </div>
+                </div>
+
+                <div className="satisfaction-section">
+                  <h4>오늘 멘토링은 어떠셨나요?</h4>
+                  <div className="satisfaction-stars" role="radiogroup" aria-label="만족도 평가">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        className={`star-button ${selectedRating >= star ? 'active' : ''}`}
+                        onClick={() => handleStarClick(star)}
+                        disabled={isSubmittingRating}
+                        role="radio"
+                        aria-checked={selectedRating >= star}
+                        aria-label={`${star}점 만족도`}
+                        title={`${star}점 만족도`}
+                      >
+                        ⭐
+                      </button>
+                    ))}
+                  </div>
+                  <p className="satisfaction-text">
+                    {selectedRating > 0 
+                      ? `${selectedRating}점을 선택하셨습니다. 감사합니다!` 
+                      : '별을 클릭해서 만족도를 알려주세요'
+                    }
+                  </p>
+                  {isSubmittingRating && (
+                    <div className="rating-submitting">
+                      <span>만족도를 저장하는 중...</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="review-actions">
+                  <button 
+                    className="review-detail-button" 
+                    onClick={handleGoToReview}
+                    aria-describedby="review-detail-description"
+                  >
+                    📝 상세한 리뷰 남기기
+                  </button>
+                  <div id="review-detail-description" className="sr-only">
+                    멘토에게 자세한 피드백을 남길 수 있는 페이지로 이동합니다
+                  </div>
+                  <button 
+                    className="review-later-button" 
+                    onClick={handleReviewModalClose}
+                  >
+                    나중에 하기
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 헤더 */}
         <div className="chat-header">
           <div className="chat-header-left">
-            <button className="back-button" onClick={onBack}>
-              <ArrowLeft className="icon"/>
-            </button>
             <div className="contact-info">
               <div className="contact-avatar">
                 {contact?.profileImage ? (
@@ -553,12 +897,19 @@ const ChatRoom = ({
                     : 'disconnected'}`}></div>
               </div>
               <div className="contact-details">
-                <h3 className="contact-name">{contact?.name || '김밤'}</h3>
-                <span className={`contact-status ${isChatRoomClosed ? 'closed' : ''}`}>
+                <h3 className="contact-name">
+                  {contact?.name || contact?.menteeName || contact?.mentorName || '사용자'}
+                </h3>
+                <span className={`contact-status ${isChatRoomClosed || reservationStatus === 'COMPLETE' ? 'closed' : ''}`}>
                   {isChatRoomClosed ? (
                     <>
                       <div className="status-indicator-closed"></div>
                       <span>멘토링 종료</span>
+                    </>
+                  ) : reservationStatus === 'COMPLETE' ? (
+                    <>
+                      <div className="status-indicator-closed"></div>
+                      <span>멘토링 완료</span>
                     </>
                   ) : (
                     <>
@@ -651,7 +1002,7 @@ const ChatRoom = ({
         </div>
 
         {/* 입력 영역 */}
-        {isChatRoomClosed ? (
+        {isChatRoomClosed || reservationStatus === 'COMPLETE' ? (
           <div className="message-input-container disabled">
             <div className="chat-closed-notice">
               <div className="chat-closed-visual">
@@ -664,8 +1015,48 @@ const ChatRoom = ({
                 </div>
               </div>
               <div className="chat-closed-content">
-                <span className="chat-closed-title">멘토링이 종료되었습니다</span>
-                <span className="chat-closed-subtitle">대화 내용은 계속 확인하실 수 있습니다</span>
+                <div className="title-and-button">
+                  <div className="title-section">
+                    <span className="chat-closed-title">
+                      {isChatRoomClosed ? '멘토링이 종료되었습니다' : '멘토링이 완료되었습니다'}
+                    </span>
+                    <span className="chat-closed-subtitle">
+                      {isMentor 
+                        ? "멘티가 리뷰를 남길 수 있습니다. 대화 내용은 계속 확인하실 수 있습니다"
+                        : hasClosedModal 
+                          ? "대화 내용은 계속 확인하실 수 있습니다" 
+                          : "잠시만 기다리시면 리뷰 작성 안내가 표시됩니다"
+                      }
+                    </span>
+                  </div>
+                  
+                  {/* 모달을 닫은 멘티에게만 리뷰 버튼 표시 - 위쪽 배치 */}
+                  {(() => {
+                    const shouldShowButton = hasClosedModal && !isMentor && !hasWrittenReview;
+                    console.log('🔍 리뷰 버튼 표시 조건 확인:', {
+                      hasClosedModal,
+                      isMentor,
+                      hasWrittenReview,
+                      userRole,
+                      shouldShowButton,
+                      '모달을 닫았나?': hasClosedModal ? '예' : '아니오',
+                      '멘토인가?': isMentor ? '예 (버튼 숨김)' : '아니오 (버튼 표시 가능)',
+                      '리뷰 작성했나?': hasWrittenReview ? '예 (버튼 숨김)' : '아니오 (버튼 표시)',
+                      '최종 결과': shouldShowButton ? '버튼 표시' : '버튼 숨김'
+                    });
+                    return shouldShowButton;
+                  })() && (
+                    <div className="review-button-section compact top">
+                      <button 
+                        className="compact-review-button"
+                        onClick={handleGoToReview}
+                      >
+                        <span className="button-icon">⭐</span>
+                        <span className="button-text">리뷰 작성</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

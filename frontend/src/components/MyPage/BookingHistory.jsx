@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, FileText } from 'lucide-react';
 import { reservationAPI, userAPI, ticketAPI } from '../../services/api';
 import './BookingHistory.css';
 
 const BookingHistory = ({ userInfo }) => {
+  const navigate = useNavigate();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -77,6 +79,8 @@ const BookingHistory = ({ userInfo }) => {
 
         return {
           id: reservation.id,
+          mentorId: reservation.mentor, // 멘토 ID 추가
+          menteeId: reservation.mentee, // 멘티 ID 추가
           mentor: mentorName,
           mentee: menteeName,
           ticketName: ticketInfo ? ticketInfo.name : '알 수 없음',
@@ -109,6 +113,17 @@ const BookingHistory = ({ userInfo }) => {
     setDataLoaded(false);
     setError(null);
     fetchReservations();
+  };
+
+  // 리뷰 작성 페이지로 이동
+  const handleWriteReview = (reservation) => {
+    const queryParams = new URLSearchParams({
+      mentorId: reservation.mentorId || '', // 멘토 ID도 함께 전달
+      mentorName: reservation.mentor || '',
+      reservationId: reservation.id,
+    });
+    
+    navigate(`/review/write?${queryParams.toString()}`);
   };
 
   if (loading) {
@@ -223,7 +238,10 @@ const BookingHistory = ({ userInfo }) => {
                     </button>
                   )}
                   {reservation.status === 'COMPLETED' && (
-                    <button className="action-btn secondary">
+                    <button 
+                      className="action-btn secondary"
+                      onClick={() => handleWriteReview(reservation)}
+                    >
                       <FileText size={16} />
                       리뷰 작성
                     </button>
