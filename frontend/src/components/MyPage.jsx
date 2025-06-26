@@ -62,6 +62,9 @@ const MyPage = ({ onBack, onLogout }) => {
       if (response.data && response.data.data) {
         const backendUserData = response.data.data;
 
+        // 기존 세션의 토큰 유지
+        const prevUserData = userInfoUtils.getUserInfo();
+
         const mappedUserInfo = {
           id: backendUserData.id,
           name: backendUserData.name,
@@ -73,7 +76,8 @@ const MyPage = ({ onBack, onLogout }) => {
           createdAt: backendUserData.createdAt,
           profileImage: backendUserData.profileImage || '/default-profile.svg',
           bank: backendUserData.bank || '',
-          accountNumber: backendUserData.accountNumber || ''
+          accountNumber: backendUserData.accountNumber || '',
+          token: prevUserData?.token // 기존 토큰 유지
         };
 
         setUserInfo(mappedUserInfo);

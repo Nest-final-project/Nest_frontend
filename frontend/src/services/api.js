@@ -197,6 +197,12 @@ export const authAPI = {
 
   // OAuth2 로그인 URL 가져오기
   getOAuth2CallbackUrl: (code) => api.get(`/oauth2/callback`, {params: {code}}),
+
+  // email 인증코드 보내기
+  sendEmailVerificationCode: (email) => api.post('/api/auth/signup/code', {email}),
+
+  // 인증코드 검증
+  verifyEmail: (email, authCode) => api.post('/api/auth/signup/code/verify', {email, authCode}),
   
 };
 

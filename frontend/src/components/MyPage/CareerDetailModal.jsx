@@ -65,7 +65,7 @@ const CareerDetailModal = ({ detail, onClose, onEdit, onDelete, onEditCertificat
               <ul className="certificates-list">
                 {detail.certificates.map(cert => (
                   <li key={cert.id} className="certificate-item">
-                    {cert.fileUrl}
+                    <img src={cert.fileUrl}></img>
                   </li>
                 ))}
               </ul>

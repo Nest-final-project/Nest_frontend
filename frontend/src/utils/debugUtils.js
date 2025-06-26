@@ -17,7 +17,7 @@ export const debugAuthState = () => {
   console.log('- userData:', userData ? 'exists' : 'null');
   
   // LocalStorage 확인 (refreshToken)
-  const refreshToken = localStorage.getItem('refreshToken');
+  const refreshToken = sessionStorage.getItem('refreshToken');
   console.log('📦 LocalStorage:');
   console.log('- refreshToken:', refreshToken ? `${refreshToken.substring(0, 20)}...` : 'null');
   
