@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
-import {Search, Plus, MoreVertical, User, ArrowLeft} from 'lucide-react';
+import {Search, Plus, MoreVertical, User, ArrowLeft, X} from 'lucide-react';
 import './ChatList.css';
 import axios from "axios";
 import { accessTokenUtils } from '../utils/tokenUtils';
@@ -16,6 +16,9 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
 
   // URL로 직접 접근한 채팅방 처리를 위한 상태
   const [hasTriggeredInitialSelect, setHasTriggeredInitialSelect] = useState(false);
+  
+  // 검색 모드 상태
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
   // 채팅방 상태 확인 함수
   const checkChatRoomStatus = async (chatRoomId) => {
@@ -394,6 +397,21 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
     onChatSelect(chat);
   };
 
+  // 검색 모드 토글
+  const toggleSearchMode = () => {
+    setIsSearchMode(!isSearchMode);
+    if (isSearchMode) {
+      // 검색 모드 종료시 검색어 초기화
+      setSearchTerm('');
+    }
+  };
+
+  // 검색 취소
+  const cancelSearch = () => {
+    setIsSearchMode(false);
+    setSearchTerm('');
+  };
+
   if (initialLoading) {
     return (
         <div className="chat-list-container">
@@ -413,35 +431,50 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
             <button className="back-to-home-button" onClick={onBack}>
               <ArrowLeft className="icon"/>
             </button>
-            <h2 className="chat-list-title">메시지</h2>
+            <h2 className={`chat-list-title ${isSearchMode ? 'search-active' : ''}`}>
+              채팅
+            </h2>
           </div>
           <div className="header-actions">
-            <button
-                className="header-action-button"
-                onClick={refreshChatRooms}
-                title="새로고침"
+            <button 
+              className="header-action-button" 
+              onClick={toggleSearchMode}
+              title="검색"
             >
+              <Search className="icon"/>
+            </button>
+            <button className="header-action-button" title="새 채팅">
               <Plus className="icon"/>
             </button>
-            <button className="header-action-button">
+            <button className="header-action-button" title="메뉴">
               <MoreVertical className="icon"/>
             </button>
           </div>
         </div>
 
-        {/* 검색바 */}
-        <div className="search-container">
-          <div className="search-input-wrapper">
-            <Search className="search-icon"/>
-            <input
+        {/* 검색창 */}
+        {isSearchMode && (
+          <div className="search-container">
+            <div className="search-input-wrapper">
+              <Search className="search-icon" />
+              <input
                 type="text"
-                placeholder="채팅방 검색..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
-            />
+                autoFocus
+              />
+              {searchTerm && (
+                <button 
+                  className="search-clear-button"
+                  onClick={() => setSearchTerm('')}
+                >
+                  <X className="icon"/>
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 채팅방 목록 */}
         <div className="chat-rooms-list" ref={chatListRef}>

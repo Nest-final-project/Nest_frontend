@@ -148,6 +148,12 @@ const ChatRoom = ({
       }
     } finally {
       setLoading(false);
+      // 로딩 완료 후 즉시 스크롤을 맨 아래로
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({behavior: 'instant'});
+        }
+      }, 50);
     }
   };
 
@@ -267,10 +273,9 @@ const ChatRoom = ({
   // 채팅방 변경 시 메시지 초기화 및 새 메시지 로드
   useEffect(() => {
     if (chatRoomId) {
-      console.log(`🔄 채팅방 ${chatRoomId} 변경 - 메시지 초기화`);
+      console.log(`🔄 채팅방 ${chatRoomId} 변경 - 메시지 로딩 시작`);
 
-      // 즉시 메시지 완전 초기화 
-      setMessages([]);
+      // 상태 초기화 (메시지는 즉시 초기화하지 않음)
       setError(null);
       setLoading(true);
       setIsChatRoomClosed(false);
@@ -289,6 +294,8 @@ const ChatRoom = ({
           }
         } catch (error) {
           console.error('채팅방 로딩 실패:', error);
+          // 에러 발생 시에만 메시지 초기화
+          setMessages([]);
         }
       };
 
@@ -296,12 +303,12 @@ const ChatRoom = ({
     }
   }, [chatRoomId]);
 
-  // 메시지 스크롤
+  // 메시지 스크롤 (로딩 중이 아닐 때만)
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && !loading) {
       messagesEndRef.current.scrollIntoView({behavior: 'smooth'});
     }
-  }, [messages]);
+  }, [messages, loading]);
 
   // 입력창 초기 설정
   useEffect(() => {
@@ -675,7 +682,7 @@ const ChatRoom = ({
                   value={message}
                   onChange={handleTextareaChange}
                   onKeyPress={handleKeyPress}
-                  placeholder="메시지를 입력하세요..."
+                  placeholder="메시지 입력"
                   className="message-textarea"
                   rows="1"
               />
