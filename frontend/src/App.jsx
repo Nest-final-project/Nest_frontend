@@ -790,7 +790,7 @@ const AppContent = () => {
           <Route path="/fail" element={<Fail onBack={handleBackToPayment} onHome={handleBackToHome} />} />
           <Route path="/chat" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
           <Route path="/chat/:chatRoomId" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
-          <Route path="/mypage" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
+          <Route path="/mypage/*" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
           <Route path="/inquiry" element={<InquiryPage />} />
           <Route path="/admin" element={<AdminDashboard onBack={() => { handleLogout(); }} userInfo={userInfo} />} />
           <Route path="/sse-demo" element={<SSEDemoPage />} />
