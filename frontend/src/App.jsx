@@ -22,7 +22,7 @@ import MyPage from './components/MyPage.jsx';
 import ChatContainer from './components/ChatContainer.jsx';
 import NotificationContainer from './components/NotificationContainer.jsx';
 import Inquiry from './components/Inquiry.jsx';
-import AdminDashboard from './components/AdminDashboard.jsx';
+import AdminDashboard from './components/admin/AdminDashboard.jsx';
 import {authUtils, userInfoUtils} from './utils/tokenUtils';
 import {registerDebugFunctions} from './utils/websocketDebug';
 import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 'react-router-dom';
@@ -688,15 +688,15 @@ const AppContent = () => {
       mentorId: mentorId.toString(),
       mentorName: mentorName
     });
-    
+
     if (chatRoomId) {
       params.append('chatRoomId', chatRoomId.toString());
     }
-    
+
     if (rating > 0) {
       params.append('rating', rating.toString());
     }
-    
+
     navigate(`/review/write?${params.toString()}`);
   };
 
@@ -809,6 +809,7 @@ const AppContent = () => {
           <Route path="/fail" element={<Fail onBack={handleBackToPayment} onHome={handleBackToHome} />} />
           <Route path="/chat" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
           <Route path="/chat/:chatRoomId" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
+          <Route path="/mypage/*" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
           <Route path="/review/write" element={<ReviewWrite />} />
           <Route path="/mypage" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
           <Route path="/inquiry" element={<InquiryPage />} />
