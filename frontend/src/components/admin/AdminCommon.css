@@ -22,24 +22,110 @@
   margin: 0 0 8px 0;
   font-size: 28px;
   font-weight: 700;
-  color: #1f2937; /* 다크 텍스트로 변경 */
+  color: #1f2937;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* 다크모드 지원 */
-[data-theme="dark"] .header-left h2 {
-  color: white;
+/* 다크모드 지원 - 실제 다크모드 클래스 기준 */
+.dark-mode .header-left h2,
+.admin-content-wrapper.dark-mode .header-left h2 {
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 쿠폰 제목 특별 스타일 */
+.coupon-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937 !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 이용권 제목 특별 스타일 */
+.ticket-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937 !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 키워드 제목 특별 스타일 */
+.keyword-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937 !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 다크모드에서 쿠폰 제목 */
+.dark-mode .coupon-title,
+.admin-content-wrapper.dark-mode .coupon-title {
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 다크모드에서 이용권 제목 */
+.dark-mode .ticket-title,
+.admin-content-wrapper.dark-mode .ticket-title {
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 다크모드에서 키워드 제목 */
+.dark-mode .keyword-title,
+.admin-content-wrapper.dark-mode .keyword-title {
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 이용권 제목 특별 스타일 */
+.ticket-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937 !important; /* 라이트모드 강제 적용 */
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 다크모드에서 이용권 제목 */
+.dark-mode .ticket-title,
+.admin-content-wrapper.dark-mode .ticket-title {
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 다크모드에서 키워드 제목 */
+.dark-mode .keyword-title,
+.admin-content-wrapper.dark-mode .keyword-title {
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
 }
 
 .header-left p {
   margin: 0;
-  color: #6b7280; /* 회색 텍스트로 변경 */
+  color: #6b7280;
   font-size: 16px;
 }
 
 /* 다크모드 지원 */
-[data-theme="dark"] .header-left p {
-  color: rgba(255, 255, 255, 0.8);
+.dark-mode .header-left p,
+.admin-content-wrapper.dark-mode .header-left p {
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .header-actions {
@@ -188,19 +274,152 @@
   overflow: hidden;
 }
 
+/* 키워드 테이블 특별 스타일 - 크기 축소 */
+.keyword-table {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.keyword-table .table-header {
+  grid-template-columns: 1fr 120px;
+}
+
+.keyword-table .table-row {
+  grid-template-columns: 1fr 120px;
+}
+
 /* 다크모드 지원 */
 [data-theme="dark"] .content-table {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* 키워드 테이블 다크모드 지원 */
+.dark-mode .keyword-table {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 카테고리 관리 테이블 (2개 컬럼) - 크기 축소 */
+.category-table .table-header,
+.category-table .table-row {
+  grid-template-columns: 1fr 80px;
+}
+
+/* 카테고리 테이블 특별 스타일 - 크기 축소 */
+.category-table {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 카테고리 테이블 전용 스타일 */
+.category-table .table-header,
+.category-table .table-row {
+  padding: 16px 20px; /* 기본 20px 24px에서 축소 */
+  gap: 12px; /* 기본 16px에서 축소 */
+}
+
+.category-table .table-cell {
+  font-size: 13px; /* 기본 14px에서 축소 */
+}
+
+.category-table .cell-content {
+  gap: 6px; /* 기본 8px에서 축소 */
+}
+
+/* 카테고리 제목 특별 스타일 */
+.category-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937 !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 다크모드에서 카테고리 제목 */
+.dark-mode .category-title,
+.admin-content-wrapper.dark-mode .category-title {
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
 .table-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 120px;
+  grid-template-columns: 2.5fr 1.2fr 1.2fr 1.5fr 120px;
   gap: 16px;
   padding: 20px 24px;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
+}
+
+/* 이용권 관리 테이블 (3개 컬럼) - 크기 축소 */
+.ticket-table .table-header,
+.ticket-table .table-row {
+  grid-template-columns: 1.5fr 1fr 100px;
+}
+
+/* 이용권 테이블 특별 스타일 - 크기 축소 */
+.ticket-table {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* 이용권 테이블 전용 스타일 */
+.ticket-table .table-header,
+.ticket-table .table-row {
+  padding: 16px 20px; /* 기본 20px 24px에서 축소 */
+  gap: 12px; /* 기본 16px에서 축소 */
+}
+
+.ticket-table .table-cell {
+  font-size: 13px; /* 기본 14px에서 축소 */
+}
+
+.ticket-table .cell-content {
+  gap: 6px; /* 기본 8px에서 축소 */
+}
+
+/* 키워드 관리 테이블 (2개 컬럼) - 크기 축소 */
+.keyword-table .table-header,
+.keyword-table .table-row {
+  grid-template-columns: 1fr 80px;
+}
+
+/* 키워드 테이블 전용 스타일 */
+.keyword-table .table-header,
+.keyword-table .table-row {
+  padding: 16px 20px; /* 기본 20px 24px에서 축소 */
+  gap: 12px; /* 기본 16px에서 축소 */
+}
+
+.keyword-table .table-cell {
+  font-size: 13px; /* 기본 14px에서 축소 */
+}
+
+.keyword-table .cell-content {
+  gap: 6px; /* 기본 8px에서 축소 */
+}
+
+/* 키워드 제목 특별 스타일 */
+.keyword-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937 !important; /* 라이트모드 강제 적용 */
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 다크모드에서 키워드 제목 */
+.dark-mode .keyword-title,
+.admin-content-wrapper.dark-mode .keyword-title {
+  color: white !important;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
 }
 
 /* 다크모드 지원 */
@@ -213,11 +432,13 @@
   font-weight: 600;
   color: #374151;
   font-size: 14px;
+  justify-content: center;
+  text-align: center;
 }
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 120px;
+  grid-template-columns: 2.5fr 1.2fr 1.2fr 1.5fr 120px;
   gap: 16px;
   padding: 20px 24px;
   border-bottom: 1px solid rgba(229, 231, 235, 0.3);
@@ -240,6 +461,7 @@
 .table-cell {
   display: flex;
   align-items: center;
+  justify-content: center;
   font-size: 14px;
   color: #6b7280;
 }
@@ -247,8 +469,10 @@
 .cell-content {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   width: 100%;
+  text-align: center;
 }
 
 .cell-content svg {
@@ -346,6 +570,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  justify-content: center;
 }
 
 .action-btn {
