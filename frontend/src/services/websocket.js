@@ -1,7 +1,6 @@
-import { Client } from '@stomp/stompjs';
+import {Client} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { authAPI } from './api';
-
+import {authAPI} from './api';
 
 class WebSocketService {
   constructor() {
@@ -24,57 +23,55 @@ class WebSocketService {
     console.error('💡 새로운 유효한 토큰을 획득한 후 이 코드를 수정하세요');
     this.emit('connectionFailed', new Error('WebSocket connection disabled'));
     return;
-    
+
     try {
       // 이전 인증 실패로 인한 연결 차단 확인
       if (this.authenticationFailed) {
         const errorMsg = 'WebSocket connection blocked due to authentication failure. Please refresh token and try again.';
         console.error(errorMsg);
-        this.emit('authenticationBlocked', { 
+        this.emit('authenticationBlocked', {
           reason: 'JWT authentication failed',
-          lastError: this.lastTokenError 
+          lastError: this.lastTokenError
         });
         return;
       }
 
       this.isManualDisconnect = false;
       let socketToken = '';
-      
+
       try {
         const res = await authAPI.refresh();
         socketToken = res.data.token;
-        
+
         // 토큰 획득 성공 시 인증 실패 플래그 리셋
         this.authenticationFailed = false;
         this.lastTokenError = null;
-        
+
         console.log('✅ Valid token obtained for WebSocket connection');
       } catch (tokenError) {
         console.error('❌ Failed to obtain valid token:', tokenError);
-        
+
         // 토큰 획득 실패 처리
         this.lastTokenError = {
           message: tokenError.message,
           timestamp: new Date().toISOString(),
           type: 'TOKEN_ACQUISITION_FAILED'
         };
-        
+
         this.emit('tokenError', this.lastTokenError);
-        
+
         // 토큰이 없으면 연결하지 않음
         throw new Error('No valid token available for WebSocket connection');
       }
 
-      const socketUrl = 'ws://localhost:8080/ws-nest';
-      const socket = new SockJS(socketUrl);
+      const socketUrl = 'ws://localhost:8080/ws-nest/websocket';
+      const socket = new WebSocket(socketUrl);
 
       this.stompClient = new Client({
         webSocketFactory: () => socket,
         debug: false,
         reconnectDelay: 0,
-        connectHeaders: {
-          Authorization: `Bearer ${socketToken}`
-        },
+
         onConnect: (frame) => {
           console.log('✅ STOMP connected successfully:', frame);
           this.connected = true;
@@ -84,37 +81,41 @@ class WebSocketService {
         },
         onStompError: (frame) => {
           console.error('❌ STOMP error:', frame.headers['message']);
-          if (frame.body) console.error('Error detail:', frame.body);
-          
+          if (frame.body) {
+            console.error('Error detail:', frame.body);
+          }
+
           // JWT 관련 에러 처리
           const errorMessage = frame.headers['message'] || frame.body || '';
           const isAuthError = this.isAuthenticationError(errorMessage);
-          
+
           if (isAuthError) {
-            console.error('🚫 JWT authentication failed - blocking further reconnection attempts');
+            console.error(
+                '🚫 JWT authentication failed - blocking further reconnection attempts');
             this.authenticationFailed = true;
             this.lastTokenError = {
               message: errorMessage,
               timestamp: new Date().toISOString(),
               type: 'JWT_AUTHENTICATION_FAILED'
             };
-            
+
             this.emit('authenticationFailed', this.lastTokenError);
-            
+
             // 인증 실패 시 연결 완전 종료
             this.forceDisconnect();
           } else {
-            this.emit('stompError', { message: errorMessage, frame });
+            this.emit('stompError', {message: errorMessage, frame});
           }
         },
         onWebSocketClose: (event) => {
           this.connected = false;
           console.warn('🔌 WebSocket disconnected:', event.code, event.reason);
-          
-          this.emit('disconnected', { code: event.code, reason: event.reason });
-          
+
+          this.emit('disconnected', {code: event.code, reason: event.reason});
+
           // 수동 연결 해제가 아니고 인증 실패가 아닌 경우에만 재연결 시도
-          if (!event.wasClean && !this.isManualDisconnect && !this.authenticationFailed) {
+          if (!event.wasClean && !this.isManualDisconnect
+              && !this.authenticationFailed) {
             this.handleReconnect();
           } else if (this.authenticationFailed) {
             console.log('🚫 Reconnection blocked due to authentication failure');
@@ -130,7 +131,7 @@ class WebSocketService {
     } catch (error) {
       console.error('❌ WebSocket connection failed:', error);
       this.emit('connectionFailed', error);
-      
+
       // 인증 관련 에러가 아닌 경우에만 재연결 시도
       if (!this.authenticationFailed) {
         this.handleReconnect();
@@ -139,7 +140,9 @@ class WebSocketService {
   }
 
   setupEventListeners() {
-    if (!this.socket) return;
+    if (!this.socket) {
+      return;
+    }
 
     this.socket.onopen = (event) => {
       console.log('WebSocket connected');
@@ -151,7 +154,7 @@ class WebSocketService {
       try {
         const data = JSON.parse(event.data);
         this.emit('message', data);
-        
+
         // 메시지 타입별 처리
         if (data.type) {
           this.emit(data.type, data);
@@ -164,7 +167,7 @@ class WebSocketService {
     this.socket.onclose = (event) => {
       console.log('WebSocket disconnected:', event.code, event.reason);
       this.emit('disconnected', event);
-      
+
       if (!event.wasClean) {
         this.handleReconnect();
       }
@@ -195,9 +198,9 @@ class WebSocketService {
       'invalid token',
       'token expired'
     ];
-    
-    return authErrorKeywords.some(keyword => 
-      errorMessage.toLowerCase().includes(keyword.toLowerCase())
+
+    return authErrorKeywords.some(keyword =>
+        errorMessage.toLowerCase().includes(keyword.toLowerCase())
     );
   }
 
@@ -205,9 +208,9 @@ class WebSocketService {
     // 인증 실패 시 재연결 시도하지 않음
     if (this.authenticationFailed) {
       console.error('🚫 Auto-reconnect blocked: JWT authentication failed');
-      this.emit('reconnectBlocked', { 
+      this.emit('reconnectBlocked', {
         reason: 'Authentication failed',
-        lastError: this.lastTokenError 
+        lastError: this.lastTokenError
       });
       return;
     }
@@ -217,16 +220,17 @@ class WebSocketService {
       console.log('🔌 Manual disconnect - skipping reconnection');
       return;
     }
-    
+
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-      
+      console.log(
+          `🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+
       this.emit('reconnectAttempt', {
         attempt: this.reconnectAttempts,
         maxAttempts: this.maxReconnectAttempts
       });
-      
+
       setTimeout(() => {
         this.connect();
       }, this.reconnectInterval);
@@ -238,31 +242,11 @@ class WebSocketService {
     }
   }
 
-  send(destination, payload) {
-    if (this.connected && this.stompClient) {
-      this.stompClient.publish({
-        destination,
-        body: JSON.stringify(payload),
-      });
-    } else {
-      console.warn('STOMP client not connected');
-    }
-  }
-
-  // 채팅 메시지 전송
-  sendChatMessage(destination,payload) {
-    if (this.connected && this.stompClient) {
-      this.stompClient.publish({
-        destination,
-        body: JSON.stringify(payload),
-      });
-    } else {
-      console.warn('STOMP client not connected');
-    }
-  }
 
   subscribe(destination, callback) {
-    if (!this.connected || !this.stompClient) return;
+    if (!this.connected || !this.stompClient) {
+      return;
+    }
     const subscription = this.stompClient.subscribe(destination, (message) => {
       const body = JSON.parse(message.body);
       callback(body);
@@ -270,42 +254,6 @@ class WebSocketService {
     this.subscriptions.set(destination, subscription);
   }
 
-
-  // 채팅방 입장
-  joinChatroom(chatroomId) {
-    this.send({
-      type: 'JOIN_CHATROOM',
-      chatroomId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // 채팅방 나가기
-  leaveChatroom(chatroomId) {
-    this.send({
-      type: 'LEAVE_CHATROOM',
-      chatroomId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // 타이핑 상태 전송
-  sendTypingStatus(chatroomId, isTyping) {
-    this.send({
-      type: 'TYPING_STATUS',
-      chatroomId,
-      isTyping,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // 이벤트 리스너 등록
-  on(event, callback) {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
-    }
-    this.listeners.get(event).push(callback);
-  }
 
   // 이벤트 리스너 제거
   off(event, callback) {
@@ -333,29 +281,30 @@ class WebSocketService {
 
   // 강제 연결 해제 (인증 실패 시 사용)
   forceDisconnect() {
-    console.log('🚫 Force disconnecting WebSocket due to authentication failure');
+    console.log(
+        '🚫 Force disconnecting WebSocket due to authentication failure');
     this.isManualDisconnect = true;
-    
+
     if (this.stompClient) {
       this.stompClient.deactivate();
       this.stompClient = null;
     }
-    
+
     this.connected = false;
-    this.emit('forceDisconnected', { reason: 'Authentication failed' });
+    this.emit('forceDisconnected', {reason: 'Authentication failed'});
   }
 
   // 연결 종료 (사용자가 직접 호출)
   disconnect() {
     console.log('🔌 Manual WebSocket disconnect');
     this.isManualDisconnect = true;
-    
+
     if (this.stompClient) {
       this.stompClient.deactivate();
       this.stompClient = null;
       this.connected = false;
     }
-    
+
     this.emit('manualDisconnect');
   }
 
@@ -366,22 +315,22 @@ class WebSocketService {
     this.lastTokenError = null;
     this.reconnectAttempts = 0;
     this.isManualDisconnect = false;
-    
+
     this.emit('authenticationReset');
   }
 
   // 새로운 토큰으로 재연결 시도
   async reconnectWithNewToken() {
     console.log('🔄 Attempting reconnection with new token');
-    
+
     // 인증 상태 리셋
     this.resetAuthenticationState();
-    
+
     // 기존 연결 정리
     if (this.connected) {
       this.disconnect();
     }
-    
+
     // 잠시 대기 후 새로운 연결 시도
     setTimeout(() => {
       this.connect();

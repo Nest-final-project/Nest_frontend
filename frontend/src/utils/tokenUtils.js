@@ -149,6 +149,43 @@ export const authUtils = {
   },
 };
 
+/**
+ * WebSocket 전용 토큰 관리
+ */
+export const websocketTokenUtils = {
+  // WebSocket 전용 서브토큰 발급 요청
+  generateWebSocketToken: async () => {
+    const accessToken = accessTokenUtils.getAccessToken();
+    if (!accessToken) {
+      throw new Error('Access Token이 없습니다');
+    }
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiUrl}/socket/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`WebSocket 토큰 발급 실패: ${response.status} - ${errorData}`);
+      }
+
+      const responseData = await response.json();
+      console.log('✅ WebSocket 서브토큰 발급 성공');
+      console.log('📋 서버 응답:', responseData.message);
+      return responseData.data.token; // 서버에서 { data: { token: "..." } } 형태로 응답
+    } catch (error) {
+      console.error('❌ WebSocket 서브토큰 발급 실패:', error);
+      throw error;
+    }
+  }
+};
+
 // JWT 토큰에서 페이로드를 디코딩하는 함수
 export const decodeJWT = (token) => {
   if (!token) {
