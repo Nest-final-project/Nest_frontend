@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit3, Trash2, RefreshCw, Gift, Calendar, Percent, Users } from 'lucide-react';
+import {Plus, Edit3, Trash2, RefreshCw, Gift, Calendar, Users } from 'lucide-react';
 import './AdminCommon.css';
 import {adminAPI} from "../../services/api.js";
 import {accessTokenUtils} from "../../utils/tokenUtils.js";
@@ -8,8 +8,6 @@ import CouponFormModal from './CouponFormModal.jsx';
 const CouponManagement = ({ isDarkMode }) => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
 
