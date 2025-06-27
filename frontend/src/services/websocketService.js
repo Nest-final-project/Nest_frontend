@@ -1,6 +1,6 @@
 // STOMP WebSocket 서비스 - useWebSocket 훅과 호환되는 버전
 import { Client } from '@stomp/stompjs';
-import { accessTokenUtils } from '../utils/tokenUtils';
+import { accessTokenUtils, websocketTokenUtils } from '../utils/tokenUtils';
 
 class WebSocketService {
   constructor() {
@@ -10,8 +10,9 @@ class WebSocketService {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.reconnectInterval = 1000;
-    this.heartbeatInterval = null;
+
     this.connectionPromise = null;
+    this.websocketToken = null; // 소켓 전용 토큰 저장
   }
 
   // 연결 상태 확인
@@ -25,7 +26,7 @@ class WebSocketService {
       return this.connectionPromise;
     }
 
-    this.connectionPromise = new Promise((resolve, reject) => {
+    this.connectionPromise = new Promise(async (resolve, reject) => {
       try {
         const token = accessTokenUtils.getAccessToken();
         if (!token) {
@@ -55,15 +56,27 @@ class WebSocketService {
           return;
         }
 
-        const wsUrl = `${import.meta.env.VITE_WS_URL || 'ws://localhost:8080'}/ws-nest/websocket`;
-        console.log('🔌 WebSocket 연결 시도:', wsUrl);
-        console.log('🔐 사용할 토큰:', token.substring(0, 20) + '...');
+        // WebSocket 전용 서브토큰 발급
+        try {
+          console.log('🔐 WebSocket 전용 서브토큰 발급 요청...');
+          this.websocketToken = await websocketTokenUtils.generateWebSocketToken();
+          console.log('✅ WebSocket 서브토큰 발급 완료:', this.websocketToken.substring(0, 20) + '...');
+        } catch (tokenError) {
+          console.error('❌ WebSocket 서브토큰 발급 실패:', tokenError);
+          reject(new Error('WebSocket 서브토큰 발급 실패'));
+          return;
+        }
+
+        // WebSocket URL에 토큰을 파라미터로 추가
+        const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080';
+        const wsUrl = `${baseUrl}/ws-nest/websocket?token=${encodeURIComponent(this.websocketToken)}`;
+        console.log('🔌 WebSocket 연결 시도 (토큰 파라미터):', baseUrl + '/ws-nest/websocket?token=***');
         
-        // STOMP 클라이언트 생성
+        // STOMP 클라이언트 생성 (헤더에서 토큰 완전 제거)
         this.stompClient = new Client({
           brokerURL: wsUrl,
           connectHeaders: {
-            'Authorization': `Bearer ${token}`
+            // Authorization 헤더 완전 제거 - URL 파라미터로만 인증
           },
           debug: (str) => {
             console.log('🔍 STOMP Debug:', str);
@@ -81,12 +94,19 @@ class WebSocketService {
         this.stompClient.onConnect = (frame) => {
           console.log('🟢 STOMP WebSocket 연결 성공!');
           console.log('📋 연결 프레임:', frame);
+          console.log('👤 현재 사용자 ID:', this.getCurrentUserId());
+          console.log('🔍 STOMP 클라이언트 상태:', this.stompClient.state);
+          console.log('🔍 STOMP 연결 상태:', this.stompClient.connected);
+          
           this.isConnectedState = true;
           this.reconnectAttempts = 0;
           this.connectionPromise = null;
           
-          // 개인 메시지 구독
-          this.subscribeToPersonalMessages();
+          // 연결 성공 후 잠시 대기 후 구독 설정 (STOMP 클라이언트 완전 초기화 보장)
+          setTimeout(() => {
+            console.log('🔄 구독 설정 시작...');
+            this.subscribeToPersonalMessages();
+          }, 100);
           
           resolve();
         };
@@ -111,16 +131,17 @@ class WebSocketService {
           console.log('🔴 STOMP WebSocket 연결 끊김');
           this.isConnectedState = false;
           this.connectionPromise = null;
+          this.websocketToken = null; // 토큰 초기화
           // 자동 재연결은 하지 않음 (수동으로 관리)
         };
 
         // WebSocket 레벨 에러 시
         this.stompClient.onWebSocketError = (error) => {
           console.error('🔴 WebSocket 레벨 에러:', error);
-          console.error('🔗 연결 시도했던 URL:', wsUrl);
+          console.error('🔗 연결 시도했던 URL:', baseUrl + '/ws-nest/websocket?token=***');
           this.connectionPromise = null;
           
-          reject(new Error(`WebSocket connection failed to ${wsUrl}`));
+          reject(new Error(`WebSocket connection failed to ${baseUrl}/ws-nest/websocket`));
         };
 
         // 연결 시작
@@ -139,42 +160,88 @@ class WebSocketService {
 
   // 개인 메시지 구독
   subscribeToPersonalMessages() {
-    if (!this.stompClient || !this.stompClient.connected) {
-      console.warn('STOMP 클라이언트가 연결되지 않았습니다');
-      return;
+    if (!this.stompClient) {
+      console.error('❌ STOMP 클라이언트가 존재하지 않습니다');
+      return false;
+    }
+    
+    if (!this.stompClient.connected) {
+      console.error('❌ STOMP 클라이언트가 연결되지 않았습니다');
+      console.log('🔍 현재 STOMP 상태:', this.stompClient.state);
+      return false;
     }
 
     try {
-      // 개인 메시지 구독
-      this.stompClient.subscribe('/user/queue/message', (message) => {
-        try {
-          const messageData = JSON.parse(message.body);
-          console.log('📨 개인 메시지 수신:', messageData);
-          this.handleMessage(messageData);
-        } catch (error) {
-          console.error('메시지 파싱 실패:', error);
-        }
+      console.log('📡 메시지 구독 설정 시작...');
+      console.log('🔍 구독 전 STOMP 상태 확인:', {
+        state: this.stompClient.state,
+        connected: this.stompClient.connected,
+        hasSubscriptions: !!this.stompClient.subscriptions
       });
       
-      // 개인 오류 메시지 구독
-      this.stompClient.subscribe('/user/queue/errors', (message) => {
+      const subscriptions = [];
+
+      // 2. 사용자별 개인 메시지 구독
+      const userId = this.getCurrentUserId();
+      if (userId) {
         try {
-          const errorData = JSON.parse(message.body);
-          console.error('❌ 서버 오류 메시지 수신:', errorData);
-          // 오류 메시지도 핸들러로 전달 (오류 처리용)
-          this.handleMessage({
-            type: 'ERROR',
-            ...errorData
+          const userDestination = `/user/queue/message`;
+          console.log('📡 개인 메시지 구독 시도:', userDestination);
+          
+          const userSubscription = this.stompClient.subscribe(userDestination, (message) => {
+            console.log('🎯 개인 메시지 수신!', message.body);
+            try {
+              const messageData = JSON.parse(message.body);
+              this.processReceivedMessage(messageData);
+            } catch (error) {
+              console.error('❌ 개인 메시지 파싱 실패:', error);
+            }
           });
+          
+          if (userSubscription && userSubscription.id) {
+            subscriptions.push(userSubscription);
+            console.log('✅ 개인 메시지 구독 성공 - ID:', userSubscription.id);
+          }
         } catch (error) {
-          console.error('오류 메시지 파싱 실패:', error);
+          console.error('❌ 개인 메시지 구독 예외:', error);
         }
-      });
+      }
+
+      return true;
       
-      console.log('📡 개인 메시지 구독 완료: /user/queue/message');
-      console.log('📡 개인 오류 메시지 구독 완료: /user/queue/errors');
     } catch (error) {
-      console.error('구독 설정 실패:', error);
+      console.error('❌ 구독 설정 전체 실패:', error);
+      return false;
+    }
+  }
+
+  // 수신된 메시지 처리 (중복 제거)
+  processReceivedMessage(messageData) {
+    // 메시지 데이터 정규화
+    const normalizedMessage = {
+      id: messageData.id || messageData.messageId || `ws-${Date.now()}`,
+      content: messageData.content || messageData.text,
+      chatRoomId: messageData.chatRoomId,
+      senderId: messageData.senderId,
+      mine: messageData.mine,
+      sentAt: messageData.sentAt || messageData.timestamp || new Date().toISOString(),
+      type: messageData.type || 'MESSAGE'
+    };
+    
+    console.log('📨 정규화된 메시지:', normalizedMessage);
+    this.handleMessage(normalizedMessage);
+  }
+
+  // 하트비트 시작 (제거됨 - STOMP 내장 하트비트 사용)
+  startHeartbeat() {
+    console.log('🚫 커스텀 하트비트 비활성화 - STOMP 내장 하트비트 사용');
+  }
+
+  // 하트비트 정지
+  stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+  
     }
   }
 
@@ -194,12 +261,17 @@ class WebSocketService {
 
   // STOMP WebSocket 연결 해제
   disconnect() {
+    console.log('🔌 WebSocket 연결 해제 시작...');
+    
     if (this.stompClient) {
       this.stompClient.deactivate();
       this.stompClient = null;
     }
     this.isConnectedState = false;
     this.connectionPromise = null;
+    this.websocketToken = null; // 토큰 초기화
+    
+    console.log('✅ WebSocket 연결 해제 완료');
   }
 
   // 강제 재연결
@@ -269,7 +341,11 @@ class WebSocketService {
       reconnectAttempts: this.reconnectAttempts,
       handlersCount: this.messageHandlers.size,
       stompState: this.stompClient ? this.stompClient.state : 'NULL',
-      hasClient: !!this.stompClient
+      stompConnected: this.stompClient ? this.stompClient.connected : false,
+      hasClient: !!this.stompClient,
+      websocketToken: !!this.websocketToken,
+      subscriptionsCount: this.stompClient && this.stompClient.subscriptions ? 
+        Object.keys(this.stompClient.subscriptions).length : 0
     };
   }
 

@@ -197,6 +197,12 @@ export const authAPI = {
 
   // OAuth2 로그인 URL 가져오기
   getOAuth2CallbackUrl: (code) => api.get(`/oauth2/callback`, {params: {code}}),
+
+  // email 인증코드 보내기
+  sendEmailVerificationCode: (email) => api.post('/api/auth/signup/code', {email}),
+
+  // 인증코드 검증
+  verifyEmail: (email, authCode) => api.post('/api/auth/signup/code/verify', {email, authCode}),
   
 };
 
@@ -413,7 +419,7 @@ export const ticketAPI = {
       api.patch(`/api/admin/ticket/${ticketId}`, ticketData),
 
   // 티켓 삭제
-  deleteReview: (ticketId) => api.delete(`/api/admin/ticket/${ticketId}`),
+  deleteTicket: (ticketId) => api.delete(`/api/admin/ticket/${ticketId}`),
 }
 
 // User Coupon API (사용자 쿠폰 API)
@@ -551,7 +557,7 @@ export const adminAPI = {
   registerCoupon: (couponData) => api.post('/api/admin/coupons', couponData),
 
   // [관리자] 쿠폰 목록 조회
-  findCoupons: (params) => {
+  /*findCoupons: (params = {}) => {
     console.log('🔍 [adminAPI.findCoupons] 요청 시작, params:', params);
     return api.get('/api/admin/coupons', {params})
       .then(response => {
@@ -563,6 +569,8 @@ export const adminAPI = {
         throw error;
       });
   },
+*/
+  findCoupons: () => api.get('/api/admin/coupons'),
 
   // [관리자] 쿠폰 수정
   updateCoupon: (couponId, couponData) => api.patch(`/api/admin/coupons/${couponId}`, couponData),
@@ -579,7 +587,14 @@ export const adminAPI = {
   // [관리자] 키워드 삭제
   deleteKeyword: (keywordId) => api.delete(`/api/admin/keywords/${keywordId}`),
 
+  // [관리자] 카테고리 등록
+  createCategory: (categoryData) => api.post('/api/admin/categories', categoryData),
 
+  // [관리자] 카테고리 수정
+  updateCategory: (categoryId, categoryData) => api.patch(`/api/admin/categories/${categoryId}`, categoryData),
+
+  // [관리자] 카테고리 삭제
+  deleteCategory: (categoryId) => api.delete(`/api/admin/categories/${categoryId}`),
 
 
 };

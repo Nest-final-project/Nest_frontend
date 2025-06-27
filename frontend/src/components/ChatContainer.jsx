@@ -16,45 +16,39 @@ const ChatContainer = ({onBack, isLoggedIn = true}) => {
     if (chatRoomId) {
       // URL에 채팅방 ID가 있어도 ChatList에서 실제 정보를 가져올 때까지 대기
       // 임시 정보는 설정하지 않음
-      console.log('🔗 URL에서 채팅방 ID 감지:', chatRoomId);
     } else {
       setSelectedChat(null);
     }
   }, [chatRoomId]);
 
-  // JWT 토큰에서 사용자 ID 추출
-  const getCurrentUserId = () => {
+  // JWT 토큰에서 사용자 ID와 역할 추출
+  const getCurrentUserInfo = () => {
     try {
       const token = accessTokenUtils.getAccessToken();
       if (!token) {
-        return null;
+        return { userId: null, userRole: null };
       }
 
       // JWT 토큰의 payload 부분 디코딩
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.sub || payload.userId || payload.id;
+      
+      return {
+        userId: payload.sub || payload.userId || payload.id,
+        userRole: payload.role || payload.userRole || payload.authorities?.[0] // 역할 정보 확인
+      };
     } catch (error) {
       console.error('토큰 파싱 실패:', error);
-      return null;
+      return { userId: null, userRole: null };
     }
   };
 
   const handleChatSelect = (chat) => {
-    console.log('🔍 ChatContainer - 채팅 선택:', {
-      previousChatId: selectedChat?.id,
-      newChatId: chat?.id,
-      chat,
-      chatIdType: typeof chat?.id
-    });
-
     // 같은 채팅방을 다시 선택한 경우 무시
     if (selectedChat?.id === chat?.id) {
-      console.log('🚫 같은 채팅방 재선택 - 무시');
       return;
     }
 
     // 채팅방 변경 - URL도 함께 변경
-    console.log(`🔄 채팅방 변경: ${selectedChat?.id} → ${chat?.id}`);
     setSelectedChat(chat);
     navigate(`/chat/${chat.id}`);
   };
@@ -80,18 +74,12 @@ const ChatContainer = ({onBack, isLoggedIn = true}) => {
         <div className={`chat-main ${!selectedChat ? 'hidden-mobile' : ''}`}>
           {selectedChat ? (
               <>
-                {/* 디버깅용 로그 */}
-                {console.log('🔍 ChatContainer - ChatRoom 렌더링:', {
-                  selectedChat,
-                  chatRoomId: selectedChat.id,
-                  contact: selectedChat.contact,
-                  userId: getCurrentUserId()
-                })}
                 <ChatRoom
                     key={`chatroom-${selectedChat.id}`} // key prop 추가로 강제 재마운트
                     contact={selectedChat.contact}
                     chatRoomId={selectedChat.id}
-                    userId={getCurrentUserId()}
+                    userId={getCurrentUserInfo().userId}
+                    userRole={getCurrentUserInfo().userRole}
                     reservationId={null} // 임시로 null, 나중에 백엔드에서 제공받아야 함
                     onBack={handleBackToList}
                     onBackToHome={onBack}

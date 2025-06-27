@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import {
   User,
   Settings,
@@ -23,10 +24,19 @@ const MentorRegistration = lazy(() => import('./MyPage/MentorRegistration.jsx'))
 const ConsultationTime = lazy(() => import('./MyPage/ConsultationTime.jsx'));
 
 const MyPage = ({ onBack, onLogout }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [userInfo, setUserInfo] = useState(null);
-  const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // URL 경로에서 현재 탭 추출
+  const getCurrentTab = () => {
+    const path = location.pathname.replace('/mypage', '') || '/profile';
+    return path.substring(1) || 'profile'; // 앞의 '/' 제거
+  };
+  
+  const [activeTab, setActiveTab] = useState(getCurrentTab());
 
   useEffect(() => {
     fetchUserProfile();
@@ -52,6 +62,9 @@ const MyPage = ({ onBack, onLogout }) => {
       if (response.data && response.data.data) {
         const backendUserData = response.data.data;
 
+        // 기존 세션의 토큰 유지
+        const prevUserData = userInfoUtils.getUserInfo();
+
         const mappedUserInfo = {
           id: backendUserData.id,
           name: backendUserData.name,
@@ -63,7 +76,8 @@ const MyPage = ({ onBack, onLogout }) => {
           createdAt: backendUserData.createdAt,
           profileImage: backendUserData.profileImage || '/default-profile.svg',
           bank: backendUserData.bank || '',
-          accountNumber: backendUserData.accountNumber || ''
+          accountNumber: backendUserData.accountNumber || '',
+          token: prevUserData?.token // 기존 토큰 유지
         };
 
         setUserInfo(mappedUserInfo);
@@ -102,7 +116,14 @@ const MyPage = ({ onBack, onLogout }) => {
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName);
+    navigate(`/mypage/${tabName}`);
   };
+  
+  // URL 변경 시 activeTab 업데이트
+  useEffect(() => {
+    const currentTab = getCurrentTab();
+    setActiveTab(currentTab);
+  }, [location.pathname]);
 
   if (loading && !userInfo) {
     return (
@@ -248,28 +269,61 @@ const MyPage = ({ onBack, onLogout }) => {
                 <p>로딩 중...</p>
               </div>
             }>
-              {activeTab === 'profile' && (
-                <BasicInfo 
-                  userInfo={userInfo} 
-                  setUserInfo={setUserInfo} 
-                  onLogout={onLogout} 
-                />
-              )}
-              {activeTab === 'bookings' && (
-                <BookingHistory userInfo={userInfo} />
-              )}
-              {activeTab === 'payments' && userInfo.userRole === 'MENTEE' && (
-                <PaymentHistory userInfo={userInfo} />
-              )}
-              {activeTab === 'careers' && userInfo.userRole === 'MENTOR' && (
-                <CareerHistory userInfo={userInfo} />
-              )}
-              {activeTab === 'mentorRegister' && userInfo.userRole === 'MENTOR' && (
-                <MentorRegistration userInfo={userInfo} onLogout={onLogout} />
-              )}
-              {activeTab === 'schedule' && userInfo.userRole === 'MENTOR' && (
-                <ConsultationTime userInfo={userInfo} />
-              )}
+              <Routes>
+                <Route path="/" element={
+                  <BasicInfo 
+                    userInfo={userInfo} 
+                    setUserInfo={setUserInfo} 
+                    onLogout={onLogout} 
+                  />
+                } />
+                <Route path="/profile" element={
+                  <BasicInfo 
+                    userInfo={userInfo} 
+                    setUserInfo={setUserInfo} 
+                    onLogout={onLogout} 
+                  />
+                } />
+                <Route path="/bookings" element={
+                  <BookingHistory userInfo={userInfo} />
+                } />
+                <Route path="/payments" element={
+                  userInfo?.userRole === 'MENTEE' ? (
+                    <PaymentHistory userInfo={userInfo} />
+                  ) : (
+                    <div className="access-denied">
+                      <p>접근 권한이 없습니다.</p>
+                    </div>
+                  )
+                } />
+                <Route path="/careers" element={
+                  userInfo?.userRole === 'MENTOR' ? (
+                    <CareerHistory userInfo={userInfo} />
+                  ) : (
+                    <div className="access-denied">
+                      <p>접근 권한이 없습니다.</p>
+                    </div>
+                  )
+                } />
+                <Route path="/mentorRegister" element={
+                  userInfo?.userRole === 'MENTOR' ? (
+                    <MentorRegistration userInfo={userInfo} onLogout={onLogout} />
+                  ) : (
+                    <div className="access-denied">
+                      <p>접근 권한이 없습니다.</p>
+                    </div>
+                  )
+                } />
+                <Route path="/schedule" element={
+                  userInfo?.userRole === 'MENTOR' ? (
+                    <ConsultationTime userInfo={userInfo} />
+                  ) : (
+                    <div className="access-denied">
+                      <p>접근 권한이 없습니다.</p>
+                    </div>
+                  )
+                } />
+              </Routes>
             </Suspense>
           </div>
         </div>

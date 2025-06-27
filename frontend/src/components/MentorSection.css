@@ -119,7 +119,7 @@
   cursor: pointer;
   overflow: hidden;
   min-height: 320px;
-  height: 320px;
+  height: 350px;
   display: flex;
   flex-direction: column;
 }

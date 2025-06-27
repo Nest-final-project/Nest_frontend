@@ -36,27 +36,27 @@ export const accessTokenUtils = {
 };
 
 /**
- * Refresh Token 관리 (HttpOnly 쿠키에서 읽기)
+ * Refresh Token 관리 (Session Storage 사용)
  */
 export const refreshTokenUtils = {
-  // Refresh Token 조회 (쿠키에서)
+  // Refresh Token 조회
   getRefreshToken: () => {
     // HttpOnly 쿠키는 JavaScript로 직접 접근할 수 없으므로
     // 백엔드에서 별도 API를 통해 가져오거나, 
     // 로그인 응답에서 별도 필드로 받아야 함
-    return localStorage.getItem('refreshToken'); // 임시로 localStorage 사용
+    return sessionStorage.getItem('refreshToken'); // 임시로 localStorage 사용
   },
 
-  // Refresh Token 저장 (임시: 실제로는 백엔드에서 HttpOnly 쿠키로 설정)
+  // Refresh Token 저장
   setRefreshToken: (token) => {
     if (token) {
-      localStorage.setItem('refreshToken', token);
+      sessionStorage.setItem('refreshToken', token);
     }
   },
 
   // Refresh Token 삭제
   removeRefreshToken: () => {
-    localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('refreshToken');
   },
 
   // 쿠키에서 특정 값 읽기 (일반 쿠키용, HttpOnly는 접근 불가)
@@ -147,6 +147,43 @@ export const authUtils = {
       console.log('- User Info 확인:', userInfoUtils.getUserInfo() ? '✅' : '❌');
     }, 50);
   },
+};
+
+/**
+ * WebSocket 전용 토큰 관리
+ */
+export const websocketTokenUtils = {
+  // WebSocket 전용 서브토큰 발급 요청
+  generateWebSocketToken: async () => {
+    const accessToken = accessTokenUtils.getAccessToken();
+    if (!accessToken) {
+      throw new Error('Access Token이 없습니다');
+    }
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+      const response = await fetch(`${apiUrl}/socket/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(`WebSocket 토큰 발급 실패: ${response.status} - ${errorData}`);
+      }
+
+      const responseData = await response.json();
+      console.log('✅ WebSocket 서브토큰 발급 성공');
+      console.log('📋 서버 응답:', responseData.message);
+      return responseData.data.token; // 서버에서 { data: { token: "..." } } 형태로 응답
+    } catch (error) {
+      console.error('❌ WebSocket 서브토큰 발급 실패:', error);
+      throw error;
+    }
+  }
 };
 
 // JWT 토큰에서 페이로드를 디코딩하는 함수

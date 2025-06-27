@@ -29,6 +29,8 @@ import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 
 import SSEExample from './components/SSEExample.jsx';
 import MentorProfilePage from './components/MentorProfilePage.jsx';
 import OAuth2CallbackPage from "./components/OAuth2CallbackPage.jsx";
+import Signup from './components/Signup';
+import ReviewWrite from './components/ReviewWrite.jsx';
 
 const AppContent = () => {
   const navigate = useNavigate();
@@ -86,10 +88,8 @@ const AppContent = () => {
 
         console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
 
-        // WebSocket 디버깅 함수 등록 (개발 환경에서만)
-        if (import.meta.env.VITE_NODE_ENV === 'development') {
-          registerDebugFunctions();
-        }
+        // WebSocket 디버깅 함수 등록
+        registerDebugFunctions();
 
         // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
         const urlParams = new URLSearchParams(window.location.search);
@@ -681,6 +681,24 @@ const AppContent = () => {
     navigate('/sse-demo');
   };
 
+  // 리뷰 작성 페이지로 이동
+  const handleReviewWrite = (mentorId, mentorName, chatRoomId = null, rating = 0) => {
+    const params = new URLSearchParams({
+      mentorId: mentorId.toString(),
+      mentorName: mentorName
+    });
+
+    if (chatRoomId) {
+      params.append('chatRoomId', chatRoomId.toString());
+    }
+
+    if (rating > 0) {
+      params.append('rating', rating.toString());
+    }
+
+    navigate(`/review/write?${params.toString()}`);
+  };
+
   // URL 기반으로 값 추출을 위한 컴포넌트들
   const MentorListPage = () => {
     const location = useLocation();
@@ -695,11 +713,13 @@ const AppContent = () => {
               onBack={handleBackToHome}
               onMentorSelect={handleMentorSelect}
           />
-          <Login
-              isOpen={isLoginOpen}
-              onClose={() => setIsLoginOpen(false)}
-              onLoginSuccess={handleLoginSuccess}
-          />
+          {isLoginOpen && (
+            <Login
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+                onLoginSuccess={handleLoginSuccess}
+            />
+          )}
           <NotificationContainer isLoggedIn={isLoggedIn} />
         </div>
     );
@@ -790,18 +810,16 @@ const AppContent = () => {
           <Route path="/fail" element={<Fail onBack={handleBackToPayment} onHome={handleBackToHome} />} />
           <Route path="/chat" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
           <Route path="/chat/:chatRoomId" element={<ChatContainer onBack={handleBackToHome} isLoggedIn={isLoggedIn} />} />
-          <Route path="/mypage" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
+          <Route path="/review/write" element={<ReviewWrite />} />
+          <Route path="/mypage/*" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
           <Route path="/inquiry" element={<InquiryPage />} />
           <Route path="/admin" element={<AdminDashboard onBack={() => { handleLogout(); }} userInfo={userInfo} />} />
           <Route path="/sse-demo" element={<SSEDemoPage />} />
           <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
           <Route path="/social-signup" element={<SocialSignup />} />
+          <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="/signup" element={<Signup />} />
         </Routes>
-        <Login
-            isOpen={isLoginOpen}
-            onClose={() => setIsLoginOpen(false)}
-            onLoginSuccess={handleLoginSuccess}
-        />
         <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
   );
