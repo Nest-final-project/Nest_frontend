@@ -46,8 +46,6 @@ const Login = ({ onLoginSuccess }) => {
       if (onLoginSuccess) {
         onLoginSuccess(userInfo);
       }
-      alert('로그인 성공!');
-
       if (userInfo.userRole === 'ADMIN') {
         navigate('/admin');
       } else {

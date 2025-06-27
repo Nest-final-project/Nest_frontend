@@ -1,37 +1,462 @@
+/* 모던한 쿠폰 폼 모달 스타일 */
+input::-webkit-inner-spin-button {
+  appearance: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.4),
+    rgba(0, 0, 0, 0.6)
+  );
+  backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal {
-  background: #fff;
-  padding: 2rem;
-  width: 400px;
-  border-radius: 8px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  background: white;
+  padding: 0;
+  width: 100%;
+  max-width: 560px;
+  border-radius: 24px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  max-height: 90vh;
+  margin: 20px;
+}
+
+/* 다크모드 지원 */
+[data-theme="dark"] .modal {
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal h3 {
-  margin-top: 0;
+  margin: 0;
+  padding: 32px 32px 24px 32px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+[data-theme="dark"] .modal h3 {
+  color: white;
+  background: linear-gradient(135deg, #374151, #4b5563);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal h3::before {
+  content: '🎫';
+  font-size: 28px;
 }
 
 .modal form {
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 24px;
+  max-height: calc(90vh - 200px);
+  overflow-y: auto;
 }
 
+/* 커스텀 스크롤바 */
+.modal form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal form::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.modal form::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.modal form::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 폼 그룹 스타일 */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+[data-theme="dark"] .form-group label {
+  color: #d1d5db;
+}
+
+.form-group label::after {
+  content: '*';
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.form-group label[for="minAmount"]::after,
+.form-group label[for="usageLimit"]::after {
+  content: '';
+}
+
+/* 입력 필드 스타일 */
+.form-group input,
+.form-group select {
+  padding: 16px 20px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f2937;
+  background: white;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select {
+  background: #374151;
+  border-color: #4b5563;
+  color: white;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 
+    0 0 0 4px rgba(99, 102, 241, 0.1),
+    0 4px 12px rgba(99, 102, 241, 0.15);
+  transform: translateY(-1px);
+}
+
+.form-group input[type="number"] {
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+}
+
+/* 셀렉트 박스 스타일 */
+.form-group select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 20px;
+  padding-right: 48px;
+  appearance: none;
+}
+
+/* 그리드 레이아웃 */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* 체크박스 스타일 */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+[data-theme="dark"] .checkbox-container {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.checkbox-container:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+[data-theme="dark"] .checkbox-container:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+.checkbox-container.checked {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: #6366f1;
+}
+
+.checkbox-container input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  margin: 0;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.checkbox-container input[type="checkbox"]:checked {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+
+.checkbox-container input[type="checkbox"]:checked::after {
+  content: '✓';
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.checkbox-container label {
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  margin: 0;
+  font-size: 16px;
+}
+
+[data-theme="dark"] .checkbox-container label {
+  color: #d1d5db;
+}
+
+/* 버튼 컨테이너 */
 .modal-actions {
+  padding: 24px 0 0 0;
+  background: none;
+  border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 1rem;
+  gap: 16px;
+  margin: 24px 0 0 0;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+[data-theme="dark"] .modal-actions {
+  background: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 버튼 스타일 */
+.modal-actions button {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 취소 버튼 */
+.modal-actions button[type="button"] {
+  background: white;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.modal-actions button[type="button"]:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 저장 버튼 */
+.modal-actions button.btn-primary,
+.modal-actions button[type="submit"] {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: 2px solid transparent;
+  box-shadow: 
+    0 4px 12px rgba(99, 102, 241, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modal-actions button.btn-primary:hover,
+.modal-actions button[type="submit"]:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 20px rgba(99, 102, 241, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.modal-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 로딩 스피너 */
+.modal-actions button:disabled::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 640px) {
+  .modal {
+    margin: 10px;
+    max-width: calc(100vw - 20px);
+    border-radius: 20px;
+  }
+  
+  .modal h3 {
+    padding: 24px 24px 20px 24px;
+    font-size: 20px;
+  }
+  
+  .modal form {
+    padding: 24px;
+    gap: 20px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .modal-actions {
+    padding: 20px 24px 24px 24px;
+    flex-direction: column-reverse;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+    padding: 16px 28px;
+  }
+}
+
+/* 입력 필드 아이콘 */
+.form-group {
+  position: relative;
+}
+
+.form-group[data-field="name"]::before,
+.form-group[data-field="discountAmount"]::before {
+  position: absolute;
+  top: calc(50% + 12px); /* 라벨 높이 보정 */
+  right: 16px;
+  font-size: 18px;
+  color: #9ca3af;
+  pointer-events: none;
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+.form-group[data-field="name"]::before {
+  content: '🏷️';
+}
+
+.form-group[data-field="discountAmount"]::before {
+  content: '💰';
+}
+
+/* 포커스 효과 개선 */
+.form-group input:focus + .field-icon,
+.form-group select:focus + .field-icon {
+  color: #6366f1;
+  transform: scale(1.1);
+}
+
+/* 텍스트 하이라이트 */
+.form-group label strong {
+  color: #6366f1;
+  font-weight: 700;
+}
+
+/* 멋진 그라디언트 테두리 효과 */
+.modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899, #f59e0b);
+  border-radius: 24px;
+  padding: 2px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal:hover::before {
+  opacity: 0.1;
 }
