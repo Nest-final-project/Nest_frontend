@@ -3,8 +3,7 @@ import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import './Login.css';
 import logo from '../image/cool.png';
 import { authAPI } from '../services/api';
-import { authUtils } from '../utils/tokenUtils';
-import { decodeJWT } from "../utils/tokenUtils";
+import { authUtils, decodeJWT } from '../utils/tokenUtils';
 import { useNavigate } from 'react-router-dom';
 
 const Login = ({ onLoginSuccess }) => {
@@ -29,18 +28,50 @@ const Login = ({ onLoginSuccess }) => {
     try {
       const response = await authAPI.login(loginData);
       // 로그인 성공 처리 (토큰 저장 등)
-      const { accessToken, refreshToken, ...userInfo } = response.data.data;
-      authUtils.setAuthData(accessToken, refreshToken, userInfo);
+      const responseData = response.data.data;
+      const token = responseData.accessToken;
+      const refreshToken = responseData.refreshToken;
+      const userRole = decodeJWT(token).userRole;
+
+      const userInfo = {
+        id: responseData.id,
+        name: responseData.name,
+        email: responseData.email,
+        userRole: userRole,
+        joinDate: responseData.createdAt,
+        accessToken: token
+      };
+
+      authUtils.setAuthData(userInfo.accessToken, refreshToken, userInfo);
       if (onLoginSuccess) {
         onLoginSuccess(userInfo);
       }
       alert('로그인 성공!');
-      navigate('/');
+
+      if (userInfo.userRole === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError('로그인 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleKakaoLogin = () => {
+    console.log('🟡 카카오 소셜 로그인 시작...');
+    // 백엔드 OAuth2 카카오 로그인 URL로 리다이렉트
+    // 백엔드에서 성공 후 쿠키나 세션으로 토큰 설정하고 프론트로 리다이렉트
+    window.location.href = 'http://localhost:8080/oauth2/login/kakao';
+  };
+
+  const handleNaverLogin = () => {
+    console.log('🟢 네이버 소셜 로그인 시작...');
+    // 백엔드 OAuth2 네이버 로그인 URL로 리다이렉트
+    // 백엔드에서 성공 후 쿠키나 세션으로 토큰 설정하고 프론트로 리다이렉트
+    window.location.href = 'http://localhost:8080/oauth2/login/naver';
   };
 
   return (
@@ -112,11 +143,13 @@ const Login = ({ onLoginSuccess }) => {
             <span>간편 로그인</span>
           </div>
           <div className="social-buttons">
-            <button className="social-button kakao">
+            <button onClick={handleKakaoLogin}
+                className="social-button kakao">
               <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" alt="카카오" />
               <span>카카오로 시작하기</span>
             </button>
-            <button className="social-button naver">
+            <button onClick={handleNaverLogin}
+                className="social-button naver">
               <div className="naver-logo">N</div>
               <span>네이버로 시작하기</span>
             </button>
