@@ -88,10 +88,8 @@ const AppContent = () => {
 
         console.log('💡 콘솔에서 window.checkAuth() 실행하여 인증 상태 확인 가능');
 
-        // WebSocket 디버깅 함수 등록 (개발 환경에서만)
-        if (import.meta.env.VITE_NODE_ENV === 'development') {
-          registerDebugFunctions();
-        }
+        // WebSocket 디버깅 함수 등록
+        registerDebugFunctions();
 
         // URL 파라미터 확인 (소셜 로그인 후 리다이렉트 처리)
         const urlParams = new URLSearchParams(window.location.search);
