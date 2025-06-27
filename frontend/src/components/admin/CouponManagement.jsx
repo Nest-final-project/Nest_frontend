@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit3, Trash2, Download, RefreshCw, Gift, Calendar, Percent, Users } from 'lucide-react';
+import { Search, Plus, Edit3, Trash2, RefreshCw, Gift, Calendar, Percent, Users } from 'lucide-react';
 import './AdminCommon.css';
 import {adminAPI} from "../../services/api.js";
 import {accessTokenUtils} from "../../utils/tokenUtils.js";
 import CouponFormModal from './CouponFormModal.jsx';
 
-const CouponManagement = () => {
+const CouponManagement = ({ isDarkMode }) => {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,54 +26,7 @@ const CouponManagement = () => {
       return;
     }
     
-    // 개발용 임시 데이터 (실제 API 호출 전 UI 테스트용)
-    const isDevelopment = import.meta.env.VITE_NODE_ENV === 'development';
-    
-    if (isDevelopment && false) { // 임시로 비활성화, 필요시 true로 변경
-      console.log('🧪 개발 모드: 임시 더미 데이터 사용');
-      setCoupons([
-        {
-          id: 1,
-          name: '신규 가입 할인',
-          code: 'WELCOME2024',
-          discountType: 'percent',
-          discountValue: 15,
-          minAmount: 10000,
-          usageLimit: 1000,
-          usedCount: 157,
-          startDate: '2024-01-01',
-          endDate: '2024-12-31',
-          isActive: true
-        },
-        {
-          id: 2,
-          name: '여름 특가 할인',
-          code: 'SUMMER50',
-          discountType: 'amount',
-          discountValue: 5000,
-          minAmount: 30000,
-          usageLimit: 500,
-          usedCount: 89,
-          startDate: '2024-06-01',
-          endDate: '2024-08-31',
-          isActive: true
-        },
-        {
-          id: 3,
-          name: '만료된 쿠폰',
-          code: 'EXPIRED',
-          discountType: 'percent',
-          discountValue: 20,
-          minAmount: 20000,
-          usageLimit: 100,
-          usedCount: 100,
-          startDate: '2024-01-01',
-          endDate: '2024-05-31',
-          isActive: false
-        }
-      ]);
-      return;
-    }
+    // 실제 백엔드 API 호출로 데이터 로드
     
     loadCoupons();
   }, []);
@@ -81,64 +34,53 @@ const CouponManagement = () => {
   const loadCoupons = async () => {
     setLoading(true);
     try {
-      console.log('🔍 쿠폰 목록 조회 시작...');
       const response = await adminAPI.findCoupons();
-      console.log('✅ 쿠폰 목록 조회 성공:', response);
-      console.log('📋 응답 데이터 구조:', JSON.stringify(response.data, null, 2));
       
-      // 응답 데이터 구조를 더 자세히 분석
+      // 응답 데이터 구조 분석 및 파싱
       let couponData = [];
       if (response.data) {
         if (Array.isArray(response.data)) {
           couponData = response.data;
         } else if (response.data.data && Array.isArray(response.data.data)) {
           couponData = response.data.data;
+        } else if (response.data.data && response.data.data.content && Array.isArray(response.data.data.content)) {
+          couponData = response.data.data.content;
         } else if (response.data.content && Array.isArray(response.data.content)) {
-          // 페이징된 응답의 경우
           couponData = response.data.content;
         } else {
-          console.warn('⚠️ 예상하지 못한 응답 구조:', response.data);
           couponData = [];
         }
       }
       
-      console.log('📊 파싱된 쿠폰 데이터:', couponData);
-      console.log('📊 쿠폰 개수:', couponData.length);
       setCoupons(couponData);
+      
     } catch (error) {
       console.error('❌ 쿠폰 목록 조회 실패:', error);
-      console.error('❌ 에러 응답:', error.response?.data);
-      console.error('❌ 에러 상태:', error.response?.status);
       
       // 에러 발생 시 빈 배열로 설정
       setCoupons([]);
       
       // 구체적인 에러 메시지 표시
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          '쿠폰 목록을 불러오는데 실패했습니다.';
+      let errorMessage = '쿠폰 목록을 불러오는데 실패했습니다.';
+      
+      if (error.response?.status === 401) {
+        errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
+      } else if (error.response?.status === 403) {
+        errorMessage = '쿠폰 관리 권한이 없습니다.';
+      } else if (error.response?.status === 404) {
+        errorMessage = '쿠폰 API를 찾을 수 없습니다.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      console.error(`💥 에러 상세: ${errorMessage}`);
       alert(`오류: ${errorMessage}`);
+      
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredCoupons = coupons.filter(coupon => {
-    // 안전한 문자열 검색 (null/undefined 체크)
-    const couponName = coupon.name || coupon.couponName || '';
-    const couponCode = coupon.code || coupon.couponCode || '';
-    
-    const matchesSearch = couponName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         couponCode.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // 활성 상태 체크 (다양한 필드명 지원)
-    const isActive = coupon.isActive ?? coupon.active ?? true;
-    const matchesFilter = filterType === 'all' || 
-                         (filterType === 'active' && isActive) ||
-                         (filterType === 'inactive' && !isActive);
-    return matchesSearch && matchesFilter;
-  });
 
   const [saving, setSaving] = useState(false);
 
@@ -199,27 +141,10 @@ const CouponManagement = () => {
   };
 
   return (
-    <div className="admin-content-wrapper">
-      {/* 개발자 디버그 정보 */}
-      {import.meta.env.VITE_NODE_ENV === 'development' && (
-        <div style={{
-          position: 'fixed',
-          top: '10px',
-          right: '10px',
-          background: 'rgba(0,0,0,0.8)',
-          color: 'white',
-          padding: '8px',
-          borderRadius: '4px',
-          fontSize: '12px',
-          zIndex: 9999
-        }}>
-          쿠폰 개수: {coupons.length} | 로딩: {loading.toString()}
-        </div>
-      )}
-      
+    <div className={`admin-content-wrapper ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="content-header">
         <div className="header-left">
-          <h2>
+          <h2 className="coupon-title">
             <Gift size={28} />
             쿠폰 관리
           </h2>
@@ -229,10 +154,6 @@ const CouponManagement = () => {
           <button className="btn-secondary" onClick={loadCoupons}>
             <RefreshCw size={18} className={loading ? 'spinning' : ''} />
             새로고침
-          </button>
-          <button className="btn-secondary">
-            <Download size={18} />
-            내보내기
           </button>
           <button 
             className="btn-secondary"
@@ -255,42 +176,40 @@ const CouponManagement = () => {
           <div className="table-cell">할인</div>
           <div className="table-cell">사용률</div>
           <div className="table-cell">기간</div>
-          <div className="table-cell">상태</div>
           <div className="table-cell">작업</div>
         </div>
 
-        {loading ? (
-          <div className="loading-state">
-            <RefreshCw className="spinning" size={24} />
-            <p>쿠폰 데이터를 불러오는 중...</p>
-          </div>
-        ) : filteredCoupons.length === 0 ? (
-          <div className="empty-state">
-            <Gift size={48} />
-            <h3>쿠폰이 없습니다</h3>
-            <p>새로운 쿠폰을 추가해보세요</p>
-          </div>
-        ) : (
-          filteredCoupons.map((coupon) => (
+        {(() => {
+          if (loading) {
+            return (
+              <div className="loading-state">
+                <RefreshCw className="spinning" size={24} />
+                <p>쿠폰 데이터를 불러오는 중...</p>
+              </div>
+            );
+          } else if (coupons.length === 0) {
+            return (
+              <div className="empty-state">
+                <Gift size={48} />
+                <h3>쿠폰이 없습니다</h3>
+                <p>새로운 쿠폰을 추가해보세요</p>
+              </div>
+            );
+          } else {
+            return coupons.map((coupon) => (
             <div key={coupon.id} className="table-row">
               <div className="table-cell">
                 <div className="cell-content">
                   <Gift size={16} />
                   <div>
                     <strong>{coupon.name || coupon.couponName || '이름 없음'}</strong>
-                    <small>코드: {coupon.code || coupon.couponCode || '코드 없음'}</small>
                   </div>
                 </div>
               </div>
               <div className="table-cell">
                 <div className="cell-content">
-                  <Percent size={16} />
                   <div>
-                    <div>{formatDiscount(
-                      coupon.discountType || 'percent', 
-                      coupon.discountValue || 0
-                    )}</div>
-                    <small>최소 ₩{(coupon.minAmount || 0).toLocaleString()}</small>
+                    <div>₩{(coupon.discountAmount || 0).toLocaleString()}</div>
                   </div>
                 </div>
               </div>
@@ -298,12 +217,12 @@ const CouponManagement = () => {
                 <div className="cell-content">
                   <Users size={16} />
                   <div>
-                    <div>{coupon.usedCount || 0} / {coupon.usageLimit || 0}</div>
+                    <div>{coupon.issuedQuantity || 0} / {coupon.totalQuantity || 0}</div>
                     <div className="usage-bar">
                       <div 
                         className="usage-fill"
                         style={{ 
-                          width: `${((coupon.usedCount || 0) / (coupon.usageLimit || 1)) * 100}%` 
+                          width: `${((coupon.issuedQuantity || 0) / (coupon.totalQuantity || 1)) * 100}%` 
                         }}
                       ></div>
                     </div>
@@ -314,15 +233,10 @@ const CouponManagement = () => {
                 <div className="cell-content">
                   <Calendar size={16} />
                   <div>
-                    <div>{coupon.startDate || '시작일 없음'}</div>
-                    <small>~ {coupon.endDate || '종료일 없음'}</small>
+                    <div>{(coupon.validFrom || '시작일 없음').replace('T', ' ').substring(0, 16)}</div>
+                    ~ {(coupon.validTo || '종료일 없음').replace('T', ' ').substring(0, 16)}
                   </div>
                 </div>
-              </div>
-              <div className="table-cell">
-                <span className={`status-badge ${(coupon.isActive ?? coupon.active ?? true) ? 'active' : 'inactive'}`}>
-                  {(coupon.isActive ?? coupon.active ?? true) ? '활성' : '비활성'}
-                </span>
               </div>
               <div className="table-cell">
                 <div className="table-actions">
@@ -343,8 +257,9 @@ const CouponManagement = () => {
                 </div>
               </div>
             </div>
-          ))
-        )}
+          ));
+          }
+        })()}
       </div> {/* content-table를 감싸는 마지막 div */}
 
       {showCreateModal && (
