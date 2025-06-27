@@ -420,17 +420,6 @@ const ComplaintManagement = ({ isDarkMode }) => {
             민원 관리
           </h2>
           <p>사용자 문의 및 신고를 관리합니다</p>
-          <div className="stats-summary">
-            <span className="stat-item">
-              <strong>총 {pagination.totalElements}건</strong>
-            </span>
-            <span className="stat-item">
-              대기: {complaints.filter(c => c.status?.toLowerCase() === 'pending').length}건
-            </span>
-            <span className="stat-item">
-              완료: {complaints.filter(c => c.status?.toLowerCase() === 'answered').length}건
-            </span>
-          </div>
         </div>
         <div className="header-actions">
           <button
@@ -444,6 +433,21 @@ const ComplaintManagement = ({ isDarkMode }) => {
         </div>
       </div>
 
+      <div className="content-stats">
+        <div className="stat-card">
+          <div className="stat-number">{pagination.totalElements}</div>
+          <div className="stat-label">총 건수</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-number">{complaints.filter(c => c.status?.toLowerCase() === 'pending').length}</div>
+          <div className="stat-label">대기중</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-number">{complaints.filter(c => c.status?.toLowerCase() === 'answered').length}</div>
+          <div className="stat-label">답변완료</div>
+        </div>
+      </div>
+
       {/* 에러 표시 */}
       {error && (
         <div className="error-message">
@@ -454,6 +458,7 @@ const ComplaintManagement = ({ isDarkMode }) => {
           </button>
         </div>
       )}
+
 
       <div className="content-table complaint-table">
         <div className="table-header">
