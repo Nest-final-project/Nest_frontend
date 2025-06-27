@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Edit3, Download, RefreshCw, Briefcase, Calendar, CheckCircle, XCircle, User, FileText } from 'lucide-react';
+import { Edit3, RefreshCw, Briefcase, CheckCircle, XCircle, User } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 import './AdminCommon.css';
 
-const CareerManagement = () => {
+const CareerManagement = ({ isDarkMode }) => {
   const [careers, setCareers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCareer, setSelectedCareer] = useState(null);
@@ -102,17 +101,12 @@ const CareerManagement = () => {
     }
   };
 
-  // 검색 & 필터
+  // 필터
   const filteredCareers = Array.isArray(careers)
       ? careers.filter(career => {
-        const search = searchTerm.toLowerCase();
-        const matchesSearch =
-            (career.mentorName && career.mentorName.toLowerCase().includes(search)) ||
-            (career.mentorEmail && career.mentorEmail.toLowerCase().includes(search)) ||
-            (career.company && career.company.toLowerCase().includes(search));
         const matchesFilter =
             filterStatus === 'all' || career.status === filterStatus;
-        return matchesSearch && matchesFilter;
+        return matchesFilter;
       })
       : [];
 
@@ -133,22 +127,6 @@ const CareerManagement = () => {
     return dateStr.slice(0, 10);
   };
 
-  // 내보내기
-  const exportData = () => {
-    const csvContent =
-        "data:text/csv;charset=utf-8," +
-        "멘토명,이메일,회사,시작일,종료일,상태\n" +
-        filteredCareers.map(career =>
-            `"${career.mentorName || ''}","${career.mentorEmail || ''}","${career.company || ''}","${career.startAt || ''}","${career.endAt || ''}","${getStatusBadge(career.status).text}"`
-        ).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `careers_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   // 상세 모달
   const CareerDetailModal = ({ isOpen, onClose, career }) => {
@@ -158,7 +136,7 @@ const CareerManagement = () => {
 
     return (
         <div className="modal-overlay">
-          <div className="modal-content career-detail-modal">
+          <div className="modal-content admin-career-detail-modal">
             <div className="modal-header">
               <h3>경력 상세 정보</h3>
               <button className="modal-close" onClick={onClose}>×</button>
@@ -174,7 +152,7 @@ const CareerManagement = () => {
                     <p>상세 정보를 불러올 수 없습니다.</p>
                   </div>
               ) : (
-                  <div className="career-info">
+                  <div className="admin-career-info">
                     <div className="info-section">
                       <h4>기본 정보</h4>
                       <div className="info-grid">
@@ -250,19 +228,19 @@ const CareerManagement = () => {
   };
 
   return (
-      <div className="admin-content-wrapper">
+      <div className={`admin-content-wrapper career-management ${isDarkMode ? 'dark-mode' : ''}`}>
         <div className="content-header">
           <div className="header-left">
-            <h2><Briefcase size={28} />경력 관리</h2>
+            <h2 className="career-title">
+              <Briefcase size={28} />
+              경력 관리
+            </h2>
             <p>멘토들의 경력 정보를 검토하고 관리합니다</p>
           </div>
           <div className="header-actions">
             <button className="btn-secondary" onClick={loadCareers}>
               <RefreshCw size={18} className={loading ? 'spinning' : ''} />
               새로고침
-            </button>
-            <button className="btn-secondary" onClick={exportData}>
-              <Download size={18} /> 내보내기
             </button>
           </div>
         </div>
@@ -281,29 +259,8 @@ const CareerManagement = () => {
             <div className="stat-label">전체</div>
           </div>
         </div>
-
-        <div className="content-filters">
-          <div className="search-bar">
-            <Search size={18} />
-            <input
-                type="text"
-                placeholder="멘토명, 이메일, 회사명 검색..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="filter-select"
-          >
-            <option value="all">전체 상태</option>
-            <option value="AUTHORIZED">승인됨</option>
-            <option value="UNAUTHORIZED">거절됨</option>
-          </select>
-        </div>
-
-        <div className="content-table">
+        
+        <div className="content-table career-table">
           <div className="table-header">
             <div className="table-cell">멘토명</div>
             <div className="table-cell">이메일</div>
@@ -322,7 +279,7 @@ const CareerManagement = () => {
               <div className="empty-state">
                 <Briefcase size={48} />
                 <h3>경력 데이터가 없습니다</h3>
-                <p>{searchTerm || filterStatus !== 'all' ? '검색 조건을 확인해보세요' : '등록된 경력이 없습니다'}</p>
+                <p>{filterStatus !== 'all' ? '검색 조건을 확인해보세요' : '등록된 경력이 없습니다'}</p>
               </div>
           ) : (
               filteredCareers.map((career) => {
