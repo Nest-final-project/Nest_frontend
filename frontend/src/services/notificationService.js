@@ -51,6 +51,12 @@ class NotificationService {
         return;
       }
 
+      if (event.eventType === 'chat-open') {
+        const notificationData = event.parsedData || JSON.parse(event.data);
+        this.handleChatStartNotification(notificationData);
+        return;
+      }
+
       // 일반 메시지 처리
       const notification = JSON.parse(event.data);
       this.handleNotification(notification);
@@ -72,11 +78,15 @@ class NotificationService {
 
   // 알림 처리
   handleNotification(notification) {
-    // 채팅 종료 알림만 처리하도록 제한
+    // 채팅 관련 알림만 처리하도록 제한
     switch (notification.type) {
       case 'chat_termination':
       case 'chat-termination':
         this.handleChatTerminationNotification(notification);
+        break;
+      case 'chat_start':
+      case 'chat-open':
+        this.handleChatStartNotification(notification);
         break;
       // 다른 알림 타입들은 주석 처리하여 비활성화
       // case 'session_ending':
@@ -186,6 +196,33 @@ class NotificationService {
     this.notifyListeners('notification', terminationNotification);
   }
 
+  // 채팅 시작 알림
+  handleChatStartNotification(notification) {
+    const chatRoomId = notification.chatRoomId;
+    const startNotification = {
+      id: `chat_start_${Date.now()}`,
+      type: 'success',
+      title: '상담 시작 알림',
+      message: notification.content || notification.message || '상담이 시작되었습니다.',
+      timestamp: notification.createdAt || new Date().toISOString(),
+      chatRoomId: chatRoomId, // 리다이렉트를 위한 채팅방 ID
+      actions: [
+        {
+          label: '채팅방으로 이동',
+          type: 'primary',
+          onClick: () => this.openChatRoom(chatRoomId)
+        },
+        {
+          label: '확인',
+          type: 'secondary',
+          onClick: () => {}
+        }
+      ]
+    };
+
+    this.notifyListeners('notification', startNotification);
+  }
+
   // 세션 연장 요청
   async requestSessionExtension(sessionId) {
     try {
@@ -235,9 +272,18 @@ class NotificationService {
   }
 
   // 채팅방 열기
+  openChatRoom(chatRoomId) {
+    // React Router를 사용하여 채팅방으로 이동
+    if (chatRoomId) {
+      window.location.href = `/chat/${chatRoomId}`;
+    } else {
+      console.error('채팅방 ID가 없습니다.');
+    }
+  }
+
+  // 채팅방 열기 (기존 메서드 - 호환성 유지)
   openChat(chatId) {
-    // 실제로는 라우터나 상태 관리를 통해 채팅방으로 이동
-    window.location.hash = `#chat/${chatId}`;
+    this.openChatRoom(chatId);
   }
 
   // 연결 상태 확인

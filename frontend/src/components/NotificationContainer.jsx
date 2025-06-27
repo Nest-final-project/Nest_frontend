@@ -78,9 +78,18 @@ const NotificationContainer = ({ isLoggedIn = false }) => {
   // 전역 알림 함수 (다른 컴포넌트에서 사용할 수 있도록, 로그인된 상태에서만)
   if (isLoggedIn) {
     window.showNotification = addNotification;
+    
+    // 채팅방으로 이동하는 전역 함수 추가
+    window.openChatRoom = (chatRoomId) => {
+      if (chatRoomId) {
+        // React Router 사용 시
+        window.location.href = `/chat/${chatRoomId}`;
+      }
+    };
   } else {
     // 로그아웃 상태에서는 전역 알림 함수 제거
     delete window.showNotification;
+    delete window.openChatRoom;
   }
 
   return (

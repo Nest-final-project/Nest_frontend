@@ -53,6 +53,19 @@ const NotificationToast = ({ notification, onClose }) => {
     }
   };
 
+  const handleToastClick = () => {
+    // 채팅 시작 알림인 경우 클릭 시 채팅방으로 이동
+    if (notification.type === 'success' && notification.chatRoomId) {
+      if (window.openChatRoom) {
+        window.openChatRoom(notification.chatRoomId);
+      } else {
+        // 직접 이동
+        window.location.href = `/chat/${notification.chatRoomId}`;
+      }
+      handleClose();
+    }
+  };
+
   const handleClose = () => {
     setIsExiting(true);
     setTimeout(() => {
@@ -62,19 +75,26 @@ const NotificationToast = ({ notification, onClose }) => {
 
   return (
     <div 
-      className={`notification-toast ${notification.type} ${isVisible ? 'visible' : ''} ${isExiting ? 'exiting' : ''}`}
+      className={`notification-toast ${notification.type} ${isVisible ? 'visible' : ''} ${isExiting ? 'exiting' : ''} ${notification.chatRoomId ? 'clickable' : ''}`}
+      onClick={handleToastClick}
     >
       <div className="notification-content">
         <div className="notification-header">
           {getIcon()}
           <div className="notification-title">{notification.title}</div>
-          <button className="close-button" onClick={handleClose}>
+          <button className="close-button" onClick={(e) => {
+            e.stopPropagation(); // 토스트 클릭 이벤트 방지
+            handleClose();
+          }}>
             <X className="close-icon" />
           </button>
         </div>
         
         <div className="notification-body">
           <p className="notification-message">{notification.message}</p>
+          {notification.chatRoomId && (
+            <p className="notification-hint">클릭하여 채팅방으로 이동</p>
+          )}
           {notification.timestamp && (
             <span className="notification-time">
               {new Date(notification.timestamp).toLocaleTimeString('ko-KR', {
@@ -91,7 +111,8 @@ const NotificationToast = ({ notification, onClose }) => {
               <button
                 key={index}
                 className={`notification-action ${action.type || 'secondary'}`}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation(); // 토스트 클릭 이벤트 방지
                   action.onClick && action.onClick();
                   handleClose();
                 }}

@@ -71,6 +71,19 @@ class SSEService {
         }
       });
 
+      // 채팅 시작 알림 전용 이벤트 리스너
+      this.eventSource.addEventListener('chat-open', (event) => {
+        console.log('채팅 시작 알림 수신:', event);
+        try {
+          const data = JSON.parse(event.data);
+          console.log('파싱된 채팅 시작 데이터:', data);
+          if (onMessage) onMessage({ ...event, parsedData: data, eventType: 'chat-open' });
+        } catch (error) {
+          console.error('채팅 시작 알림 파싱 오류:', error);
+          if (onMessage) onMessage({ ...event, eventType: 'chat-open' });
+        }
+      });
+
       // 에러 처리
       this.eventSource.onerror = (event) => {
         console.error('SSE 연결 오류:', event);
