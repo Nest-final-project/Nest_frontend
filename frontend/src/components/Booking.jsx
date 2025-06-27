@@ -111,32 +111,75 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     const dayOfWeek = getDayOfWeek(selectedDate);
     console.log(`🔍 변환된 요일: ${dayOfWeek}`);
 
-    // 기존 예약 목록 API를 사용해서 해당 날짜의 예약 현황 파악
-    console.log(`🔍 예약 목록 API 호출로 날짜별 예약 현황 확인`);
-    
+    // 상담 시간 설정 API와 예약 목록 API를 호출하여 상담 시간 정보를 조합
+    // 1) 상담 시간 설정 API (getAvailableConsultationSlots) - 멘토가 설정한 요일별 상담 가능 시간
+    // 2) 예약 목록 API (getReservations) - 전체 예약 목록 (클라이언트에서 예약된 시간 제외 처리)
+    console.log(`🔍 상담 관련 API 호출: 멘토ID=${mentor.userId}, 요일=${dayOfWeek}, 날짜=${selectedDate}`);
+
     Promise.all([
       consultationAPI.getAvailableConsultationSlots(mentor.userId, dayOfWeek),
       reservationAPI.getReservations()
     ])
-    .then(([consultationRes, reservationsRes]) => {
-      console.log("🔍 상담 시간 API 응답:", consultationRes);
+    .then(([consultationSlotsRes, reservationsRes]) => {
+      console.log("🔍 멘토 상담 시간 설정 API 응답:", consultationSlotsRes);
       console.log("🔍 전체 예약 목록 API 응답:", reservationsRes);
       
-      // 1. 멘토의 기본 상담 시간 추출
-      const consultationSlots = consultationRes.data?.data || consultationRes.data || [];
-      console.log("🧪 멘토 기본 상담 시간:", consultationSlots);
+      console.log("🔍 상담 시간 설정 API 응답 전체 구조:", JSON.stringify(consultationSlotsRes.data, null, 2));
       
+      // API 응답 상태 확인
+      console.log("📊 상담 시간 설정 API 응답 상태 분석:");
+      console.log(`- 응답 상태: ${consultationSlotsRes.status}`);
+      console.log(`- 데이터 존재: ${!!consultationSlotsRes.data}`);
+      console.log(`- 데이터 타입: ${typeof consultationSlotsRes.data}`);
+      if (consultationSlotsRes.data) {
+        console.log(`- 데이터 키들: ${Object.keys(consultationSlotsRes.data)}`);
+      }
+
+      // 1. 멘토의 상담 시간 설정 (전체 상담 가능 시간) 추출
+      let consultationSlots = [];
+      
+      // 상담 시간 설정 API 응답 구조 분석 및 데이터 추출
+      if (consultationSlotsRes.data) {
+        if (Array.isArray(consultationSlotsRes.data)) {
+          consultationSlots = consultationSlotsRes.data;
+        } else if (consultationSlotsRes.data.data && Array.isArray(consultationSlotsRes.data.data)) {
+          consultationSlots = consultationSlotsRes.data.data;
+        } else if (consultationSlotsRes.data.content && Array.isArray(consultationSlotsRes.data.content)) {
+          consultationSlots = consultationSlotsRes.data.content;
+        } else if (typeof consultationSlotsRes.data === 'object') {
+          // 단일 객체인 경우 배열로 변환
+          consultationSlots = [consultationSlotsRes.data];
+        }
+      }
+
+      console.log("🧪 멘토 상담 시간 설정 (처리 후):", consultationSlots);
+
       // 2. 전체 예약 목록에서 해당 멘토, 해당 날짜의 예약만 필터링
-      const allReservations = reservationsRes.data?.data || reservationsRes.data || [];
-      console.log("🧪 전체 예약 목록:", allReservations);
+      let allReservations = [];
       
-      // 해당 멘토의 해당 날짜 예약만 필터링
-      const todayReservations = allReservations.filter(reservation => {
+      // 예약 목록 API 응답 구조 안전하게 처리
+      if (reservationsRes.data) {
+        if (Array.isArray(reservationsRes.data)) {
+          allReservations = reservationsRes.data;
+        } else if (reservationsRes.data.data && Array.isArray(reservationsRes.data.data)) {
+          allReservations = reservationsRes.data.data;
+        } else if (reservationsRes.data.content && Array.isArray(reservationsRes.data.content)) {
+          allReservations = reservationsRes.data.content;
+        } else if (reservationsRes.data.reservations && Array.isArray(reservationsRes.data.reservations)) {
+          allReservations = reservationsRes.data.reservations;
+        }
+      }
+      
+      console.log("🧪 전체 예약 목록:", allReservations);
+      console.log("🧪 예약 목록 타입:", typeof allReservations, "배열인가:", Array.isArray(allReservations));
+
+      // 해당 멘토의 해당 날짜 예약만 필터링 (배열인 경우에만)
+      const todayReservations = Array.isArray(allReservations) ? allReservations.filter(reservation => {
         // 멘토 ID 매칭
-        const mentorMatches = reservation.mentor === mentor.userId || 
-                             reservation.mentorId === mentor.userId ||
-                             reservation.mentor?.id === mentor.userId;
-        
+        const mentorMatches = reservation.mentor === mentor.userId ||
+            reservation.mentorId === mentor.userId ||
+            reservation.mentor?.id === mentor.userId;
+
         // 날짜 매칭 (예약 시작 시간에서 날짜 부분 추출)
         let reservationDate = null;
         if (reservation.reservationStartAt) {
@@ -146,67 +189,108 @@ const Booking = ({ mentor, onBack, onBooking }) => {
             reservationDate = reservation.reservationStartAt.split(' ')[0];
           }
         }
-        
+
         const dateMatches = reservationDate === selectedDate;
-        
+
         console.log(`예약 확인: 멘토매칭=${mentorMatches}, 날짜매칭=${dateMatches}, 예약=${reservation.reservationStartAt}`);
-        
+
         return mentorMatches && dateMatches;
-      });
-      
+      }) : [];
+
       console.log(`📅 ${selectedDate}에 해당 멘토의 예약:`, todayReservations);
 
-      // 예약 API 응답 처리
-      if (Array.isArray(availableSlots) && availableSlots.length > 0) {
-        console.log("📋 예약 가능한 시간 슬롯이 있음");
-        
-        // 예약 가능한 시간 슬롯들에서 시간 추출
-        const processedSlots = availableSlots
-          .filter(slot => slot.startTime && slot.endTime)
-          .map(slot => ({
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-            original: slot
-          }))
-          .sort((a, b) => a.startTime.localeCompare(b.startTime));
+      // 3. 상담 시간 설정을 기반으로 시간 슬롯 처리
+      // 클라이언트 사이드에서 예약된 시간을 제외하는 로직은 나중에 추가 가능
+      
+      if (Array.isArray(consultationSlots) && consultationSlots.length > 0) {
+        console.log("📋 멘토 상담 시간 설정 처리 시작");
 
-        console.log("🔍 처리된 예약 가능 시간들:", processedSlots);
+        // 시간 추출 - 다양한 필드명 지원
+        const processedSlots = consultationSlots
+        .map(slot => {
+          let startTime = null;
+          let endTime = null;
+
+          // 다양한 필드명 시도 (예약 API에 맞춰 확장)
+          const timeFields = [
+            { start: 'startTime', end: 'endTime' },
+            { start: 'availableStartTime', end: 'availableEndTime' },
+            { start: 'slotStartTime', end: 'slotEndTime' },
+            { start: 'start', end: 'end' },
+            { start: 'from', end: 'to' },
+            { start: 'startAt', end: 'endAt' },
+            { start: 'availableStartAt', end: 'availableEndAt' },
+            { start: 'consultationStartTime', end: 'consultationEndTime' },
+            { start: 'start_time', end: 'end_time' },
+            { start: 'time_start', end: 'time_end' }
+          ];
+
+          for (const field of timeFields) {
+            if (slot[field.start] && slot[field.end]) {
+              startTime = slot[field.start];
+              endTime = slot[field.end];
+              break;
+            }
+          }
+
+          // 시간 형식 정규화 (HH:mm 형식으로 변환)
+          if (startTime && endTime) {
+            // "HH:mm:ss" 또는 "HH:mm" 형식을 "HH:mm"로 변환
+            startTime = startTime.split(':').slice(0, 2).join(':');
+            endTime = endTime.split(':').slice(0, 2).join(':');
+            
+            return {
+              startTime,
+              endTime,
+              original: slot
+            };
+          }
+          return null;
+        })
+        .filter(slot => slot !== null)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+        console.log("🔍 처리된 상담 시간들:", processedSlots);
 
         if (processedSlots.length > 0) {
           const startTimes = processedSlots.map(slot => slot.startTime);
           const endTimes = processedSlots.map(slot => slot.endTime);
-          
+
           const earliestStart = startTimes.reduce((a, b) => a < b ? a : b);
           const latestEnd = endTimes.reduce((a, b) => a > b ? a : b);
-          
-          console.log(`🕒 예약 가능 시간 범위: ${earliestStart} ~ ${latestEnd}`);
-          
+
+          console.log(`🕒 상담 시간 범위: ${earliestStart} ~ ${latestEnd}`);
+
           setConsultationStartAt(`${selectedDate}T${earliestStart}:00`);
           setConsultationEndAt(`${selectedDate}T${latestEnd}:00`);
-          
-          console.log(`✅ 예약 API 기반 시간 설정: ${earliestStart} ~ ${latestEnd}`);
+
+          console.log(`✅ 상담 시간 설정 기반 시간 설정: ${earliestStart} ~ ${latestEnd}`);
         } else {
-          console.log("❌ 처리 가능한 예약 슬롯 없음 - 기본 시간 사용");
-          setConsultationStartAt(`${selectedDate}T09:00:00`);
-          setConsultationEndAt(`${selectedDate}T18:00:00`);
+          console.log("❌ 처리 가능한 시간 슬롯 없음");
+          console.log("🔍 원본 슬롯 데이터 분석:", consultationSlots);
+          setConsultationStartAt(null);
+          setConsultationEndAt(null);
         }
       } else {
-        console.log("📅 예약 가능한 시간 슬롯이 없음 - 전체 시간 사용 가능");
-        
-        // 예약 가능한 시간이 없다는 것은 전체 시간이 사용 가능하다는 의미일 수 있음
-        setConsultationStartAt(`${selectedDate}T09:00:00`);
-        setConsultationEndAt(`${selectedDate}T18:00:00`);
-        
-        console.log(`✅ 전체 시간 사용 가능: 09:00 ~ 18:00`);
+        console.log("📅 상담 시간 설정이 없음 - 상담 불가능한 날짜");
+        console.log("🔍 상담 시간 설정:", consultationSlots);
+
+        // 상담 시간 설정이 없다는 것은 해당 요일에 상담이 불가능함을 의미
+        setConsultationStartAt(null);
+        setConsultationEndAt(null);
+
+        console.log(`❌ ${selectedDate} (${dayOfWeek})에는 멘토가 상담 시간을 설정하지 않음`);
       }
     })
     .catch(err => {
       console.error('❌ 시간 조회 실패:', err);
-      
-      // 에러 발생 시 기본 시간 사용
-      console.log("⚠️ 에러 발생 - 기본 시간 사용 (09:00-18:00)");
-      setConsultationStartAt(`${selectedDate}T09:00:00`);
-      setConsultationEndAt(`${selectedDate}T18:00:00`);
+
+      // 에러 발생 시에도 상담 불가능으로 처리
+      // API 호출 실패는 해당 날짜에 데이터가 없거나 서버 오류를 의미
+      setConsultationStartAt(null);
+      setConsultationEndAt(null);
+
+      console.log(`⚠️ API 호출 실패로 인해 ${selectedDate}에는 상담 예약 불가`);
     });
   }, [mentor?.userId, selectedDate]);
 
@@ -253,10 +337,30 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     const result = [];
     let start = new Date(startAt);
     const end = new Date(endAt);
+    const now = new Date();
+
+    // 선택된 날짜가 오늘인지 확인
+    const selectedDateObj = new Date(selectedDate);
+    const isToday = selectedDateObj.toDateString() === now.toDateString();
 
     // Reset seconds and milliseconds for precise comparison
     start.setSeconds(0, 0);
     end.setSeconds(0, 0);
+
+    // 오늘인 경우 현재 시간 이후의 슬롯만 생성
+    if (isToday) {
+      const currentTime = new Date();
+      currentTime.setSeconds(0, 0);
+      // 현재 시간을 10분 단위로 올림 처리
+      const currentMinutes = currentTime.getMinutes();
+      const roundedMinutes = Math.ceil(currentMinutes / 10) * 10;
+      currentTime.setMinutes(roundedMinutes);
+
+      // 시작 시간이 현재 시간보다 이전이면 현재 시간으로 조정
+      if (start < currentTime) {
+        start = new Date(currentTime);
+      }
+    }
 
     // 종료 시간까지 포함하도록 수정 (<=를 사용하여 16:00까지 포함)
     while (start <= end) {
@@ -284,6 +388,13 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     if (!selectedDate) return false;
     return selectedDate === formatDate(year, month, day);
   };
+  const isPastDate = (year, month, day) => {
+    const today = new Date();
+    const dateToCheck = new Date(year, month, day);
+    today.setHours(0, 0, 0, 0);
+    dateToCheck.setHours(0, 0, 0, 0);
+    return dateToCheck < today;
+  };
 
   // 달력 렌더링 함수
   const renderCalendar = () => {
@@ -304,6 +415,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     for (let day = 1; day <= daysInMonth; day++) {
       const isCurrentDay = isToday(year, month, day);
       const isSelectedDay = isSelected(year, month, day);
+      const isPast = isPastDate(year, month, day);
 
       // 선택된 날짜가 있으면 오늘 표시를 하지 않음 (어떤 날짜든 선택되면 today 스타일 제거)
       const shouldShowToday = isCurrentDay && !selectedDate;
@@ -311,8 +423,8 @@ const Booking = ({ mentor, onBack, onBooking }) => {
       days.push(
           <div
               key={day}
-              className={`calendar-day ${shouldShowToday ? 'today' : ''} ${isSelectedDay ? 'selected' : ''}`}
-              onClick={() => setSelectedDate(formatDate(year, month, day))}
+              className={`calendar-day ${shouldShowToday ? 'today' : ''} ${isSelectedDay ? 'selected' : ''} ${isPast ? 'disabled' : ''}`}
+              onClick={() => !isPast && setSelectedDate(formatDate(year, month, day))}
           >
             {day}
           </div>
@@ -358,7 +470,16 @@ const Booking = ({ mentor, onBack, onBooking }) => {
       return;
     }
 
-    // 4. 로그인 상태 확인
+    // 4. 과거 시간 예약 방지
+    const now = new Date();
+    const selectedDateTime = new Date(`${selectedDate}T${selectedStartTime}:00`);
+
+    if (selectedDateTime <= now) {
+      alert('과거 시간에는 예약할 수 없습니다. 현재 시간 이후의 시간을 선택해주세요.');
+      return;
+    }
+
+    // 5. 로그인 상태 확인
     const token = localStorage?.getItem("accessToken") || sessionStorage?.getItem("accessToken");
     if (!token) {
       alert('로그인이 필요합니다. 로그인 후 다시 시도해주세요.');
@@ -591,3 +712,4 @@ const Booking = ({ mentor, onBack, onBooking }) => {
 };
 
 export default Booking;
+
