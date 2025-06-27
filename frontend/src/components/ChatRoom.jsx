@@ -316,16 +316,22 @@ const ChatRoom = ({
     }
 
     if (!isConnected) {
+      console.log('🔌 WebSocket 연결 시도...');
       connect();
     }
 
     const unsubscribe = onMessage((messageData) => {
       console.log('📨 WebSocket 메시지 수신:', messageData);
 
-      // 현재 채팅방의 메시지인지 엄격하게 확인
-      const receivedChatRoomId = messageData.chatRoomId
-          ? messageData.chatRoomId.toString() : null;
-      const currentChatRoomId = chatRoomId ? chatRoomId.toString() : null;
+      // 메시지 타입이 ERROR인 경우 처리
+      if (messageData.type === 'ERROR') {
+        console.error('❌ 서버 오류:', messageData);
+        return;
+      }
+
+      // 현재 채팅방의 메시지인지 확인
+      const receivedChatRoomId = messageData.chatRoomId?.toString();
+      const currentChatRoomId = chatRoomId?.toString();
 
       console.log('🔍 채팅방 ID 비교:', {
         received: receivedChatRoomId,
@@ -333,70 +339,56 @@ const ChatRoom = ({
         match: receivedChatRoomId === currentChatRoomId
       });
 
-      if (receivedChatRoomId === currentChatRoomId && currentChatRoomId
-          !== null) {
-        const senderId = messageData.senderId ? messageData.senderId.toString()
-            : null;
-        const currentUserId = userId ? userId.toString() : null;
-
+      // 채팅방 ID가 일치하는 경우에만 메시지 추가
+      if (receivedChatRoomId === currentChatRoomId && currentChatRoomId) {
         const newMessage = {
-          id: messageData.messageId || `ws-${Date.now()}`,
+          id: messageData.id || messageData.messageId || `ws-${Date.now()}`,
           text: messageData.content,
           sender: messageData.mine ? 'user' : 'other',
           timestamp: messageData.sentAt || new Date().toISOString(),
           status: messageData.mine ? 'sent' : 'received'
         };
 
-        console.log(`✅ 채팅방 ${chatRoomId}에 메시지 추가:`, newMessage);
+        console.log(`✅ 채팅방 ${chatRoomId}에 실시간 메시지 추가:`, newMessage);
 
         setMessages(prev => {
-          // 현재 채팅방 ID와 다시 한번 확인
-          const currentRoomId = chatRoomId ? chatRoomId.toString() : null;
-          if (messageData.chatRoomId?.toString() !== currentRoomId) {
-            console.log('🚫 setState 내부에서 채팅방 ID 불일치로 메시지 무시');
-            return prev;
-          }
+          // 중복 메시지 확인
+          const exists = prev.some(msg => {
+            // ID가 같은 경우
+            if (msg.id === newMessage.id) return true;
+            
+            // 임시 메시지와 실제 메시지가 매칭되는 경우
+            if (typeof msg.id === 'string' && msg.id.startsWith('temp-') && 
+                msg.text === newMessage.text && 
+                msg.sender === newMessage.sender &&
+                Math.abs(new Date(msg.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 5000) {
+              return true;
+            }
+            
+            return false;
+          });
 
-          // 메시지가 비어있다면 (새 채팅방이거나 초기화 직후) 바로 추가
-          if (prev.length === 0) {
-            console.log('➕ 빈 채팅방에 첫 메시지 추가:', newMessage);
-            return [newMessage];
-          }
-
-          // 같은 내용의 임시 메시지가 있는지 확인 (낙관적 업데이트 메시지)
-          const tempMessageIndex = prev.findIndex(msg =>
-              msg.id.startsWith('temp-') &&
-              msg.text === newMessage.text &&
-              msg.sender === newMessage.sender &&
-              Math.abs(new Date(msg.timestamp).getTime() - new Date(
-                  newMessage.timestamp).getTime()) < 5000 // 5초 이내
-          );
-
-          if (tempMessageIndex !== -1) {
-            // 임시 메시지를 실제 메시지로 교체
-            console.log('🔄 임시 메시지를 실제 메시지로 교체:', newMessage);
-            const updated = prev.map((msg, index) =>
-                index === tempMessageIndex ? newMessage : msg
-            );
-            return updated.sort(
-                (a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-          }
-
-          // 이미 같은 ID의 메시지가 있는지 확인
-          const exists = prev.some(msg => msg.id === newMessage.id);
           if (exists) {
             console.log('🚫 중복 메시지이므로 무시:', newMessage);
-            return prev; // 그대로 반환
+            // 임시 메시지를 실제 메시지로 교체
+            return prev.map(msg => {
+              if (typeof msg.id === 'string' && msg.id.startsWith('temp-') && 
+                  msg.text === newMessage.text && 
+                  msg.sender === newMessage.sender &&
+                  Math.abs(new Date(msg.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 5000) {
+                console.log('🔄 임시 메시지를 실제 메시지로 교체:', newMessage);
+                return newMessage;
+              }
+              return msg;
+            }).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
           }
 
-          console.log('➕ 새 메시지 추가:', newMessage);
+          console.log('➕ 새로운 실시간 메시지 추가:', newMessage);
           const updated = [...prev, newMessage];
-          return updated.sort(
-              (a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          return updated.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         });
       } else {
-        console.log(
-            `🚫 다른 채팅방(${receivedChatRoomId})의 메시지이므로 무시 (현재: ${currentChatRoomId})`);
+        console.log(`🚫 다른 채팅방(${receivedChatRoomId})의 메시지이므로 무시 (현재: ${currentChatRoomId})`);
       }
     });
 
