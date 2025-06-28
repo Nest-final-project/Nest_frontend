@@ -214,22 +214,20 @@ const KeywordManagement = ({ isDarkMode }) => {
               <div className="table-cell">
                 <div className="cell-content">
                   <Hash size={16} />
-                  <div>
-                    <strong>{keyword.name || '이름 없음'}</strong>
-                  </div>
+                  <strong>{keyword.name || '이름 없음'}</strong>
                 </div>
               </div>
               <div className="table-cell">
                 <div className="table-actions">
                   <button 
-                    className="action-btn edit"
+                    className="action-btn view"
                     onClick={() => handleEdit(keyword)}
                     title="수정"
                   >
                     <Edit3 size={16} />
                   </button>
                   <button 
-                    className="action-btn delete"
+                    className="action-btn reject"
                     onClick={() => handleDelete(keyword.id)}
                     title="삭제"
                   >

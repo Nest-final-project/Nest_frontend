@@ -361,58 +361,7 @@ html .admin-content-wrapper.dark-mode.career-management .career-title {
   overflow: hidden;
 }
 
-/* 키워드 테이블 특별 스타일 - 크기 축소 */
-.keyword-table {
-  max-width: 600px;
-  margin: 0 auto;
-}
 
-.keyword-table .table-header {
-  grid-template-columns: 1fr 120px;
-}
-
-.keyword-table .table-row {
-  grid-template-columns: 1fr 120px;
-}
-
-/* 다크모드 지원 */
-[data-theme="dark"] .content-table {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* 키워드 테이블 다크모드 지원 */
-.dark-mode .keyword-table {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* 카테고리 관리 테이블 (2개 컬럼) - 크기 축소 */
-.category-table .table-header,
-.category-table .table-row {
-  grid-template-columns: 1fr 80px;
-}
-
-/* 카테고리 테이블 특별 스타일 - 크기 축소 */
-.category-table {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* 카테고리 테이블 전용 스타일 */
-.category-table .table-header,
-.category-table .table-row {
-  padding: 16px 20px; /* 기본 20px 24px에서 축소 */
-  gap: 12px; /* 기본 16px에서 축소 */
-}
-
-.category-table .table-cell {
-  font-size: 13px; /* 기본 14px에서 축소 */
-}
-
-.category-table .cell-content {
-  gap: 6px; /* 기본 8px에서 축소 */
-}
 
 /* 카테고리 제목 특별 스타일 */
 .category-title {
@@ -461,32 +410,434 @@ html .admin-content-wrapper.dark-mode.career-management .career-title {
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* 민원 관리 테이블 (6개 컬럼) - 크기 축소 */
-.complaint-table .table-header,
-.complaint-table .table-row {
-  grid-template-columns: 0.8fr 2fr 1.2fr 1fr 1.2fr 100px;
-}
-
-/* 민원 테이블 특별 스타일 - content-stats와 동일한 폭 */
+/* 민원 관리 테이블 모던 스타일 */
 .complaint-table {
-  width: 100%;
-  max-width: none;
-  margin: 0;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
 }
 
-/* 민원 테이블 전용 스타일 */
-.complaint-table .table-header,
+.complaint-table .table-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  grid-template-columns: 0.8fr 2fr 1.2fr 1.2fr 1fr 100px;
+}
+
+.complaint-table .table-header .table-cell {
+  color: white !important;
+  font-weight: 700;
+}
+
 .complaint-table .table-row {
-  padding: 16px 20px; /* 기본 20px 24px에서 축소 */
-  gap: 12px; /* 기본 16px에서 축소 */
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  grid-template-columns: 0.8fr 2fr 1.2fr 1.2fr 1fr 100px;
+}
+
+.complaint-table .table-row:hover {
+  background: linear-gradient(145deg, #f8fafc, #ffffff);
+  transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.complaint-table .table-row:last-child {
+  border-bottom: none;
 }
 
 .complaint-table .table-cell {
-  font-size: 13px; /* 기본 14px에서 축소 */
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
 }
 
-.complaint-table .cell-content {
-  gap: 6px; /* 기본 8px에서 축소 */
+.complaint-table .cell-content strong {
+  font-weight: 700;
+  color: #1a202c;
+}
+
+/* 다크모드에서 민원 테이블 */
+.dark-mode .complaint-table {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+}
+
+.dark-mode .complaint-table .table-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .complaint-table .table-row:hover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+}
+
+.dark-mode .complaint-table .table-cell {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark-mode .complaint-table .cell-content strong {
+  color: white;
+}
+
+/* 민원 관리 상태 배지 */
+.complaint-table .status-badge.pending {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  border: none;
+}
+
+.complaint-table .status-badge.approved {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  border: none;
+}
+
+.complaint-table .status-badge.rejected {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  border: none;
+}
+
+/* 카테고리 관리 테이블 모던 스타일 */
+.category-table {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.category-table .table-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  grid-template-columns: 1fr 120px;
+}
+
+.category-table .table-header .table-cell {
+  color: white !important;
+  font-weight: 700;
+}
+
+.category-table .table-row {
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  grid-template-columns: 1fr 120px;
+}
+
+.category-table .table-row:hover {
+  background: linear-gradient(145deg, #f8fafc, #ffffff);
+  transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.category-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.category-table .table-cell {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.category-table .cell-content strong {
+  font-weight: 700;
+  color: #1a202c;
+}
+
+/* 키워드 관리 테이블 모던 스타일 */
+.keyword-table {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.keyword-table .table-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  grid-template-columns: 1fr 120px;
+}
+
+.keyword-table .table-header .table-cell {
+  color: white !important;
+  font-weight: 700;
+}
+
+.keyword-table .table-row {
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  grid-template-columns: 1fr 120px;
+}
+
+.keyword-table .table-row:hover {
+  background: linear-gradient(145deg, #f8fafc, #ffffff);
+  transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.keyword-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.keyword-table .table-cell {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.keyword-table .cell-content strong {
+  font-weight: 700;
+  color: #1a202c;
+}
+
+/* 이용권 관리 테이블 모던 스타일 */
+.ticket-table {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ticket-table .table-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  grid-template-columns: 1.5fr 1fr 120px;
+}
+
+.ticket-table .table-header .table-cell {
+  color: white !important;
+  font-weight: 700;
+}
+
+.ticket-table .table-row {
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  grid-template-columns: 1.5fr 1fr 120px;
+}
+
+.ticket-table .table-row:hover {
+  background: linear-gradient(145deg, #f8fafc, #ffffff);
+  transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.ticket-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.ticket-table .table-cell {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.ticket-table .cell-content strong {
+  font-weight: 700;
+  color: #1a202c;
+}
+
+/* 쿠폰 관리 테이블 모던 스타일 */
+.coupon-table {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.coupon-table .table-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  grid-template-columns: 1.5fr 1fr 1.2fr 1.5fr 120px;
+}
+
+.coupon-table .table-header .table-cell {
+  color: white !important;
+  font-weight: 700;
+}
+
+.coupon-table .table-row {
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  grid-template-columns: 1.5fr 1fr 1.2fr 1.5fr 120px;
+}
+
+.coupon-table .table-row:hover {
+  background: linear-gradient(145deg, #f8fafc, #ffffff);
+  transform: translateX(4px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.coupon-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.coupon-table .table-cell {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.coupon-table .cell-content strong {
+  font-weight: 700;
+  color: #1a202c;
+}
+
+/* 다크모드에서 모든 테이블 공통 */
+.dark-mode .category-table,
+.dark-mode .keyword-table, 
+.dark-mode .ticket-table,
+.dark-mode .coupon-table {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+}
+
+.dark-mode .category-table .table-row,
+.dark-mode .keyword-table .table-row,
+.dark-mode .ticket-table .table-row,
+.dark-mode .coupon-table .table-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .category-table .table-row:hover,
+.dark-mode .keyword-table .table-row:hover,
+.dark-mode .ticket-table .table-row:hover,
+.dark-mode .coupon-table .table-row:hover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.1));
+}
+
+.dark-mode .category-table .table-cell,
+.dark-mode .keyword-table .table-cell,
+.dark-mode .ticket-table .table-cell,
+.dark-mode .coupon-table .table-cell {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark-mode .category-table .cell-content strong,
+.dark-mode .keyword-table .cell-content strong,
+.dark-mode .ticket-table .cell-content strong,
+.dark-mode .coupon-table .cell-content strong {
+  color: white;
+}
+
+/* 모든 테이블 액션 버튼 통일 */
+.category-table .action-btn,
+.keyword-table .action-btn,
+.ticket-table .action-btn,
+.coupon-table .action-btn,
+.complaint-table .action-btn {
+  padding: 10px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  border: 1px solid transparent;
+}
+
+.category-table .action-btn.view,
+.keyword-table .action-btn.view,
+.ticket-table .action-btn.view,
+.coupon-table .action-btn.view,
+.complaint-table .action-btn.view {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15));
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.category-table .action-btn.view:hover,
+.keyword-table .action-btn.view:hover,
+.ticket-table .action-btn.view:hover,
+.coupon-table .action-btn.view:hover,
+.complaint-table .action-btn.view:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.25));
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+.category-table .action-btn.reject,
+.keyword-table .action-btn.reject,
+.ticket-table .action-btn.reject,
+.coupon-table .action-btn.reject,
+.complaint-table .action-btn.reject {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.category-table .action-btn.reject:hover,
+.keyword-table .action-btn.reject:hover,
+.ticket-table .action-btn.reject:hover,
+.coupon-table .action-btn.reject:hover,
+.complaint-table .action-btn.reject:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.25));
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
 }
 
 /* 경력 관리 테이블 (7개 컬럼) - 크기 조정 */
@@ -949,26 +1300,7 @@ html .admin-content-wrapper.dark-mode.career-management .career-title {
   gap: 6px; /* 기본 8px에서 축소 */
 }
 
-/* 키워드 관리 테이블 (2개 컬럼) - 크기 축소 */
-.keyword-table .table-header,
-.keyword-table .table-row {
-  grid-template-columns: 1fr 80px;
-}
 
-/* 키워드 테이블 전용 스타일 */
-.keyword-table .table-header,
-.keyword-table .table-row {
-  padding: 16px 20px; /* 기본 20px 24px에서 축소 */
-  gap: 12px; /* 기본 16px에서 축소 */
-}
-
-.keyword-table .table-cell {
-  font-size: 13px; /* 기본 14px에서 축소 */
-}
-
-.keyword-table .cell-content {
-  gap: 6px; /* 기본 8px에서 축소 */
-}
 
 /* 키워드 제목 특별 스타일 */
 .keyword-title {
