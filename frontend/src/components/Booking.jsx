@@ -69,6 +69,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
   const [consultationStartAt, setConsultationStartAt] = useState(null);
   const [consultationEndAt, setConsultationEndAt] = useState(null);
   const [consultationSlots, setConsultationSlots] = useState([]);
+  const [availableEndTimes, setAvailableEndTimes] = useState([]);
   const [selectedStartTime, setSelectedStartTime] = useState('');
   const [selectedEndTime, setSelectedEndTime] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date(2025, 5));
@@ -88,6 +89,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
       setLoading(false);
     });
   }, []);
+
 
   function getDayOfWeek(dateString) {
     const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
@@ -323,16 +325,117 @@ const Booking = ({ mentor, onBack, onBooking }) => {
 
 
 
-  // 3. 10분 단위 구간으로 분할
+  // 3. 10분 단위 구간으로 분할 (예약된 시간 제외)
   useEffect(() => {
-    if (!consultationStartAt || !consultationEndAt) {
+    if (!consultationStartAt || !consultationEndAt || !selectedDate) {
       setConsultationSlots([]);
       return;
     }
-    setConsultationSlots(generateConsultationSlots(consultationStartAt, consultationEndAt));
-  }, [consultationStartAt, consultationEndAt]);
+    
+    // 해당 날짜의 예약 목록 가져오기
+    reservationAPI.getReservations()
+      .then(reservationsRes => {
+        let allReservations = [];
+        
+        if (reservationsRes.data) {
+          if (Array.isArray(reservationsRes.data)) {
+            allReservations = reservationsRes.data;
+          } else if (reservationsRes.data.data && Array.isArray(reservationsRes.data.data)) {
+            allReservations = reservationsRes.data.data;
+          } else if (reservationsRes.data.content && Array.isArray(reservationsRes.data.content)) {
+            allReservations = reservationsRes.data.content;
+          } else if (reservationsRes.data.reservations && Array.isArray(reservationsRes.data.reservations)) {
+            allReservations = reservationsRes.data.reservations;
+          }
+        }
+        
+        // 해당 멘토의 해당 날짜 예약만 필터링
+        const todayReservations = Array.isArray(allReservations) ? allReservations.filter(reservation => {
+          const mentorMatches = reservation.mentor === mentor.userId ||
+              reservation.mentorId === mentor.userId ||
+              reservation.mentor?.id === mentor.userId;
 
-  function generateConsultationSlots(startAt, endAt) {
+          let reservationDate = null;
+          if (reservation.reservationStartAt) {
+            if (reservation.reservationStartAt.includes('T')) {
+              reservationDate = reservation.reservationStartAt.split('T')[0];
+            } else if (reservation.reservationStartAt.includes(' ')) {
+              reservationDate = reservation.reservationStartAt.split(' ')[0];
+            }
+          }
+
+          const dateMatches = reservationDate === selectedDate;
+          return mentorMatches && dateMatches;
+        }) : [];
+        
+        setConsultationSlots(generateConsultationSlots(consultationStartAt, consultationEndAt, todayReservations));
+      })
+      .catch(err => {
+        console.error('예약 목록 조회 실패:', err);
+        setConsultationSlots(generateConsultationSlots(consultationStartAt, consultationEndAt, []));
+      });
+  }, [consultationStartAt, consultationEndAt, selectedDate, mentor?.userId]);
+
+  // 4. 시작시간이 선택되면 종료시간 옵션 계산
+  useEffect(() => {
+    if (!selectedStartTime || !consultationEndAt || !selectedDate) {
+      setAvailableEndTimes([]);
+      setSelectedEndTime('');
+      return;
+    }
+
+    // 시작시간으로부터 가능한 종료시간들 계산
+    reservationAPI.getReservations()
+      .then(reservationsRes => {
+        let allReservations = [];
+        
+        if (reservationsRes.data) {
+          if (Array.isArray(reservationsRes.data)) {
+            allReservations = reservationsRes.data;
+          } else if (reservationsRes.data.data && Array.isArray(reservationsRes.data.data)) {
+            allReservations = reservationsRes.data.data;
+          } else if (reservationsRes.data.content && Array.isArray(reservationsRes.data.content)) {
+            allReservations = reservationsRes.data.content;
+          } else if (reservationsRes.data.reservations && Array.isArray(reservationsRes.data.reservations)) {
+            allReservations = reservationsRes.data.reservations;
+          }
+        }
+        
+        // 해당 멘토의 해당 날짜 예약만 필터링
+        const todayReservations = Array.isArray(allReservations) ? allReservations.filter(reservation => {
+          const mentorMatches = reservation.mentor === mentor.userId ||
+              reservation.mentorId === mentor.userId ||
+              reservation.mentor?.id === mentor.userId;
+
+          let reservationDate = null;
+          if (reservation.reservationStartAt) {
+            if (reservation.reservationStartAt.includes('T')) {
+              reservationDate = reservation.reservationStartAt.split('T')[0];
+            } else if (reservation.reservationStartAt.includes(' ')) {
+              reservationDate = reservation.reservationStartAt.split(' ')[0];
+            }
+          }
+
+          const dateMatches = reservationDate === selectedDate;
+          return mentorMatches && dateMatches;
+        }) : [];
+        
+        const endTimes = calculateAvailableEndTimes(selectedStartTime, consultationEndAt, todayReservations);
+        setAvailableEndTimes(endTimes);
+        
+        // 현재 선택된 종료시간이 새로운 옵션에 없으면 초기화
+        if (selectedEndTime && !endTimes.includes(selectedEndTime)) {
+          setSelectedEndTime('');
+        }
+      })
+      .catch(err => {
+        console.error('종료시간 계산을 위한 예약 목록 조회 실패:', err);
+        setAvailableEndTimes([]);
+        setSelectedEndTime('');
+      });
+  }, [selectedStartTime, consultationEndAt, selectedDate, mentor?.userId]);
+
+  function generateConsultationSlots(startAt, endAt, reservations = []) {
     if (!startAt || !endAt) return [];
     const result = [];
     let start = new Date(startAt);
@@ -362,17 +465,149 @@ const Booking = ({ mentor, onBack, onBooking }) => {
       }
     }
 
+    // 예약된 시간 범위들을 파싱
+    const reservedTimeRanges = reservations.map(reservation => {
+      let startTime = null;
+      let endTime = null;
+      
+      if (reservation.reservationStartAt && reservation.reservationEndAt) {
+        // 시간 부분 추출 (HH:mm 형식)
+        if (reservation.reservationStartAt.includes('T')) {
+          startTime = reservation.reservationStartAt.split('T')[1].substring(0, 5);
+        } else if (reservation.reservationStartAt.includes(' ')) {
+          startTime = reservation.reservationStartAt.split(' ')[1].substring(0, 5);
+        }
+        
+        if (reservation.reservationEndAt.includes('T')) {
+          endTime = reservation.reservationEndAt.split('T')[1].substring(0, 5);
+        } else if (reservation.reservationEndAt.includes(' ')) {
+          endTime = reservation.reservationEndAt.split(' ')[1].substring(0, 5);
+        }
+      }
+      
+      return { startTime, endTime };
+    }).filter(range => range.startTime && range.endTime);
+
+    console.log(`📅 ${selectedDate} 예약된 시간 범위:`, reservedTimeRanges);
+
+    // 시간이 예약된 범위와 겹치는지 확인하는 함수
+    const isTimeReserved = (timeStr) => {
+      return reservedTimeRanges.some(range => {
+        // 시간 슬롯이 예약 시간 범위와 겹치는지 확인
+        // 예약 시작 시간부터 종료 시간 전까지는 모두 예약된 것으로 간주
+        return timeStr >= range.startTime && timeStr < range.endTime;
+      });
+    };
+
+    // 시간 범위가 예약과 겹치는지 확인하는 함수 (20분 최소 시간 고려)
+    const isTimeRangeReserved = (startTimeStr, durationMinutes = 20) => {
+      const startHour = parseInt(startTimeStr.split(':')[0]);
+      const startMinute = parseInt(startTimeStr.split(':')[1]);
+      
+      // 시작 시간부터 최소 duration만큼의 시간이 모두 비어있는지 확인
+      for (let i = 0; i < durationMinutes; i += 10) {
+        const checkMinute = startMinute + i;
+        const checkHour = startHour + Math.floor(checkMinute / 60);
+        const normalizedMinute = checkMinute % 60;
+        
+        const timeToCheck = `${checkHour.toString().padStart(2, '0')}:${normalizedMinute.toString().padStart(2, '0')}`;
+        
+        if (isTimeReserved(timeToCheck)) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     // 종료 시간까지 포함하도록 수정 (<=를 사용하여 16:00까지 포함)
     while (start <= end) {
       const minutes = start.getMinutes();
       if (minutes % 10 === 0) {
         const hours = start.getHours().toString().padStart(2, '0');
         const mins = minutes.toString().padStart(2, '0');
-        result.push(`${hours}:${mins}`);
+        const timeSlot = `${hours}:${mins}`;
+        
+        // 해당 시간부터 최소 20분이 확보 가능한지 확인 (시작시간으로 선택 가능한지)
+        if (!isTimeRangeReserved(timeSlot, 20)) {
+          result.push(timeSlot);
+        } else {
+          console.log(`⏰ 예약으로 인해 시작시간 불가: ${timeSlot}`);
+        }
       }
       start.setMinutes(start.getMinutes() + 10); // 10분 단위로 증가하도록 수정
     }
 
+    console.log(`✅ 예약 가능한 시간 슬롯:`, result);
+    return result;
+  }
+
+  function calculateAvailableEndTimes(startTime, consultationEndAt, reservations = []) {
+    if (!startTime || !consultationEndAt) return [];
+    
+    const result = [];
+    const endDateTime = new Date(consultationEndAt);
+    
+    // 시작 시간을 Date 객체로 변환
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const startDateTime = new Date(selectedDate);
+    startDateTime.setHours(startHour, startMinute, 0, 0);
+    
+    // 최소 20분부터 시작
+    let currentTime = new Date(startDateTime);
+    currentTime.setMinutes(currentTime.getMinutes() + 20);
+    
+    // 예약된 시간 범위들을 파싱
+    const reservedTimeRanges = reservations.map(reservation => {
+      let reservationStartTime = null;
+      let reservationEndTime = null;
+      
+      if (reservation.reservationStartAt && reservation.reservationEndAt) {
+        if (reservation.reservationStartAt.includes('T')) {
+          reservationStartTime = reservation.reservationStartAt.split('T')[1].substring(0, 5);
+        } else if (reservation.reservationStartAt.includes(' ')) {
+          reservationStartTime = reservation.reservationStartAt.split(' ')[1].substring(0, 5);
+        }
+        
+        if (reservation.reservationEndAt.includes('T')) {
+          reservationEndTime = reservation.reservationEndAt.split('T')[1].substring(0, 5);
+        } else if (reservation.reservationEndAt.includes(' ')) {
+          reservationEndTime = reservation.reservationEndAt.split(' ')[1].substring(0, 5);
+        }
+      }
+      
+      return { startTime: reservationStartTime, endTime: reservationEndTime };
+    }).filter(range => range.startTime && range.endTime);
+
+    console.log(`🕒 시작시간: ${startTime}, 예약 범위:`, reservedTimeRanges);
+    
+    // 시간 범위가 예약과 겹치는지 확인
+    const isTimeRangeConflicted = (start, end) => {
+      return reservedTimeRanges.some(reserved => {
+        // 새로운 예약 시간이 기존 예약과 겹치는지 확인
+        return (start < reserved.endTime && end > reserved.startTime);
+      });
+    };
+    
+    // 상담 종료 시간까지 10분 단위로 체크
+    while (currentTime <= endDateTime) {
+      const minutes = currentTime.getMinutes();
+      if (minutes % 10 === 0) {
+        const hours = currentTime.getHours().toString().padStart(2, '0');
+        const mins = minutes.toString().padStart(2, '0');
+        const endTimeStr = `${hours}:${mins}`;
+        
+        // 시작시간부터 이 종료시간까지의 범위가 예약과 겹치지 않는지 확인
+        if (!isTimeRangeConflicted(startTime, endTimeStr)) {
+          result.push(endTimeStr);
+        } else {
+          console.log(`⏰ 예약 충돌로 종료시간 불가: ${startTime} ~ ${endTimeStr}`);
+          break; // 충돌이 발생하면 그 이후 시간은 모두 불가능
+        }
+      }
+      currentTime.setMinutes(currentTime.getMinutes() + 10);
+    }
+    
+    console.log(`✅ ${startTime}부터 가능한 종료시간:`, result);
     return result;
   }
 
@@ -691,10 +926,10 @@ const Booking = ({ mentor, onBack, onBooking }) => {
                     value={selectedEndTime}
                     onChange={e => setSelectedEndTime(e.target.value)}
                     className="time-select"
-                    disabled={consultationSlots.length === 0}
+                    disabled={!selectedStartTime || availableEndTimes.length === 0}
                 >
                   <option value="">종료 시간</option>
-                  {consultationSlots.map((slot, idx) => (
+                  {availableEndTimes.map((slot, idx) => (
                       <option key={idx} value={slot}>{slot}</option>
                   ))}
                 </select>
