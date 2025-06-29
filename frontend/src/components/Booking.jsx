@@ -65,9 +65,13 @@ const Booking = ({ mentor, onBack, onBooking }) => {
   const [serviceOptions, setServiceOptions] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
 
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+  });
   const [consultationStartAt, setConsultationStartAt] = useState(null);
   const [consultationEndAt, setConsultationEndAt] = useState(null);
+  const [consultationTimesByDate, setConsultationTimesByDate] = useState({});
   const [consultationSlots, setConsultationSlots] = useState([]);
   const [availableEndTimes, setAvailableEndTimes] = useState([]);
   const [selectedStartTime, setSelectedStartTime] = useState('');
@@ -106,12 +110,22 @@ const Booking = ({ mentor, onBack, onBooking }) => {
 
   // 2. 날짜 선택 시 해당 날짜의 예약 가능 시간 계산 (예약 현황 고려)
   useEffect(() => {
-    if (!selectedDate || !mentor?.userId) return;
+    if (!selectedDate || !mentor?.userId) {
+      // 날짜나 멘토가 없으면 상태 초기화
+      setConsultationSlots([]);
+      setSelectedStartTime('');
+      setSelectedEndTime('');
+      return;
+    }
 
     console.log(`🔍 날짜 선택됨 - 멘토ID: ${mentor.userId}, 날짜: ${selectedDate}`);
 
     const dayOfWeek = getDayOfWeek(selectedDate);
     console.log(`🔍 변환된 요일: ${dayOfWeek}`);
+
+    // 기존 선택된 시간 초기화
+    setSelectedStartTime('');
+    setSelectedEndTime('');
 
     // 상담 시간 설정 API와 예약 목록 API를 호출하여 상담 시간 정보를 조합
     // 1) 상담 시간 설정 API (getAvailableConsultationSlots) - 멘토가 설정한 요일별 상담 가능 시간
@@ -255,42 +269,131 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         console.log("🔍 처리된 상담 시간들:", processedSlots);
 
         if (processedSlots.length > 0) {
-          const startTimes = processedSlots.map(slot => slot.startTime);
-          const endTimes = processedSlots.map(slot => slot.endTime);
+          // 해당 요일의 모든 상담 시간 슬롯을 개별적으로 처리
+          console.log(`🕒 ${dayOfWeek} (${selectedDate}) 상담 시간 슬롯들:`, processedSlots);
 
-          const earliestStart = startTimes.reduce((a, b) => a < b ? a : b);
-          const latestEnd = endTimes.reduce((a, b) => a > b ? a : b);
+          // 연속된 시간대들을 찾아서 전체 상담 가능 범위 계산
+          const timeRanges = [];
+          let currentRange = null;
+          
+          // 시간 순서로 정렬된 슬롯들을 순회하면서 연속된 구간 찾기
+          for (let i = 0; i < processedSlots.length; i++) {
+            const slot = processedSlots[i];
+            const nextSlot = processedSlots[i + 1];
+            
+            if (!currentRange) {
+              currentRange = { start: slot.startTime, end: slot.endTime };
+            }
+            
+            // 다음 슬롯이 현재 구간과 연속되는지 확인
+            if (nextSlot && slot.endTime === nextSlot.startTime) {
+              // 연속되면 끝 시간을 확장
+              currentRange.end = nextSlot.endTime;
+            } else {
+              // 연속되지 않으면 현재 구간을 저장하고 새 구간 시작
+              timeRanges.push(currentRange);
+              currentRange = null;
+            }
+          }
+          
+          console.log(`📋 ${dayOfWeek} (${selectedDate}) 연속된 상담 시간 구간들:`, timeRanges);
+          
+          // 전체 범위 계산
+          const earliestStart = timeRanges[0].start;
+          const latestEnd = timeRanges[timeRanges.length - 1].end;
+          
+          console.log(`🕒 ${dayOfWeek} (${selectedDate}) 전체 상담 시간 범위: ${earliestStart} ~ ${latestEnd}`);
 
-          console.log(`🕒 상담 시간 범위: ${earliestStart} ~ ${latestEnd}`);
-
-          setConsultationStartAt(`${selectedDate}T${earliestStart}:00`);
-          setConsultationEndAt(`${selectedDate}T${latestEnd}:00`);
-
-          console.log(`✅ 상담 시간 설정 기반 시간 설정: ${earliestStart} ~ ${latestEnd}`);
+          // 10분 단위로 전체 상담 가능 시간 슬롯 생성 (연속된 구간들 기반)
+          const allAvailableSlots = [];
+          timeRanges.forEach(range => {
+            const startTime = new Date(`2000-01-01T${range.start}:00`);
+            const endTime = new Date(`2000-01-01T${range.end}:00`);
+            
+            let current = new Date(startTime);
+            // 종료 시간까지 포함하도록 <= 사용 (22:00이면 22:00까지 포함)
+            while (current <= endTime) {
+              const hours = current.getHours().toString().padStart(2, '0');
+              const minutes = current.getMinutes().toString().padStart(2, '0');
+              const timeSlot = `${hours}:${minutes}`;
+              
+              // 종료 시간과 정확히 같으면 추가하지 않음 (시작 시간으로만 사용)
+              if (timeSlot !== range.end) {
+                allAvailableSlots.push(timeSlot);
+              }
+              
+              current.setMinutes(current.getMinutes() + 10);
+            }
+          });
+          
+          console.log(`✅ ${dayOfWeek} (${selectedDate}) 생성된 예약 가능 시간: [${allAvailableSlots.join(', ')}]`);
+          
+          // 실제 사용 가능한 시간 슬롯들을 설정
+          setConsultationSlots(allAvailableSlots);
+          
+          // 날짜별로 독립적으로 상담 시간 저장
+          const startDateTime = `${selectedDate}T${earliestStart}:00`;
+          const endDateTime = `${selectedDate}T${latestEnd}:00`;
+          
+          setConsultationStartAt(startDateTime);
+          setConsultationEndAt(endDateTime);
+          
+          // 날짜별 상담 시간 캐시 업데이트
+          setConsultationTimesByDate(prev => ({
+            ...prev,
+            [selectedDate]: {
+              startAt: startDateTime,
+              endAt: endDateTime,
+              dayOfWeek: dayOfWeek,
+              timeRanges: timeRanges,
+              availableSlots: allAvailableSlots
+            }
+          }));
         } else {
-          console.log("❌ 처리 가능한 시간 슬롯 없음");
+          console.log(`❌ ${selectedDate} (${dayOfWeek}) 처리 가능한 시간 슬롯 없음`);
           console.log("🔍 원본 슬롯 데이터 분석:", consultationSlots);
           setConsultationStartAt(null);
           setConsultationEndAt(null);
+          
+          // 날짜별 상담 시간 캐시에서 해당 날짜 제거
+          setConsultationTimesByDate(prev => {
+            const updated = { ...prev };
+            delete updated[selectedDate];
+            return updated;
+          });
         }
       } else {
-        console.log("📅 상담 시간 설정이 없음 - 상담 불가능한 날짜");
+        console.log(`📅 ${selectedDate} (${dayOfWeek}) 상담 시간 설정이 없음 - 상담 불가능한 날짜`);
         console.log("🔍 상담 시간 설정:", consultationSlots);
 
         // 상담 시간 설정이 없다는 것은 해당 요일에 상담이 불가능함을 의미
         setConsultationStartAt(null);
         setConsultationEndAt(null);
+        
+        // 날짜별 상담 시간 캐시에서 해당 날짜 제거
+        setConsultationTimesByDate(prev => {
+          const updated = { ...prev };
+          delete updated[selectedDate];
+          return updated;
+        });
 
         console.log(`❌ ${selectedDate} (${dayOfWeek})에는 멘토가 상담 시간을 설정하지 않음`);
       }
     })
     .catch(err => {
-      console.error('❌ 시간 조회 실패:', err);
+      console.error(`❌ ${selectedDate} (${getDayOfWeek(selectedDate)}) 시간 조회 실패:`, err);
 
       // 에러 발생 시에도 상담 불가능으로 처리
       // API 호출 실패는 해당 날짜에 데이터가 없거나 서버 오류를 의미
       setConsultationStartAt(null);
       setConsultationEndAt(null);
+      
+      // 날짜별 상담 시간 캐시에서 해당 날짜 제거
+      setConsultationTimesByDate(prev => {
+        const updated = { ...prev };
+        delete updated[selectedDate];
+        return updated;
+      });
 
       console.log(`⚠️ API 호출 실패로 인해 ${selectedDate}에는 상담 예약 불가`);
     });
@@ -325,12 +428,16 @@ const Booking = ({ mentor, onBack, onBooking }) => {
 
 
 
-  // 3. 10분 단위 구간으로 분할 (예약된 시간 제외)
+  // 3. 예약된 시간 제외하여 실제 사용 가능한 시간 슬롯 필터링
   useEffect(() => {
-    if (!consultationStartAt || !consultationEndAt || !selectedDate) {
-      setConsultationSlots([]);
+    // consultationTimesByDate에서 해당 날짜의 원본 슬롯 가져오기
+    const dateData = consultationTimesByDate[selectedDate];
+    if (!dateData || !dateData.availableSlots || dateData.availableSlots.length === 0) {
       return;
     }
+    
+    const originalSlots = dateData.availableSlots;
+    console.log(`📋 ${selectedDate} 원본 상담 가능 시간:`, originalSlots);
     
     // 해당 날짜의 예약 목록 가져오기
     reservationAPI.getReservations()
@@ -349,12 +456,14 @@ const Booking = ({ mentor, onBack, onBooking }) => {
           }
         }
         
-        // 해당 멘토의 해당 날짜 예약만 필터링
+        // 해당 멘토의 해당 날짜 예약만 필터링 (날짜 정확히 매칭)
         const todayReservations = Array.isArray(allReservations) ? allReservations.filter(reservation => {
+          // 멘토 매칭
           const mentorMatches = reservation.mentor === mentor.userId ||
               reservation.mentorId === mentor.userId ||
               reservation.mentor?.id === mentor.userId;
 
+          // 날짜 매칭 (정확한 날짜 비교)
           let reservationDate = null;
           if (reservation.reservationStartAt) {
             if (reservation.reservationStartAt.includes('T')) {
@@ -365,16 +474,61 @@ const Booking = ({ mentor, onBack, onBooking }) => {
           }
 
           const dateMatches = reservationDate === selectedDate;
+          
+          console.log(`🔍 예약 체크: 멘토(${mentorMatches}) 날짜(${dateMatches}) - ${reservation.reservationStartAt} vs ${selectedDate}`);
+          
           return mentorMatches && dateMatches;
         }) : [];
         
-        setConsultationSlots(generateConsultationSlots(consultationStartAt, consultationEndAt, todayReservations));
+        console.log(`📅 ${selectedDate} 해당 날짜만의 예약 현황 (${todayReservations.length}건):`, todayReservations);
+        
+        if (todayReservations.length > 0) {
+          // 예약된 시간 범위 추출
+          const reservedTimeRanges = todayReservations.map(reservation => {
+            let startTime = null;
+            let endTime = null;
+            
+            if (reservation.reservationStartAt && reservation.reservationEndAt) {
+              if (reservation.reservationStartAt.includes('T')) {
+                startTime = reservation.reservationStartAt.split('T')[1].substring(0, 5);
+              } else if (reservation.reservationStartAt.includes(' ')) {
+                startTime = reservation.reservationStartAt.split(' ')[1].substring(0, 5);
+              }
+              
+              if (reservation.reservationEndAt.includes('T')) {
+                endTime = reservation.reservationEndAt.split('T')[1].substring(0, 5);
+              } else if (reservation.reservationEndAt.includes(' ')) {
+                endTime = reservation.reservationEndAt.split(' ')[1].substring(0, 5);
+              }
+            }
+            
+            return { startTime, endTime };
+          }).filter(range => range.startTime && range.endTime);
+          
+          console.log(`⏰ ${selectedDate} 예약된 시간 범위:`, reservedTimeRanges);
+          
+          // 원본 슬롯에서 예약된 시간과 겹치지 않는 슬롯들만 필터링
+          const availableSlots = originalSlots.filter(slot => {
+            const isReserved = reservedTimeRanges.some(reserved => {
+              return slot >= reserved.startTime && slot < reserved.endTime;
+            });
+            return !isReserved;
+          });
+          
+          console.log(`✅ ${selectedDate} 예약 제외 후 사용 가능한 시간 (${availableSlots.length}개):`, availableSlots);
+          setConsultationSlots(availableSlots);
+        } else {
+          // 예약이 없으면 원본 슬롯을 그대로 사용
+          console.log(`✅ ${selectedDate} 예약 없음 - 원본 슬롯 사용 (${originalSlots.length}개)`);
+          setConsultationSlots(originalSlots);
+        }
       })
       .catch(err => {
-        console.error('예약 목록 조회 실패:', err);
-        setConsultationSlots(generateConsultationSlots(consultationStartAt, consultationEndAt, []));
+        console.error(`❌ ${selectedDate} 예약 목록 조회 실패:`, err);
+        // 오류 시에도 원본 슬롯을 사용
+        setConsultationSlots(originalSlots);
       });
-  }, [consultationStartAt, consultationEndAt, selectedDate, mentor?.userId]);
+  }, [selectedDate, mentor?.userId, consultationTimesByDate]);
 
   // 4. 시작시간이 선택되면 종료시간 옵션 계산
   useEffect(() => {
@@ -450,19 +604,34 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     start.setSeconds(0, 0);
     end.setSeconds(0, 0);
 
+    console.log(`📅 시간 슬롯 생성: ${selectedDate} (${getDayOfWeek(selectedDate)})`);
+    console.log(`⏰ 상담 시간 범위: ${start.toLocaleTimeString()} ~ ${end.toLocaleTimeString()}`);
+
     // 오늘인 경우 현재 시간 이후의 슬롯만 생성
     if (isToday) {
       const currentTime = new Date();
       currentTime.setSeconds(0, 0);
+      const originalCurrentTime = new Date(currentTime);
+      
       // 현재 시간을 10분 단위로 올림 처리
       const currentMinutes = currentTime.getMinutes();
       const roundedMinutes = Math.ceil(currentMinutes / 10) * 10;
       currentTime.setMinutes(roundedMinutes);
 
+      console.log(`🕐 실제 현재 시간: ${originalCurrentTime.toLocaleTimeString()}`);
+      console.log(`🕐 10분 단위 올림 처리된 시간: ${currentTime.toLocaleTimeString()}`);
+      console.log(`📅 상담 시작 시간: ${start.toLocaleTimeString()}`);
+
       // 시작 시간이 현재 시간보다 이전이면 현재 시간으로 조정
       if (start < currentTime) {
+        const originalStart = new Date(start);
         start = new Date(currentTime);
+        console.log(`⏰ 시작 시간 조정: ${originalStart.toLocaleTimeString()} → ${start.toLocaleTimeString()}`);
+      } else {
+        console.log(`✅ 시작 시간이 현재 시간 이후이므로 조정 불필요`);
       }
+    } else {
+      console.log(`📅 선택된 날짜가 오늘이 아님: ${selectedDate}`);
     }
 
     // 예약된 시간 범위들을 파싱
@@ -520,6 +689,9 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     };
 
     // 종료 시간까지 포함하도록 수정 (<=를 사용하여 16:00까지 포함)
+    console.log(`🔄 시간 슬롯 생성 시작: ${start.toLocaleTimeString()} ~ ${end.toLocaleTimeString()}`);
+    let slotCount = 0;
+    
     while (start <= end) {
       const minutes = start.getMinutes();
       if (minutes % 10 === 0) {
@@ -527,17 +699,21 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         const mins = minutes.toString().padStart(2, '0');
         const timeSlot = `${hours}:${mins}`;
         
+        slotCount++;
+        console.log(`🕘 체크 중인 슬롯 ${slotCount}: ${timeSlot}`);
+        
         // 해당 시간부터 최소 20분이 확보 가능한지 확인 (시작시간으로 선택 가능한지)
         if (!isTimeRangeReserved(timeSlot, 20)) {
           result.push(timeSlot);
+          console.log(`✅ 사용 가능한 슬롯: ${timeSlot}`);
         } else {
-          console.log(`⏰ 예약으로 인해 시작시간 불가: ${timeSlot}`);
+          console.log(`❌ 예약으로 인해 시작시간 불가: ${timeSlot}`);
         }
       }
       start.setMinutes(start.getMinutes() + 10); // 10분 단위로 증가하도록 수정
     }
 
-    console.log(`✅ 예약 가능한 시간 슬롯:`, result);
+    console.log(`✅ ${selectedDate} (${getDayOfWeek(selectedDate)}) 최종 예약 가능한 시간 슬롯 (${result.length}개):`, result);
     return result;
   }
 
@@ -580,15 +756,35 @@ const Booking = ({ mentor, onBack, onBooking }) => {
 
     console.log(`🕒 시작시간: ${startTime}, 예약 범위:`, reservedTimeRanges);
     
-    // 시간 범위가 예약과 겹치는지 확인
+    // 시간 범위가 예약과 겹치는지 확인 (시작~종료 전체 구간 체크)
     const isTimeRangeConflicted = (start, end) => {
-      return reservedTimeRanges.some(reserved => {
-        // 새로운 예약 시간이 기존 예약과 겹치는지 확인
-        return (start < reserved.endTime && end > reserved.startTime);
-      });
+      // 시작 시간부터 종료 시간까지의 모든 10분 구간이 예약과 겹치지 않는지 확인
+      const [startHour, startMinute] = start.split(':').map(Number);
+      const [endHour, endMinute] = end.split(':').map(Number);
+      
+      const startTotalMinutes = startHour * 60 + startMinute;
+      const endTotalMinutes = endHour * 60 + endMinute;
+      
+      // 10분 단위로 각 구간이 예약된 시간과 겹치는지 확인
+      for (let minutes = startTotalMinutes; minutes < endTotalMinutes; minutes += 10) {
+        const checkHour = Math.floor(minutes / 60);
+        const checkMinute = minutes % 60;
+        const timeToCheck = `${checkHour.toString().padStart(2, '0')}:${checkMinute.toString().padStart(2, '0')}`;
+        
+        // 이 시간이 예약된 시간 범위에 포함되는지 확인
+        const isConflicted = reservedTimeRanges.some(reserved => {
+          return timeToCheck >= reserved.startTime && timeToCheck < reserved.endTime;
+        });
+        
+        if (isConflicted) {
+          return true; // 하나라도 겹치면 충돌
+        }
+      }
+      
+      return false; // 모든 구간이 비어있으면 충돌 없음
     };
     
-    // 상담 종료 시간까지 10분 단위로 체크
+    // 상담 종료 시간까지 10분 단위로 체크 (종료 시간 포함)
     while (currentTime <= endDateTime) {
       const minutes = currentTime.getMinutes();
       if (minutes % 10 === 0) {
@@ -596,12 +792,24 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         const mins = minutes.toString().padStart(2, '0');
         const endTimeStr = `${hours}:${mins}`;
         
-        // 시작시간부터 이 종료시간까지의 범위가 예약과 겹치지 않는지 확인
-        if (!isTimeRangeConflicted(startTime, endTimeStr)) {
+        // 최소 20분 이상의 예약 시간 확보
+        const startHour = parseInt(startTime.split(':')[0]);
+        const startMinute = parseInt(startTime.split(':')[1]);
+        const endHour = parseInt(endTimeStr.split(':')[0]);
+        const endMinute = parseInt(endTimeStr.split(':')[1]);
+        
+        const startTotalMinutes = startHour * 60 + startMinute;
+        const endTotalMinutes = endHour * 60 + endMinute;
+        const durationMinutes = endTotalMinutes - startTotalMinutes;
+        
+        // 최소 20분 이상이고 예약 충돌이 없는 경우에만 추가
+        if (durationMinutes >= 20 && !isTimeRangeConflicted(startTime, endTimeStr)) {
           result.push(endTimeStr);
+        } else if (durationMinutes < 20) {
+          console.log(`⏰ 최소 시간 미달: ${startTime} ~ ${endTimeStr} (${durationMinutes}분)`);
         } else {
           console.log(`⏰ 예약 충돌로 종료시간 불가: ${startTime} ~ ${endTimeStr}`);
-          break; // 충돌이 발생하면 그 이후 시간은 모두 불가능
+          // 충돌이 발생해도 break하지 않고 계속 확인 (나중에 빈 시간이 있을 수 있음)
         }
       }
       currentTime.setMinutes(currentTime.getMinutes() + 10);
@@ -660,6 +868,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
               key={day}
               className={`calendar-day ${shouldShowToday ? 'today' : ''} ${isSelectedDay ? 'selected' : ''} ${isPast ? 'disabled' : ''}`}
               onClick={() => !isPast && setSelectedDate(formatDate(year, month, day))}
+              style={isPast ? { cursor: 'not-allowed', opacity: 0.5 } : { cursor: 'pointer' }}
           >
             {day}
           </div>
@@ -895,7 +1104,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
                   * 해당 일자의 가능한 시간대
                   <div className="available-time">
                     {consultationSlots.length > 0
-                        ? `${consultationSlots[0]} ~ ${consultationSlots[consultationSlots.length-1]}`
+                        ? `${consultationSlots[0]} ~ ${consultationEndAt ? new Date(consultationEndAt).toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false}) : consultationSlots[consultationSlots.length-1]}`
                         : "상담 가능 시간이 없습니다."}
                   </div>
                 </div>
