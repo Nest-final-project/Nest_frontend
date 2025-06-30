@@ -214,22 +214,20 @@ const CategoryManagement = ({ isDarkMode }) => {
               <div className="table-cell">
                 <div className="cell-content">
                   <Tag size={16} />
-                  <div>
-                    <strong>{category.name || '이름 없음'}</strong>
-                  </div>
+                  <strong>{category.name || '이름 없음'}</strong>
                 </div>
               </div>
               <div className="table-cell">
                 <div className="table-actions">
                   <button 
-                    className="action-btn edit"
+                    className="action-btn view"
                     onClick={() => handleEdit(category)}
                     title="수정"
                   >
                     <Edit3 size={16} />
                   </button>
                   <button 
-                    className="action-btn delete"
+                    className="action-btn reject"
                     onClick={() => handleDelete(category.id)}
                     title="삭제"
                   >

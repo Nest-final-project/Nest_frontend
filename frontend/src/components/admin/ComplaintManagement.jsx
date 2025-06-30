@@ -420,17 +420,6 @@ const ComplaintManagement = ({ isDarkMode }) => {
             민원 관리
           </h2>
           <p>사용자 문의 및 신고를 관리합니다</p>
-          <div className="stats-summary">
-            <span className="stat-item">
-              <strong>총 {pagination.totalElements}건</strong>
-            </span>
-            <span className="stat-item">
-              대기: {complaints.filter(c => c.status?.toLowerCase() === 'pending').length}건
-            </span>
-            <span className="stat-item">
-              완료: {complaints.filter(c => c.status?.toLowerCase() === 'answered').length}건
-            </span>
-          </div>
         </div>
         <div className="header-actions">
           <button
@@ -441,6 +430,21 @@ const ComplaintManagement = ({ isDarkMode }) => {
             <RefreshCw size={18} className={loading ? 'spinning' : ''} />
             새로고침
           </button>
+        </div>
+      </div>
+
+      <div className="content-stats">
+        <div className="stat-card">
+          <div className="stat-number">{pagination.totalElements}</div>
+          <div className="stat-label">총 건수</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-number">{complaints.filter(c => c.status?.toLowerCase() === 'pending').length}</div>
+          <div className="stat-label">대기중</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-number">{complaints.filter(c => c.status?.toLowerCase() === 'answered').length}</div>
+          <div className="stat-label">답변완료</div>
         </div>
       </div>
 
@@ -455,13 +459,14 @@ const ComplaintManagement = ({ isDarkMode }) => {
         </div>
       )}
 
+
       <div className="content-table complaint-table">
         <div className="table-header">
           <div className="table-cell">카테고리</div>
           <div className="table-cell">제목</div>
           <div className="table-cell">작성자</div>
-          <div className="table-cell">상태</div>
           <div className="table-cell">접수일</div>
+          <div className="table-cell">상태</div>
           <div className="table-cell">작업</div>
         </div>
 
@@ -490,56 +495,66 @@ const ComplaintManagement = ({ isDarkMode }) => {
             )}
           </div>
         ) : (
-          complaints.map((complaint, index) => (
-            <div key={complaint.id ?? `${complaint.title}-${index}`} className="table-row">
-              <div className="table-cell">
-                <span className="category-badge">{getCategoryText(complaint.category || complaint.type)}</span>
-              </div>
-              <div className="table-cell">
-                <div className="cell-content">
-                  <strong>{complaint.title || '제목 없음'}</strong>
+          complaints.map((complaint, index) => {
+            const getStatusBadge = (status) => {
+              switch (status?.toLowerCase()) {
+                case 'pending':
+                  return { className: 'pending', text: '대기중', icon: Clock };
+                case 'answered':
+                  return { className: 'approved', text: '답변완료', icon: AlertTriangle };
+                case 'resolved':
+                  return { className: 'approved', text: '해결완료', icon: AlertTriangle };
+                case 'closed':
+                default:
+                  return { className: 'rejected', text: '종료', icon: AlertTriangle };
+              }
+            };
+            const statusBadge = getStatusBadge(complaint.status);
+            const StatusIcon = statusBadge.icon;
+            
+            return (
+              <div key={complaint.id ?? `${complaint.title}-${index}`} className="table-row">
+                <div className="table-cell">
+                  <span className="category-badge">{getCategoryText(complaint.category || complaint.type)}</span>
                 </div>
-              </div>
-              <div className="table-cell">
-                <div className="cell-content">
-                  <User size={16} />
-                  <span>
+                <div className="table-cell">
+                  <div className="cell-content">
+                    <FileText size={16} />
+                    <strong>{complaint.title || '제목 없음'}</strong>
+                  </div>
+                </div>
+                <div className="table-cell">
+                  <div className="cell-content">
+                    <User size={16} />
                     {complaint.userName || 
                      userCache.get(complaint.userId)?.name || 
                      complaint.userEmail || 
                      complaint.email || 
                      `사용자${complaint.userId || '익명'}`}
+                  </div>
+                </div>
+                <div className="table-cell">{new Date(complaint.createdAt).toLocaleDateString('ko-KR')}</div>
+                <div className="table-cell">
+                  <span className={`status-badge ${statusBadge.className}`}>
+                    <StatusIcon size={14} />
+                    {statusBadge.text}
                   </span>
                 </div>
-              </div>
-              <div className="table-cell">
-                <span
-                  className="status-badge"
-                  style={{ color: getStatusColor(complaint.status) }}
-                >
-                  {getStatusText(complaint.status)}
-                </span>
-              </div>
-              <div className="table-cell">
-                <div className="cell-content">
-                  <Clock size={16} />
-                  {new Date(complaint.createdAt).toLocaleDateString('ko-KR')}
+                <div className="table-cell">
+                  <div className="table-actions">
+                    <button
+                      className="action-btn view"
+                      onClick={() => handleViewDetail(complaint)}
+                      title="상세보기 및 답변"
+                      disabled={loading}
+                    >
+                      <Edit3 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="table-cell">
-                <div className="table-actions">
-                  <button
-                    className="action-btn view"
-                    onClick={() => handleViewDetail(complaint)}
-                    title="상세보기 및 답변"
-                    disabled={loading}
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

@@ -228,7 +228,7 @@ const CareerManagement = ({ isDarkMode }) => {
   };
 
   return (
-      <div className={`admin-content-wrapper career-management ${isDarkMode ? 'dark-mode' : ''}`}>
+      <div className={`admin-content-wrapper ${isDarkMode ? 'dark-mode' : ''}`}>
         <div className="content-header">
           <div className="header-left">
             <h2 className="career-title">
