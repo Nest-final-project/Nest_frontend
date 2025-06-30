@@ -196,7 +196,6 @@ const TicketManagement = ({ isDarkMode }) => {
                   <Ticket size={16} />
                   <div>
                     <strong>{ticket.name || '이름 없음'}</strong>
-                    <br />
                     <small>{ticket.description || '설명 없음'}</small>
                   </div>
                 </div>
@@ -213,14 +212,14 @@ const TicketManagement = ({ isDarkMode }) => {
               <div className="table-cell">
                 <div className="table-actions">
                   <button 
-                    className="action-btn view"
+                    className="action-btn edit"
                     onClick={() => handleEdit(ticket)}
                     title="수정"
                   >
                     <Edit3 size={16} />
                   </button>
                   <button 
-                    className="action-btn reject"
+                    className="action-btn delete"
                     onClick={() => handleDelete(ticket.id)}
                     title="삭제"
                   >
