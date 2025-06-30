@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Edit3, Download, RefreshCw, Briefcase, Calendar, CheckCircle, XCircle, User, FileText } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Edit3, RefreshCw, Briefcase, CheckCircle, XCircle, User } from 'lucide-react';
 import { adminAPI } from '../../services/api';
+import CareerDetailModal from './CareerDetailModal';
 import './AdminCommon.css';
 
-const CareerManagement = () => {
+const CareerManagement = ({ isDarkMode }) => {
   const [careers, setCareers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCareer, setSelectedCareer] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadCareers();
-  }, []);
-
-  const loadCareers = async () => {
+  const loadCareers = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await adminAPI.getMentorCareers();
       const data = response.data?.data;
@@ -25,31 +23,41 @@ const CareerManagement = () => {
       else setCareers([]);
     } catch (error) {
       console.error('경력 데이터 로딩 실패:', error);
+      setError('경력 데이터를 불러오는데 실패했습니다.');
       setCareers([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadCareers();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 상태 변경
-  const handleStatusChange = async (careerId, newStatus) => {
+  const handleStatusChange = useCallback(async (careerId, newStatus) => {
     try {
       await adminAPI.updateMentorCareerStatus(careerId, newStatus);
-      setCareers(careers.map(career =>
+      setCareers(prevCareers => prevCareers.map(career =>
           career.careerId === careerId ? { ...career, status: newStatus } : career
       ));
       // 상세 모달이 열려있고, 대상 경력이 바뀐 거라면 모달 내용도 업데이트
-      if (selectedCareer && selectedCareer.careerId === careerId) {
-        setSelectedCareer({ ...selectedCareer, status: newStatus });
-      }
+      setSelectedCareer(prevSelected => {
+        if (prevSelected && prevSelected.careerId === careerId) {
+          return { ...prevSelected, status: newStatus };
+        }
+        return prevSelected;
+      });
+      return true; // 성공 시 true 반환
     } catch (error) {
       console.error('상태 변경 실패:', error);
       alert('상태 변경에 실패했습니다.');
+      return false; // 실패 시 false 반환
     }
-  };
+  }, []);
 
   // 상세보기
-  const handleViewDetail = async (career) => {
+  const handleViewDetail = useCallback(async (career) => {
     setDetailLoading(true);
     try {
       const response = await adminAPI.getMentorCareerDetail(career.careerId);
@@ -67,7 +75,7 @@ const CareerManagement = () => {
     } finally {
       setDetailLoading(false);
     }
-  };
+  }, []);
 
 
   // 첨부파일 다운로드
@@ -102,22 +110,19 @@ const CareerManagement = () => {
     }
   };
 
-  // 검색 & 필터
-  const filteredCareers = Array.isArray(careers)
-      ? careers.filter(career => {
-        const search = searchTerm.toLowerCase();
-        const matchesSearch =
-            (career.mentorName && career.mentorName.toLowerCase().includes(search)) ||
-            (career.mentorEmail && career.mentorEmail.toLowerCase().includes(search)) ||
-            (career.company && career.company.toLowerCase().includes(search));
-        const matchesFilter =
-            filterStatus === 'all' || career.status === filterStatus;
-        return matchesSearch && matchesFilter;
-      })
-      : [];
+  // 필터
+  const filteredCareers = useMemo(() => {
+    return Array.isArray(careers)
+        ? careers.filter(career => {
+          const matchesFilter =
+              filterStatus === 'all' || career.status === filterStatus;
+          return matchesFilter;
+        })
+        : [];
+  }, [careers, filterStatus]);
 
   // 상태 뱃지
-  const getStatusBadge = (status) => {
+  const getStatusBadge = useCallback((status) => {
     switch (status) {
       case 'AUTHORIZED':
         return { className: 'approved', text: '승인됨', icon: CheckCircle };
@@ -125,30 +130,20 @@ const CareerManagement = () => {
       default:
         return { className: 'rejected', text: '거절됨', icon: XCircle };
     }
-  };
+  }, []);
 
   // 날짜 포맷
-  const formatDate = (dateStr) => {
+  const formatDate = useCallback((dateStr) => {
     if (!dateStr) return '-';
     return dateStr.slice(0, 10);
-  };
+  }, []);
 
-  // 내보내기
-  const exportData = () => {
-    const csvContent =
-        "data:text/csv;charset=utf-8," +
-        "멘토명,이메일,회사,시작일,종료일,상태\n" +
-        filteredCareers.map(career =>
-            `"${career.mentorName || ''}","${career.mentorEmail || ''}","${career.company || ''}","${career.startAt || ''}","${career.endAt || ''}","${getStatusBadge(career.status).text}"`
-        ).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `careers_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // 모달 닫기
+  const handleCloseModal = useCallback(() => {
+    setShowDetailModal(false);
+    setSelectedCareer(null);
+    setDetailLoading(false);
+  }, []);
 
   // 상세 모달
   const CareerDetailModal = ({ isOpen, onClose, career }) => {
@@ -267,12 +262,30 @@ const CareerManagement = () => {
           </div>
         </div>
 
+        {error && (
+          <div className="error-message" style={{
+            color: 'red',
+            padding: '16px',
+            margin: '16px 0',
+            backgroundColor: '#fee',
+            borderRadius: '8px',
+            border: '1px solid #fcc'
+          }}>
+            {error}
+            <button onClick={loadCareers} style={{ marginLeft: '16px' }}>재시도</button>
+          </div>
+        )}
+
         <div className="content-stats">
-          <div className="stat-card">
+          <div className="stat-card total">
+            <div className="stat-number">{careers.length}</div>
+            <div className="stat-label">전체</div>
+          </div>
+          <div className="stat-card approved">
             <div className="stat-number">{careers.filter(c => c.status === 'AUTHORIZED').length}</div>
             <div className="stat-label">승인됨</div>
           </div>
-          <div className="stat-card">
+          <div className="stat-card rejected">
             <div className="stat-number">{careers.filter(c => c.status === 'UNAUTHORIZED').length}</div>
             <div className="stat-label">거절됨</div>
           </div>
@@ -322,7 +335,7 @@ const CareerManagement = () => {
               <div className="empty-state">
                 <Briefcase size={48} />
                 <h3>경력 데이터가 없습니다</h3>
-                <p>{searchTerm || filterStatus !== 'all' ? '검색 조건을 확인해보세요' : '등록된 경력이 없습니다'}</p>
+                <p>{filterStatus !== 'all' ? '검색 조건을 확인해보세요' : '등록된 경력이 없습니다'}</p>
               </div>
           ) : (
               filteredCareers.map((career) => {
@@ -341,10 +354,10 @@ const CareerManagement = () => {
                       <div className="table-cell">{formatDate(career.startAt)}</div>
                       <div className="table-cell">{formatDate(career.endAt)}</div>
                       <div className="table-cell">
-                  <span className={`status-badge ${statusBadge.className}`}>
-                    <StatusIcon size={14} />
-                    {statusBadge.text}
-                  </span>
+                        <span className={`status-badge ${statusBadge.className}`}>
+                          <StatusIcon size={14} />
+                          {statusBadge.text}
+                        </span>
                       </div>
                       <div className="table-cell">
                         <div className="table-actions">
@@ -384,15 +397,16 @@ const CareerManagement = () => {
           )}
         </div>
 
-        <CareerDetailModal
-            isOpen={showDetailModal}
-            onClose={() => {
-              setShowDetailModal(false);
-              setSelectedCareer(null);
-              setDetailLoading(false);
-            }}
-            career={selectedCareer}
-        />
+        {showDetailModal && (
+          <CareerDetailModal
+              isOpen={showDetailModal}
+              onClose={handleCloseModal}
+              career={selectedCareer}
+              onStatusChange={handleStatusChange}
+              detailLoading={detailLoading}
+              isDarkMode={isDarkMode}
+          />
+        )}
       </div>
   );
 };
