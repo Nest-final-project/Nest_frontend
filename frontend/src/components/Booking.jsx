@@ -530,9 +530,16 @@ const Booking = ({ mentor, onBack, onBooking }) => {
       });
   }, [selectedDate, mentor?.userId, consultationTimesByDate]);
 
-  // 4. 시작시간이 선택되면 종료시간 옵션 계산
+  // 4. 시작시간이 선택되면 종료시간 옵션 계산 (이용권 시간 제한 반영)
   useEffect(() => {
     if (!selectedStartTime || !consultationEndAt || !selectedDate) {
+      setAvailableEndTimes([]);
+      setSelectedEndTime('');
+      return;
+    }
+    
+    // 이용권이 선택되지 않은 경우 대기
+    if (!selectedService) {
       setAvailableEndTimes([]);
       setSelectedEndTime('');
       return;
@@ -587,7 +594,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         setAvailableEndTimes([]);
         setSelectedEndTime('');
       });
-  }, [selectedStartTime, consultationEndAt, selectedDate, mentor?.userId]);
+  }, [selectedStartTime, consultationEndAt, selectedDate, mentor?.userId, selectedService, serviceOptions]);
 
   function generateConsultationSlots(startAt, endAt, reservations = []) {
     if (!startAt || !endAt) return [];
@@ -728,6 +735,19 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     const startDateTime = new Date(selectedDate);
     startDateTime.setHours(startHour, startMinute, 0, 0);
     
+    // 선택된 서비스(이용권)의 시간 제한 적용
+    let maxDuration = null;
+    if (selectedService) {
+      const selectedTicket = serviceOptions.find(option => option.id === selectedService);
+      if (selectedTicket && selectedTicket.duration) {
+        // ENUM 값에서 시간 추출 (MINUTES_20 -> 20, MINUTES_30 -> 30, MINUTES_40 -> 40)
+        const durationMatch = selectedTicket.duration.match(/MINUTES_(\d+)/);
+        if (durationMatch) {
+          maxDuration = parseInt(durationMatch[1]);
+        }
+      }
+    }
+    
     // 최소 20분부터 시작
     let currentTime = new Date(startDateTime);
     currentTime.setMinutes(currentTime.getMinutes() + 20);
@@ -785,7 +805,14 @@ const Booking = ({ mentor, onBack, onBooking }) => {
     };
     
     // 상담 종료 시간까지 10분 단위로 체크 (종료 시간 포함)
-    while (currentTime <= endDateTime) {
+    // 이용권 시간 제한이 있는 경우 더 짧은 제한 시간 적용
+    const maxEndTime = maxDuration ? 
+      new Date(startDateTime.getTime() + maxDuration * 60 * 1000) : 
+      endDateTime;
+    
+    const finalEndTime = maxEndTime < endDateTime ? maxEndTime : endDateTime;
+    
+    while (currentTime <= finalEndTime) {
       const minutes = currentTime.getMinutes();
       if (minutes % 10 === 0) {
         const hours = currentTime.getHours().toString().padStart(2, '0');
@@ -803,10 +830,15 @@ const Booking = ({ mentor, onBack, onBooking }) => {
         const durationMinutes = endTotalMinutes - startTotalMinutes;
         
         // 최소 20분 이상이고 예약 충돌이 없는 경우에만 추가
-        if (durationMinutes >= 20 && !isTimeRangeConflicted(startTime, endTimeStr)) {
+        // 이용권 시간 제한도 확인
+        const withinTicketLimit = !maxDuration || durationMinutes <= maxDuration;
+        
+        if (durationMinutes >= 20 && withinTicketLimit && !isTimeRangeConflicted(startTime, endTimeStr)) {
           result.push(endTimeStr);
         } else if (durationMinutes < 20) {
           console.log(`⏰ 최소 시간 미달: ${startTime} ~ ${endTimeStr} (${durationMinutes}분)`);
+        } else if (!withinTicketLimit) {
+          console.log(`⏰ 이용권 시간 초과: ${startTime} ~ ${endTimeStr} (${durationMinutes}분 > ${maxDuration}분)`);
         } else {
           console.log(`⏰ 예약 충돌로 종료시간 불가: ${startTime} ~ ${endTimeStr}`);
           // 충돌이 발생해도 break하지 않고 계속 확인 (나중에 빈 시간이 있을 수 있음)
