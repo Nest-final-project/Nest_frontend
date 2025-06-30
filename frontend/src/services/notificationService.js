@@ -11,10 +11,14 @@ class NotificationService {
   connect() {
     const accessToken = accessTokenUtils.getAccessToken();
     
-    console.log('알림 서비스 연결 시작');
+    console.log('=== 알림 서비스 연결 시작 ===');
+    console.log('Access Token 존재:', !!accessToken);
+    console.log('API Base URL:', import.meta.env.VITE_API_BASE_URL);
+    console.log('SSE Endpoint:', import.meta.env.VITE_SSE_ENDPOINT || '/sse/notifications/subscribe');
     
     if (!accessToken) {
-      console.warn('Access token이 없어 알림 서비스 연결 불가');
+      console.warn('❌ Access token이 없어 알림 서비스 연결 불가');
+      this.notifyListeners('connection', { status: 'failed', reason: 'no_token' });
       return;
     }
 
@@ -36,22 +40,26 @@ class NotificationService {
 
   // 연결 성공 처리
   handleOpen(event) {
-    console.log('알림 서비스 연결 성공');
+    console.log('✅ 알림 서비스 연결 성공');
     this.isConnected = true;
     this.notifyListeners('connection', { status: 'connected' });
   }
 
   // 메시지 수신 처리
   handleMessage(event) {
+    console.log('📨 알림 메시지 수신:', event);
+    
     try {
       // 특별한 이벤트 타입이 있는 경우 처리
       if (event.eventType === 'chat-termination') {
+        console.log('🔥 채팅 종료 알림 처리');
         const notificationData = event.parsedData || JSON.parse(event.data);
         this.handleChatTerminationNotification(notificationData);
         return;
       }
 
       if (event.eventType === 'chat-open') {
+        console.log('🚀 채팅 시작 알림 처리');
         const notificationData = event.parsedData || JSON.parse(event.data);
         this.handleChatStartNotification(notificationData);
         return;
@@ -59,15 +67,16 @@ class NotificationService {
 
       // 일반 메시지 처리
       const notification = JSON.parse(event.data);
+      console.log('📄 일반 알림 처리:', notification);
       this.handleNotification(notification);
     } catch (error) {
-      console.error('알림 데이터 파싱 오류:', error);
+      console.error('❌ 알림 데이터 파싱 오류:', error, event);
     }
   }
 
   // 에러 처리
   handleError(event) {
-    console.error('알림 서비스 연결 오류:', event);
+    console.error('❌ 알림 서비스 연결 오류:', event);
     this.isConnected = false;
     
     // SSE 서비스가 재연결을 처리하므로 여기서는 상태만 업데이트
@@ -181,31 +190,124 @@ class NotificationService {
     const terminationNotification = {
       id: `termination_${Date.now()}`,
       type: 'warning',
+      style: 'termination',
       title: '채팅 종료 알림',
-      message: notification.content || notification.message || '채팅이 종료되었습니다.',
       timestamp: notification.createdAt || new Date().toISOString(),
-      actions: [
-        {
-          label: '확인',
-          type: 'primary',
-          onClick: () => {}
-        }
-      ]
+      terminationData: {
+        content: notification.content || notification.message || '멘토링 세션이 곧 종료됩니다.',
+        endTime: notification.endTime || null // 종료 시간이 있다면 포함
+      }
     };
 
     this.notifyListeners('notification', terminationNotification);
   }
 
   // 채팅 시작 알림
-  handleChatStartNotification(notification) {
+  async handleChatStartNotification(notification) {
     const chatRoomId = notification.chatRoomId;
+    const reservationId = notification.reservationId;
+    
+    try {
+      // 예약 정보가 있으면 상세 토스트 표시
+      if (reservationId) {
+        await this.showChatRoomCreatedNotification(chatRoomId, reservationId);
+      } else {
+        // 기본 토스트 표시
+        this.showBasicChatStartNotification(chatRoomId, notification);
+      }
+    } catch (error) {
+      console.error('채팅 시작 알림 처리 오류:', error);
+      // 오류 시 기본 토스트 표시
+      this.showBasicChatStartNotification(chatRoomId, notification);
+    }
+  }
+
+  // 예약 정보 포함 채팅방 생성 토스트
+  async showChatRoomCreatedNotification(chatRoomId, reservationId = null) {
+    try {
+      let reservationData = null;
+      
+      // 예약 ID가 있으면 예약 정보 조회
+      if (reservationId) {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+        const accessToken = accessTokenUtils.getAccessToken();
+        
+        const headers = {};
+        if (accessToken) {
+          headers.Authorization = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`;
+        }
+        
+        const response = await fetch(`${baseUrl}/api/reservations/${reservationId}`, {
+          headers: headers
+        });
+        
+        if (response.ok) {
+          reservationData = await response.json();
+        }
+      }
+
+      // 예약 데이터가 있으면 상세 토스트, 없으면 기본 토스트
+      if (reservationData) {
+        const detailedNotification = {
+          id: `chat_created_${Date.now()}`,
+          type: 'success',
+          style: 'detailed',
+          title: '멘토링 채팅방이 준비되었습니다!',
+          chatRoomId: chatRoomId,
+          timestamp: new Date().toISOString(),
+          reservationData: {
+            mentorName: reservationData.mentor?.name || reservationData.mentorName || '멘토',
+            serviceName: reservationData.ticket?.name || reservationData.serviceName || '멘토링 서비스',
+            date: reservationData.date,
+            startTime: reservationData.startTime,
+            endTime: reservationData.endTime
+          },
+          actionText: '멘토링 시작하기'
+        };
+        
+        this.notifyListeners('notification', detailedNotification);
+      } else {
+        // 기본 토스트
+        const basicNotification = {
+          id: `chat_created_${Date.now()}`,
+          type: 'success',
+          style: 'clean',
+          title: '채팅방이 생성되었습니다',
+          message: '새로운 대화를 시작해보세요',
+          chatRoomId: chatRoomId,
+          timestamp: new Date().toISOString(),
+          actionText: '채팅방 입장'
+        };
+        
+        this.notifyListeners('notification', basicNotification);
+      }
+    } catch (error) {
+      console.error('예약 정보 조회 실패:', error);
+      // 실패 시 기본 토스트 표시
+      const fallbackNotification = {
+        id: `chat_created_${Date.now()}`,
+        type: 'success',
+        style: 'clean',
+        title: '채팅방이 생성되었습니다',
+        message: '새로운 대화를 시작해보세요',
+        chatRoomId: chatRoomId,
+        timestamp: new Date().toISOString(),
+        actionText: '채팅방 입장'
+      };
+      
+      this.notifyListeners('notification', fallbackNotification);
+    }
+  }
+
+  // 기본 채팅 시작 알림
+  showBasicChatStartNotification(chatRoomId, notification) {
     const startNotification = {
       id: `chat_start_${Date.now()}`,
       type: 'success',
       title: '상담 시작 알림',
       message: notification.content || notification.message || '상담이 시작되었습니다.',
       timestamp: notification.createdAt || new Date().toISOString(),
-      chatRoomId: chatRoomId, // 리다이렉트를 위한 채팅방 ID
+      chatRoomId: chatRoomId,
       actions: [
         {
           label: '채팅방으로 이동',
@@ -362,9 +464,43 @@ class NotificationService {
       });
     }, 12000);
   }
+
+  // 시간 계산 헬퍼 함수
+  calculateDuration(startTime, endTime) {
+    if (!startTime || !endTime) return '';
+    
+    try {
+      const start = new Date(`2000-01-01T${startTime}`);
+      const end = new Date(`2000-01-01T${endTime}`);
+      const diffMs = end - start;
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins >= 60) {
+        const hours = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        return mins > 0 ? `${hours}시간 ${mins}분` : `${hours}시간`;
+      }
+      return `${diffMins}분`;
+    } catch (error) {
+      return '';
+    }
+  }
 }
 
 // 싱글톤 인스턴스 생성
 const notificationService = new NotificationService();
+
+// 글로벌 함수 등록 (다른 곳에서 사용할 수 있도록)
+window.showChatRoomCreatedNotification = (chatRoomId, reservationId = null) => {
+  return notificationService.showChatRoomCreatedNotification(chatRoomId, reservationId);
+};
+
+window.showChatTerminationNotification = (content, endTime = null) => {
+  notificationService.handleChatTerminationNotification({
+    content: content,
+    endTime: endTime,
+    createdAt: new Date().toISOString()
+  });
+};
 
 export default notificationService;
