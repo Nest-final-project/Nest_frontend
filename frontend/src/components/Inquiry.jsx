@@ -312,15 +312,13 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
   // 상태 텍스트/클래스
   const getStatusText = (status) => {
     switch (status) {
-      case 'ANSWERED': case 'answered': 
-      case 'RESOLVED': case 'resolved': return '답변완료';
+      case 'ANSWERED': case 'answered': return '답변완료';
       case 'PENDING': case 'pending': default: return '답변대기';
     }
   };
   const getStatusClass = (status) => {
     switch (status) {
-      case 'ANSWERED': case 'answered': 
-      case 'RESOLVED': case 'resolved': return 'status-answered';
+      case 'ANSWERED': case 'answered': return 'status-answered';
       case 'PENDING': case 'pending': default: return 'status-pending';
     }
   };
