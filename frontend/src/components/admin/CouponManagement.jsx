@@ -168,7 +168,7 @@ const CouponManagement = ({ isDarkMode }) => {
       </div>
 
 
-      <div className="content-table">
+      <div className="content-table coupon-table">
         <div className="table-header">
           <div className="table-cell">쿠폰 정보</div>
           <div className="table-cell">할인</div>
@@ -199,16 +199,12 @@ const CouponManagement = ({ isDarkMode }) => {
               <div className="table-cell">
                 <div className="cell-content">
                   <Gift size={16} />
-                  <div>
-                    <strong>{coupon.name || coupon.couponName || '이름 없음'}</strong>
-                  </div>
+                  <strong>{coupon.name || coupon.couponName || '이름 없음'}</strong>
                 </div>
               </div>
               <div className="table-cell">
                 <div className="cell-content">
-                  <div>
-                    <div>₩{(coupon.discountAmount || 0).toLocaleString()}</div>
-                  </div>
+                  <div>₩{(coupon.discountAmount || 0).toLocaleString()}</div>
                 </div>
               </div>
               <div className="table-cell">
@@ -239,14 +235,14 @@ const CouponManagement = ({ isDarkMode }) => {
               <div className="table-cell">
                 <div className="table-actions">
                   <button 
-                    className="action-btn edit"
+                    className="action-btn view"
                     onClick={() => handleEdit(coupon)}
                     title="수정"
                   >
                     <Edit3 size={16} />
                   </button>
                   <button 
-                    className="action-btn delete"
+                    className="action-btn reject"
                     onClick={() => handleDelete(coupon.id)}
                     title="삭제"
                   >
@@ -258,7 +254,7 @@ const CouponManagement = ({ isDarkMode }) => {
           ));
           }
         })()}
-      </div> {/* content-table를 감싸는 마지막 div */}
+      </div>
 
       {showCreateModal && (
           <CouponFormModal
