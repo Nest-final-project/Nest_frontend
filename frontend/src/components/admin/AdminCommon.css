@@ -941,6 +941,194 @@
   }
 }
 
+/* 경력 관리 특별 스타일 */
+.career-detail-modal {
+  color: #1f2937 !important; /* 모든 텍스트를 검은색으로 강제 설정 */
+}
+
+.career-detail-modal .modal-header h3 {
+  color: #1f2937 !important;
+}
+
+.career-detail-modal .modal-body {
+  color: #1f2937 !important;
+}
+
+.career-info {
+  color: #1f2937 !important;
+}
+
+.info-section {
+  margin-bottom: 24px;
+}
+
+.info-section h4 {
+  color: #1f2937 !important;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280 !important;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1f2937 !important;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.info-value svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #1f2937 !important;
+  transition: all 0.2s ease;
+}
+
+.attachment-item:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.attachment-download {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.attachment-download:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.attachment-filename {
+  font-size: 14px;
+  color: #1f2937 !important;
+  font-weight: 500;
+}
+
+.status-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-danger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+}
+
+.status-badge.approved {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.rejected {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.action-btn.approve {
+  color: #10b981;
+}
+
+.action-btn.approve:hover {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.action-btn.reject {
+  color: #ef4444;
+}
+
+.action-btn.reject:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
 /* 스피닝 애니메이션 */
 @keyframes spin {
   from { transform: rotate(0deg); }
