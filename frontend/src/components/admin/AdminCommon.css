@@ -146,6 +146,32 @@
   text-shadow: 0 2px 12px rgba(255, 193, 7, 0.4);
 }
 
+/* 민원 제목 CoffeeChat 테마 */
+.complaint-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffb300, #ff8f00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 12px rgba(255, 179, 0, 0.3);
+  position: relative;
+}
+
+/* 다크모드에서 민원 제목 */
+.dark-mode .complaint-title,
+.admin-content-wrapper.dark-mode .complaint-title {
+  background: linear-gradient(135deg, #ffb300, #ffc107);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 12px rgba(255, 193, 7, 0.4);
+}
+
 /* 이용권 제목 특별 스타일 */
 .ticket-title {
   display: flex;
@@ -548,7 +574,7 @@ html .admin-content-wrapper.dark-mode.career-management .career-title {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-size: 13px;
-  grid-template-columns: 0.8fr 2fr 1.2fr 1.2fr 1fr 100px;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 120px;
   box-shadow: 0 4px 20px rgba(255, 179, 0, 0.3);
 }
 
@@ -562,7 +588,7 @@ html .admin-content-wrapper.dark-mode.career-management .career-title {
   padding: 20px 32px;
   border-bottom: 1px solid rgba(255, 179, 0, 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  grid-template-columns: 0.8fr 2fr 1.2fr 1.2fr 1fr 100px;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 120px;
   background: rgb(251, 249, 239);
 }
 
@@ -3696,4 +3722,118 @@ html .admin-content-wrapper.dark-mode.career-management .career-title {
 
 .spinning {
   animation: spin 1s linear infinite;
+}
+
+/* CoffeeChat 테마 통합 테이블 스타일 */
+.content-table {
+  background: linear-gradient(145deg, #fff8e1, #fff3c4);
+  border: 1px solid rgba(255, 179, 0, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(255, 179, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.content-table .table-header {
+  background: linear-gradient(135deg, #ffb300, #ff8f00);
+  color: white;
+  font-weight: 700;
+  display: grid;
+  gap: 0;
+  padding: 16px;
+}
+
+.content-table .table-header .table-cell {
+  padding: 8px 12px;
+  text-align: left;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  color: white !important;
+}
+
+.content-table .table-header .table-cell:last-child {
+  border-right: none;
+}
+
+.content-table .table-row {
+  display: grid;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 179, 0, 0.1);
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 16px;
+}
+
+.content-table .table-row:hover {
+  background: rgba(255, 243, 196, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 179, 0, 0.15);
+}
+
+.content-table .table-row:last-child {
+  border-bottom: none;
+}
+
+.content-table .table-row .table-cell {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid rgba(255, 179, 0, 0.1);
+  color: #6d4c41;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.content-table .table-row .table-cell:last-child {
+  border-right: none;
+}
+
+/* 다크모드 통합 테이블 스타일 */
+.dark-mode .content-table {
+  background: linear-gradient(145deg, #374151, #1f2937);
+  border: 1px solid rgba(255, 179, 0, 0.3);
+}
+
+.dark-mode .content-table .table-header {
+  background: linear-gradient(135deg, #ffb300, #ff8f00);
+  color: white;
+}
+
+.dark-mode .content-table .table-row {
+  background: rgba(31, 41, 55, 0.8);
+  border-bottom: 1px solid rgba(255, 179, 0, 0.2);
+}
+
+.dark-mode .content-table .table-row:hover {
+  background: rgba(55, 65, 81, 0.9);
+  box-shadow: 0 2px 8px rgba(255, 179, 0, 0.25);
+}
+
+.dark-mode .content-table .table-row .table-cell {
+  border-right: 1px solid rgba(255, 179, 0, 0.2);
+  color: #f3f4f6;
+}
+
+/* TicketManagement 스타일 테이블 레이아웃 */
+.ticket-table .table-header,
+.ticket-table .table-row {
+  grid-template-columns: 2fr 1fr 120px;
+}
+
+.category-table .table-header,
+.category-table .table-row {
+  grid-template-columns: 1fr 120px;
+}
+
+.keyword-table .table-header,
+.keyword-table .table-row {
+  grid-template-columns: 1fr 120px;
+}
+
+.coupon-table .table-header,
+.coupon-table .table-row {
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 120px;
 }

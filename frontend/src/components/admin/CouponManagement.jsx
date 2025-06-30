@@ -139,7 +139,7 @@ const CouponManagement = ({ isDarkMode }) => {
   };
 
   return (
-    <div className={`admin-content-wrapper ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={isDarkMode ? 'dark-mode' : ''}>
       <div className="content-header">
         <div className="header-left">
           <h2 className="coupon-title">
@@ -154,8 +154,7 @@ const CouponManagement = ({ isDarkMode }) => {
             새로고침
           </button>
           <button 
-            className="btn-secondary"
-            style={{ border: '2px solid rgb(91,222,8)', background: 'rgb(91,222,8)', color: 'white' }}
+            className="coffee-btn coffee-btn-primary"
             onClick={() => {
               setSelectedCoupon(null);
               setShowCreateModal(true);

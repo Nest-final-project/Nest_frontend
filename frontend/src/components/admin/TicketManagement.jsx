@@ -135,7 +135,7 @@ const TicketManagement = ({ isDarkMode }) => {
   };
 
   return (
-    <div className={`admin-content-wrapper ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={isDarkMode ? 'dark-mode' : ''}>
       <div className="content-header">
         <div className="header-left">
           <h2 className="ticket-title">
@@ -146,7 +146,7 @@ const TicketManagement = ({ isDarkMode }) => {
         </div>
         <div className="header-actions">
           <button 
-            className="btn-primary"
+            className="coffee-btn coffee-btn-primary"
             onClick={() => {
               setSelectedTicket(null);
               setShowCreateModal(true);
@@ -196,7 +196,6 @@ const TicketManagement = ({ isDarkMode }) => {
                   <Ticket size={16} />
                   <div>
                     <strong>{ticket.name || '이름 없음'}</strong>
-                    <small>{ticket.description || '설명 없음'}</small>
                   </div>
                 </div>
               </div>
@@ -205,7 +204,6 @@ const TicketManagement = ({ isDarkMode }) => {
                   <CreditCard size={16} />
                   <div>
                     <div>₩{(ticket.price || 0).toLocaleString()}</div>
-                    <small>{getTimeDisplay(ticket.ticketTime)}</small>
                   </div>
                 </div>
               </div>

@@ -203,7 +203,7 @@ export const authAPI = {
 
   // 인증코드 검증
   verifyEmail: (email, authCode) => api.post('/api/auth/signup/code/verify', {email, authCode}),
-  
+
 };
 
 // User API
@@ -488,13 +488,13 @@ export const careerAPI = {
   updateCertificate: (careerId, certificateData) => {
     const token = accessTokenUtils.getAccessToken();
     return fileApi.patch(
-      `/api/careers/${careerId}/certificates`,
-      certificateData,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      }
+        `/api/careers/${careerId}/certificates`,
+        certificateData,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
     );
   },
 
@@ -502,13 +502,13 @@ export const careerAPI = {
   createCareer: (profileId, careerData) => {
     const token = accessTokenUtils.getAccessToken();
     return fileApi.post(
-      `/api/profiles/${profileId}/careers`,
-      careerData,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      }
+        `/api/profiles/${profileId}/careers`,
+        careerData,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
     )
   },
 
@@ -544,6 +544,9 @@ export const adminAPI = {
   // [관리자] 문의 답변 등록
   createInquiryAnswer: (complaintId, answerData) =>
       api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
+
+  // [관리자] 문의 답변 조회
+  getAdaminAnswer: (answerId) => api.get(`/api/admin/complaints/${complaintId}/answers`),
 
   // [관리자] 문의 삭제
   deleteInquiry: (complaintId) => api.delete(
