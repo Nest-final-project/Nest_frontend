@@ -295,6 +295,8 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
             await profileAPI.createProfile(formData);
             setModalOpen(false);
             // 등록 후 목록 새로고침 등 추가 가능
+            fetchMentorProfile();
+            alert("멘토 등록이 완료되었습니다.")
           }}
         />
       )}
