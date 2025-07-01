@@ -40,7 +40,9 @@ const ChatRoom = ({
   const [reviewCheckLoading, setReviewCheckLoading] = useState(false); // 리뷰 확인 로딩 상태
   const [sessionEndTime, setSessionEndTime] = useState(null); // 세션 종료 시간
   const [fiveMinuteWarningShown, setFiveMinuteWarningShown] = useState(false); // 5분 전 알림 표시 여부
-
+  const[hasMore, setHasMore] = useState(true);
+  const loadingMoreRef = useRef(false);
+  const lastRequestedMessageIdRef = useRef(null); // 마지막으로 요청한 메시지 ID 추적
   // 현재 사용자가 멘토인지 확인 (부모 컴포넌트에서 전달받은 userRole 사용)
   const isMentor = userRole === 'MENTOR';
 
@@ -368,7 +370,7 @@ const ChatRoom = ({
     }
   };
 
-  // 메시지 불러오기
+  // 메시지 불러오기 (최신 메시지들)
   const fetchMessages = async (chatRoomId) => {
     if (!chatRoomId) {
       console.warn('❌ fetchMessages: 채팅방 ID가 없습니다');
@@ -377,13 +379,13 @@ const ChatRoom = ({
 
     try {
       setLoading(true);
-      console.log(`📥 채팅방 ${chatRoomId}의 메시지 가져오는 중...`);
+      console.log(`📥 채팅방 ${chatRoomId}의 최신 메시지 가져오는 중...`);
 
-      // 대화내역 가져오기
+      // 최신 메시지들 가져오기 (커서 없이)
       const response = await axios.get(
           `/api/chat_rooms/${chatRoomId}/messages`,
           {
-            params: {size: 20},
+            params: {size: 20}, // 최신 20개만
             headers: {
               'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
             }
@@ -402,16 +404,26 @@ const ChatRoom = ({
         status: msg.isMine ? 'sent' : 'received'
       }));
 
-      console.log(`✅ 채팅방 ${chatRoomId}: ${newMessages.length}개 메시지 로드`);
+      console.log(`✅ 채팅방 ${chatRoomId}: ${newMessages.length}개 최신 메시지 로드`);
+      console.log(`📊 메시지 ID 범위: ${newMessages[0]?.id} ~ ${newMessages[newMessages.length - 1]?.id}`);
+      console.log(`📊 서버 응답 - isLast: ${response.data.last}, total: ${response.data.totalElements || 'N/A'}`);
 
-      // 메시지를 완전히 새로 설정 (기존 메시지와 합치지 않음)
+      // 메시지를 완전히 새로 설정
       setMessages(newMessages);
+      
+      // latestMessagesRef도 즉시 업데이트
+      latestMessagesRef.current = newMessages;
+      
+      // 더 이전 메시지가 있는지 설정
+      setHasMore(!response.data.last);
+      lastRequestedMessageIdRef.current = null;
 
     } catch (err) {
       console.error(`❌ 채팅방 ${chatRoomId} 메시지 불러오기 실패:`, err);
       if (err.response?.status === 404) {
         console.log('채팅방이 존재하지 않거나 접근 권한이 없습니다.');
         setMessages([]);
+        latestMessagesRef.current = [];
       }
     } finally {
       setLoading(false);
@@ -489,7 +501,7 @@ const ChatRoom = ({
           if (exists) {
             console.log('🚫 중복 메시지이므로 무시:', newMessage);
             // 임시 메시지를 실제 메시지로 교체
-            return prev.map(msg => {
+            const updated = prev.map(msg => {
               if (typeof msg.id === 'string' && msg.id.startsWith('temp-') &&
                   msg.text === newMessage.text &&
                   msg.sender === newMessage.sender &&
@@ -499,11 +511,18 @@ const ChatRoom = ({
               }
               return msg;
             }).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            
+            // latestMessagesRef도 즉시 업데이트
+            latestMessagesRef.current = updated;
+            return updated;
           }
 
           console.log('➕ 새로운 실시간 메시지 추가:', newMessage);
-          const updated = [...prev, newMessage];
-          return updated.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          const updated = [...prev, newMessage].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+          
+          // latestMessagesRef도 즉시 업데이트
+          latestMessagesRef.current = updated;
+          return updated;
         });
       } else {
         console.log(`🚫 다른 채팅방(${receivedChatRoomId})의 메시지이므로 무시 (현재: ${currentChatRoomId})`);
@@ -522,6 +541,7 @@ const ChatRoom = ({
     return () => {
       // 상태 초기화
       setMessages([]);
+      latestMessagesRef.current = [];
       setError(null);
       setLoading(false);
       setIsChatRoomClosed(false);
@@ -534,6 +554,17 @@ const ChatRoom = ({
       setReviewCheckLoading(false);
       setSessionEndTime(null);
       setFiveMinuteWarningShown(false);
+      
+      // 무한스크롤 관련 상태 초기화
+      setHasMore(true); // 무한스크롤 활성화
+      loadingMoreRef.current = false;
+      lastRequestedMessageIdRef.current = null;
+      
+      // 타이머 정리
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
 
       // body 스크롤 복원 (모달이 열려있던 경우를 대비)
       document.body.style.overflow = 'unset';
@@ -637,8 +668,30 @@ const ChatRoom = ({
       setReviewCheckLoading(false);
       setSessionEndTime(null);
       setFiveMinuteWarningShown(false);
+      
+      // 무한스크롤 관련 상태 초기화
+      setHasMore(true); // 무한스크롤 활성화
+      loadingMoreRef.current = false;
+      lastRequestedMessageIdRef.current = null;
+      
+      // 타이머 정리
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
 
       console.log('🔄 리뷰 모달 및 예약 상태를 초기화했습니다.');
+
+      // 무한스크롤 관련 상태 초기화
+      setHasMore(true); // 무한스크롤 활성화
+      loadingMoreRef.current = false;
+      lastRequestedMessageIdRef.current = null;
+      
+      // 타이머 정리
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
 
       // 1. 먼저 채팅방 상태 확인 후 메시지 가져오기
       const loadChatRoom = async () => {
@@ -674,6 +727,7 @@ const ChatRoom = ({
           console.error('채팅방 로딩 실패:', error);
           // 에러 발생 시에만 메시지 초기화
           setMessages([]);
+          latestMessagesRef.current = [];
         }
       };
 
@@ -681,10 +735,269 @@ const ChatRoom = ({
     }
   }, [chatRoomId]);
 
-  // 메시지 스크롤 (로딩 중이 아닐 때만)
+  const messagesContainerRef = useRef(null);
+  const latestMessagesRef = useRef([]);
+  const scrollTimeoutRef = useRef(null); // 스크롤 이벤트 쓰로틀링용
+
+  // 무한스크롤
+  const loadMoreMessages = async () => {
+    console.log("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 loadMoreMessages 진입");
+    console.log("🔥 현재 상태:", {
+      messages수: latestMessagesRef.current.length,
+      첫번째ID: latestMessagesRef.current[0]?.id,
+      마지막ID: latestMessagesRef.current[latestMessagesRef.current.length - 1]?.id,
+      hasMore,
+      loading,
+      loadingMoreRef: loadingMoreRef.current
+    });
+    
+    // 1. 기본 조건 확인
+    if (loading || !hasMore || loadingMoreRef.current) {
+      console.log("❌ 로딩 중단:", { loading, hasMore, loadingMoreRef: loadingMoreRef.current });
+      return;
+    }
+    
+    const container = messagesContainerRef.current;
+    if (!container) {
+      console.log("❌ 컨테이너 없음");
+      return;
+    }
+
+    const oldestMessageId = latestMessagesRef.current[0]?.id;
+    console.log("✅ oldestMessageId:", oldestMessageId);
+    
+    // 2. 유효한 메시지 ID 확인
+    if (!oldestMessageId) {
+      console.log("❌ 유효하지 않은 oldestMessageId:", oldestMessageId);
+      setHasMore(false);
+      return;
+    }
+    
+    // 3. 동일한 요청 중복 방지
+    if (lastRequestedMessageIdRef.current === oldestMessageId) {
+      console.log("❌ 동일한 메시지 ID로 이미 요청했음:", oldestMessageId);
+      return;
+    }
+    
+    // 4. 로딩 상태 설정
+    loadingMoreRef.current = true;
+    lastRequestedMessageIdRef.current = oldestMessageId;
+    const previousScrollHeight = container.scrollHeight;
+    setLoading(true);
+
+    console.log("✅ loadMoreMessages 요청 파라미터:", {
+      size: 20,
+      lastMessageId: oldestMessageId,  // 🔧 백엔드와 일치
+      url: `/api/chat_rooms/${chatRoomId}/messages`
+    });
+
+    try {
+      const response = await axios.get(
+          `/api/chat_rooms/${chatRoomId}/messages`,
+          {
+            params: {
+              size: 20,
+              lastMessageId: oldestMessageId,  // 🔧 백엔드와 일치하도록 수정
+            },
+            headers: { Authorization: `Bearer ${accessTokenUtils.getAccessToken()}` },
+          }
+      );
+
+      console.log("📡 서버 응답 상세:", {
+        contentLength: response.data.content?.length || 0,
+        isLast: response.data.last,
+        첫번째메시지ID: response.data.content?.[0]?.messageId,
+        마지막메시지ID: response.data.content?.[response.data.content?.length - 1]?.messageId,
+        전체응답: response.data
+      });
+
+      const newMessages = response.data.content
+      .slice()
+      .reverse()
+      .map((msg) => ({
+        id: msg.messageId,
+        text: msg.content,
+        sender: msg.isMine ? 'user' : 'other',
+        isMine: msg.isMine,
+        timestamp: msg.sentAt,
+        status: msg.isMine ? 'sent' : 'received',
+      }));
+
+      console.log("🔍 변환된 새 메시지들:", newMessages.map(m => ({ id: m.id, text: m.text.substring(0, 20) + '...' })));
+
+      // 5. 새 메시지가 없거나 동일한 메시지만 반환된 경우
+      if (newMessages.length === 0) {
+        console.log("❌ 새 메시지가 없음 - hasMore = false");
+        setHasMore(false);
+        return;
+      }
+      
+      // 6. 기존 메시지와 중복 확인
+      const currentIds = new Set(latestMessagesRef.current.map(m => m.id));
+      const actuallyNewMessages = newMessages.filter(msg => !currentIds.has(msg.id));
+      
+      console.log("🔍 중복 확인 결과:", {
+        요청한커서: oldestMessageId,
+        기존메시지IDs: Array.from(currentIds).sort((a,b) => a-b),
+        서버응답메시지IDs: newMessages.map(m => m.id).sort((a,b) => a-b),
+        실제새메시지IDs: actuallyNewMessages.map(m => m.id).sort((a,b) => a-b),
+        "🚨 문제": actuallyNewMessages.length === 0 ? "서버가 이미 있는 메시지들을 다시 반환함!" : "정상"
+      });
+      
+      if (actuallyNewMessages.length === 0) {
+        console.log("❌ 모든 메시지가 중복됨 - 백엔드 API 문제 의심!");
+        console.log("🔍 백엔드 API 테스트 코드:");
+        console.log(`
+// 브라우저 콘솔에서 이 코드를 실행해보세요:
+fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMessageId}', {
+  headers: { 'Authorization': 'Bearer ${accessTokenUtils.getAccessToken()}' }
+})
+.then(res => res.json())
+.then(data => {
+  console.log('🔍 백엔드 응답:', data);
+  console.log('🔍 현재 클라이언트 메시지 ID들:', [${Array.from(currentIds).sort((a,b) => a-b).join(', ')}]);
+  console.log('🔍 서버가 반환한 메시지 ID들:', data.content?.map(m => m.messageId) || []);
+});
+        `);
+        setHasMore(false);
+        return;
+      }
+      
+      console.log(`✅ 실제 새 메시지 ${actuallyNewMessages.length}개 추가`);
+
+      // 7. 메시지 병합 및 정렬
+      console.log("🔄 메시지 병합 시작");
+      console.log("📊 기존 메시지 수:", latestMessagesRef.current.length);
+      console.log("📊 새 메시지 수:", actuallyNewMessages.length);
+      
+      // 새 메시지(더 오래된 메시지)를 앞에, 기존 메시지를 뒤에 배치
+      const allMessages = [...actuallyNewMessages, ...latestMessagesRef.current];
+      
+      // 중복 제거 (ID 기준)
+      const messageMap = new Map();
+      allMessages.forEach((msg) => {
+        if (!messageMap.has(msg.id)) {
+          messageMap.set(msg.id, msg);
+        }
+      });
+
+      // 시간순으로 정렬 (오래된 메시지부터)
+      const sortedMessages = Array.from(messageMap.values()).sort(
+          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+      );
+      
+      console.log("📊 병합 후 결과:", {
+        총메시지수: sortedMessages.length,
+        첫번째ID: sortedMessages[0]?.id,
+        마지막ID: sortedMessages[sortedMessages.length - 1]?.id
+      });
+
+      // 8. 상태 업데이트
+      latestMessagesRef.current = sortedMessages;
+      setMessages(sortedMessages);
+      
+      // 9. hasMore 상태 업데이트
+      const stillHasMore = !response.data.last && actuallyNewMessages.length > 0;
+      setHasMore(stillHasMore);
+      
+      // 10. 중복 방지 상태 초기화 (성공했으므로)
+      lastRequestedMessageIdRef.current = null;
+      
+      console.log(`✅ 메시지 업데이트 완료 - hasMore: ${stillHasMore}, 총 메시지: ${sortedMessages.length}`);
+
+      // 11. 스크롤 위치 복원 (더 부드럽게)
+      requestAnimationFrame(() => {
+        const newScrollHeight = container.scrollHeight;
+        const scrollDiff = newScrollHeight - previousScrollHeight;
+        
+        // 부드러운 스크롤 애니메이션
+        const startScrollTop = container.scrollTop;
+        const targetScrollTop = scrollDiff;
+        const duration = 300; // 300ms 애니메이션
+        const startTime = performance.now();
+        
+        function animateScroll(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          
+          // easeOutCubic 이징 함수로 부드러운 애니메이션
+          const eased = 1 - Math.pow(1 - progress, 3);
+          
+          container.scrollTop = startScrollTop + (targetScrollTop - startScrollTop) * eased;
+          
+          if (progress < 1) {
+            requestAnimationFrame(animateScroll);
+          }
+        }
+        
+        requestAnimationFrame(animateScroll);
+        console.log(`📜 부드러운 스크롤 복원: ${scrollDiff}px (이전: ${previousScrollHeight}, 현재: ${newScrollHeight})`);
+      });
+      
+    } catch (err) {
+      console.error('❌ 메시지 추가 로딩 실패:', err);
+      console.error('❌ 에러 상세:', err.response?.data);
+      // 에러 시 요청 기록 초기화
+      lastRequestedMessageIdRef.current = null;
+    } finally {
+      setLoading(false);
+      loadingMoreRef.current = false;
+    }
+  };
+
+  useEffect(() => {
+    if (!loading && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+    }
+  }, [loading, messages]);
+
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    // 스크롤 이벤트 쓰로틀링
+    if (scrollTimeoutRef.current) {
+      return;
+    }
+    
+    scrollTimeoutRef.current = setTimeout(() => {
+      scrollTimeoutRef.current = null;
+      
+      // 이미 로딩 중이면 중복 호출 차단
+      if (loading || loadingMoreRef.current) {
+        return;
+      }
+      
+      // 더 불러올 메시지가 없으면 차단
+      if (!hasMore) {
+        return;
+      }
+
+      // 스크롤 위치가 상단 근처일 때만 로드 (더 부드러운 트리거)
+      const scrollThreshold = 200; // 200px 여유 공간
+      if (container.scrollTop < scrollThreshold) {
+        console.log("🔼 부드러운 스크롤 트리거 -> 이전 메시지 불러오기");
+        loadMoreMessages();
+      }
+    }, 100); // 100ms로 더 빠른 반응
+  };
+
+  // 메시지 스크롤 (더 부드럽게)
   useEffect(() => {
     if (messagesEndRef.current && !loading) {
-      messagesEndRef.current.scrollIntoView({behavior: 'smooth'});
+      // 사용자가 스크롤을 올려서 보고 있는 경우 자동 스크롤하지 않음
+      const container = messagesContainerRef.current;
+      if (container) {
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        
+        if (isNearBottom) {
+          // 부드러운 스크롤로 이동
+          messagesEndRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end'
+          });
+        }
+      }
     }
   }, [messages, loading]);
 
@@ -739,7 +1052,13 @@ const ChatRoom = ({
       timestamp: new Date().toISOString(),
       status: 'sending'
     };
-    setMessages(prev => [...prev, optimisticMessage]);
+    
+    setMessages(prev => {
+      const updated = [...prev, optimisticMessage];
+      // latestMessagesRef도 즉시 업데이트
+      latestMessagesRef.current = updated;
+      return updated;
+    });
 
     try {
       if (isConnected) {
@@ -750,13 +1069,16 @@ const ChatRoom = ({
           console.log('✅ STOMP 메시지 전송 성공 - 서버에서 자동 저장됨');
 
           // 전송 성공 표시 - 낙관적 업데이트 메시지를 그대로 유지
-          setMessages(prev =>
-              prev.map(msg =>
-                  msg.id === optimisticMessage.id
-                      ? {...msg, status: 'sent'}
-                      : msg
-              )
-          );
+          setMessages(prev => {
+            const updated = prev.map(msg =>
+                msg.id === optimisticMessage.id
+                    ? {...msg, status: 'sent'}
+                    : msg
+            );
+            // latestMessagesRef도 즉시 업데이트
+            latestMessagesRef.current = updated;
+            return updated;
+          });
 
           // 서버에서 실제 메시지가 저장되기를 기다린 후 WebSocket으로 받을 것임
           // fetchMessages는 호출하지 않음 - WebSocket으로 실시간 업데이트 받음
@@ -767,7 +1089,12 @@ const ChatRoom = ({
 
       // WebSocket 연결이 안되어 있거나 전송 실패
       console.error('❌ WebSocket이 연결되지 않아 메시지를 전송할 수 없습니다');
-      setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+      setMessages(prev => {
+        const updated = prev.filter(msg => msg.id !== optimisticMessage.id);
+        // latestMessagesRef도 즉시 업데이트
+        latestMessagesRef.current = updated;
+        return updated;
+      });
       alert('실시간 연결이 끊어져 메시지를 전송할 수 없습니다. 페이지를 새로고침해주세요.');
       setMessage(messageContent);
 
@@ -775,7 +1102,12 @@ const ChatRoom = ({
       console.error('❌ 메시지 전송 실패:', error);
 
       // 전송 실패 시 낙관적 업데이트 메시지 제거
-      setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+      setMessages(prev => {
+        const updated = prev.filter(msg => msg.id !== optimisticMessage.id);
+        // latestMessagesRef도 즉시 업데이트
+        latestMessagesRef.current = updated;
+        return updated;
+      });
 
       // 사용자에게 알림
       alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
@@ -906,6 +1238,31 @@ const ChatRoom = ({
     if (!previousMessage) return true; // 첫 번째 메시지는 항상 날짜 표시
     return !isSameDay(currentMessage.timestamp, previousMessage.timestamp);
   };
+
+// messages 상태와 latestMessagesRef 동기화 (개선된 버전)
+  useEffect(() => {
+    // loadMoreMessages에서 이미 업데이트했다면 중복 업데이트 방지
+    if (latestMessagesRef.current.length === messages.length) {
+      const isAlreadySynced = latestMessagesRef.current.every((msg, index) => 
+        msg.id === messages[index]?.id
+      );
+      if (isAlreadySynced) {
+        console.log("🔄 latestMessagesRef 이미 동기화됨 - 스킵");
+        return;
+      }
+    }
+    
+    console.log("🔄 latestMessagesRef 업데이트:", {
+      이전: latestMessagesRef.current.length,
+      현재: messages.length,
+      메시지범위: messages.length > 0 ? {
+        첫번째: messages[0]?.id,
+        마지막: messages[messages.length - 1]?.id
+      } : null
+    });
+    
+    latestMessagesRef.current = messages;
+  }, [messages]);
 
   // 에러 상태
   if (error) {
@@ -1067,13 +1424,25 @@ const ChatRoom = ({
 
         {/* 메시지 영역 */}
         <div className="messages-container">
-          {loading && (
+          {/* 무한스크롤 로딩 인디케이터 (상단) */}
+          {loading && hasMore && (
+              <div className="loading-indicator top">
+                <div className="loading-spinner"></div>
+                <span>이전 메시지 불러오는 중...</span>
+              </div>
+          )}
+          
+          {/* 일반 로딩 인디케이터 (중앙) */}
+          {loading && !hasMore && (
               <div className="loading-indicator">
                 <span>메시지를 불러오는 중...</span>
               </div>
           )}
 
-          <div className="messages-list">
+          <div className="messages-list"
+               ref={messagesContainerRef}
+               onScroll={handleScroll}
+          >
             {messages.length > 0 ? (
               messages.map((msg, index) => (
                 <Fragment key={msg.id}>
