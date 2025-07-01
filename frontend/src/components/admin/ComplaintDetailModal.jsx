@@ -15,73 +15,97 @@ const ComplaintDetailModal = ({
   const [userInfo, setUserInfo] = useState(null);
   const [loadingUser, setLoadingUser] = useState(false);
   const [complaintDetail, setComplaintDetail] = useState(null);
-  const [loadingComplaint, setLoadingComplaint] = useState(false);
   const [adminAnswer, setAdminAnswer] = useState(null);
   const [loadingAnswer, setLoadingAnswer] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    if (complaint?.id) {
-      console.log('📋 모달에서 받은 민원 데이터:', complaint);
-      fetchComplaintDetail(complaint.id);
-    }
-  }, [complaint]);
-
-  const fetchComplaintDetail = async (complaintId) => {
-    setLoadingComplaint(true);
-    try {
-      console.log('🔍 민원 상세 정보 조회 시작:', complaintId);
-      const response = await adminAPI.getInquiryDetail(complaintId);
-      const detail = response.data;
-
-      console.log('✅ 민원 상세 정보 조회 성공:', detail);
-      setComplaintDetail(detail);
-
-      // userId가 있으면 사용자 정보 조회
-      if (detail.userId) {
-        fetchUserInfo(detail.userId);
-      } else {
-        setUserInfo(null);
+    console.log('🔄 ComplaintDetailModal useEffect 실행:', { 
+      isOpen, 
+      complaint: complaint ? { id: complaint.id, data: complaint.data } : null 
+    });
+    
+    // complaint 구조가 {data: {id: ...}} 형태일 수 있으므로 두 가지 경우 모두 확인
+    const actualComplaint = complaint?.data || complaint;
+    const complaintId = actualComplaint?.id;
+    
+    console.log('🔍 실제 complaint 데이터:', actualComplaint);
+    console.log('🎯 추출된 complaint ID:', complaintId);
+    
+    if (isOpen && complaintId) {
+      console.log('📋 모달에서 받은 민원 데이터:', actualComplaint);
+      
+      // 실제 complaint 데이터 사용
+      setComplaintDetail(actualComplaint);
+      
+      // 사용자 정보는 이미 complaint에 포함되어 있을 수 있음
+      if (actualComplaint.userName || actualComplaint.userEmail) {
+        console.log('✅ 사용자 정보가 complaint에 포함됨:', {
+          userName: actualComplaint.userName,
+          userEmail: actualComplaint.userEmail
+        });
+        setUserInfo({
+          name: actualComplaint.userName,
+          nickName: actualComplaint.userName,
+          email: actualComplaint.userEmail,
+          phone: actualComplaint.userPhone
+        });
+      } else if (actualComplaint.userId) {
+        console.log('🔍 사용자 정보 별도 조회 필요:', actualComplaint.userId);
+        fetchUserInfo(actualComplaint.userId);
       }
-
-      // 관리자 답변 조회
+      
+      // 답변 조회는 별도로 수행
+      console.log('🚀 답변 조회 시작하려고 함:', complaintId);
       fetchAdminAnswer(complaintId);
-    } catch (error) {
-      console.error('❌ 민원 상세 정보 조회 실패:', error);
-      setComplaintDetail(null);
-    } finally {
-      setLoadingComplaint(false);
+    } else {
+      console.log('⚠️ 모달 조건 미충족:', { 
+        isOpen, 
+        complaintId,
+        'complaint?.id': complaint?.id,
+        'complaint?.data?.id': complaint?.data?.id,
+        complaint: complaint
+      });
     }
-  };
+  }, [complaint, isOpen]);
+
 
   const fetchAdminAnswer = async (complaintId) => {
+    console.log('🔍 fetchAdminAnswer 함수 시작:', complaintId);
     setLoadingAnswer(true);
+    
     try {
-      console.log('🔍 관리자 답변 조회 시작:', complaintId);
+      console.log('🌐 adminAPI.getAdminAnswer 호출 중...');
       const response = await adminAPI.getAdminAnswer(complaintId);
       console.log('📋 getAdminAnswer 전체 응답:', response);
+      console.log('📋 응답 상태:', response.status);
+      console.log('📋 응답 데이터:', response.data);
       
-      // 응답 구조 확인을 위한 로깅
+      // Answer 테이블 구조: user, complaint, contents
       const answerData = response.data?.data || response.data;
       console.log('📋 파싱된 답변 데이터:', answerData);
+      console.log('📋 answerData 타입:', typeof answerData);
+      console.log('📋 answerData.contents:', answerData?.contents);
 
-      setAdminAnswer(answerData);
-      
-      if (answerData && (answerData.contents || answerData.content)) {
-        const answerContent = answerData.contents || answerData.content;
-        console.log('✅ 답변 내용 발견:', answerContent);
-        setAnswer(answerContent);
+      if (answerData && answerData.contents) {
+        console.log('✅ 답변 내용 발견:', answerData.contents);
+        setAdminAnswer(answerData);
+        setAnswer(answerData.contents);
         setIsEditing(false); // 답변이 있으면 읽기 모드
+        console.log('✅ 상태 업데이트 완료 - 읽기 모드');
       } else {
-        console.log('⚠️ 답변 내용이 없음');
+        console.log('⚠️ 답변 내용이 없음 - answerData:', answerData);
+        setAdminAnswer(null);
         setAnswer('');
         setIsEditing(true); // 답변이 없으면 편집 모드
+        console.log('⚠️ 상태 업데이트 완료 - 편집 모드');
       }
     } catch (error) {
       console.error('❌ 관리자 답변 조회 실패:', error);
       console.error('❌ 에러 상세:', error.response?.data || error.message);
+      console.error('❌ 에러 상태 코드:', error.response?.status);
       
-      // 404 에러는 답변이 없다는 의미일 수 있음
+      // 404 에러는 답변이 없다는 의미
       if (error.response?.status === 404) {
         console.log('📝 답변이 아직 등록되지 않음 (404)');
       }
@@ -89,8 +113,10 @@ const ComplaintDetailModal = ({
       setAdminAnswer(null);
       setAnswer('');
       setIsEditing(true); // 답변 조회 실패하면 편집 모드
+      console.log('❌ 에러 처리 완료 - 편집 모드');
     } finally {
       setLoadingAnswer(false);
+      console.log('🏁 fetchAdminAnswer 완료');
     }
   };
 
@@ -126,7 +152,8 @@ const ComplaintDetailModal = ({
       await onAnswerSubmit(complaintId, answer.trim());
       console.log('✅ 답변 제출 완료');
       // 답변 제출 후 다시 조회하여 최신 상태 반영
-      fetchAdminAnswer(complaintId);
+      await fetchAdminAnswer(complaintId);
+      setIsEditing(false); // 저장 완료 후 읽기 모드로 전환
     } catch (error) {
       console.error('❌ 답변 제출 실패:', error);
     }
@@ -191,7 +218,7 @@ const ComplaintDetailModal = ({
 
   if (!isOpen || !complaint) return null;
 
-  const displayData = complaintDetail || (complaint?.data ? complaint.data : complaint);
+  const displayData = complaintDetail || complaint?.data || complaint;
 
   console.log('🎨 ComplaintDetailModal 렌더링:', {
     isOpen,
@@ -200,7 +227,10 @@ const ComplaintDetailModal = ({
     displayData: displayData,
     'displayData.reservationId': displayData?.reservationId,
     isSubmitting,
-    answer: answer.length
+    answer: answer.length,
+    adminAnswer: adminAnswer ? 'exists' : 'null',
+    loadingAnswer,
+    isEditing
   });
 
   return (
@@ -212,17 +242,11 @@ const ComplaintDetailModal = ({
           </div>
 
           <div className="modal-body">
-            {loadingComplaint ? (
-                <div className="loading-state" style={{ textAlign: 'center', padding: '40px' }}>
-                  <p>민원 상세 정보를 불러오는 중...</p>
-                </div>
-            ) : (
-                <>
-                  <div className="complaint-info">
-                    <div className="info-row">
-                      <label>민원 번호:</label>
-                      <span>#{displayData.id || 'N/A'}</span>
-                    </div>
+            <div className="complaint-info">
+              <div className="info-row">
+                <label>민원 번호:</label>
+                <span>#{displayData.id || 'N/A'}</span>
+              </div>
                     <div className="info-row">
                       <label>작성자:</label>
                       <span>
@@ -260,14 +284,12 @@ const ComplaintDetailModal = ({
                     </div>
                   </div>
 
-                  <div className="complaint-content">
-                    <label>문의 내용:</label>
-                    <div className="complaint-content-box">
-                      {displayData.contents || '내용이 없습니다.'}
-                    </div>
-                  </div>
-                </>
-            )}
+            <div className="complaint-content">
+              <label>문의 내용:</label>
+              <div className="complaint-content-box">
+                {displayData.contents || '내용이 없습니다.'}
+              </div>
+            </div>
 
             <div className="complaint-answer">
               <label>관리자 답변:</label>

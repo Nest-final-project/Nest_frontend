@@ -460,7 +460,7 @@ export const inquiryAPI = {
       {params}),
 
   // [사용자] 문의 답변 조회
-  getUserAnswer: (complaintId) => api.get(`/api/complaints/${complaintId}/answers`),
+  getUserAnswer: (complaintId) => api.get(`/api/complaints/${complaintId}/answer`),
 
 
   // [사용자] 내 문의 상세 조회 (== 일반 상세 조회)
@@ -553,15 +553,14 @@ export const adminAPI = {
       api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
 
   // [관리자] 문의 답변 조회
-  getAdminAnswer: (complaintId) => api.get(`/api/admin/complaints/${complaintId}/answers`),
+  getAdminAnswer: (complaintId) => api.get(`/api/admin/complaints/${complaintId}/answer`),
 
   // [관리자] 문의 삭제
   deleteInquiry: (complaintId) => api.delete(
       `/api/admin/complaints/${complaintId}`),
 
   // [관리자] 문의 답변 수정
-  updateInquiryStatus: (complaintId, status) =>
-      api.patch(`/api/admin/answers/{answerId}`, {status}),
+  updateAnswer: (answerId) => api.patch(`/answers/${answerId}`),
 
   // [관리자] 쿠폰 등록
   registerCoupon: (couponData) => api.post('/api/admin/coupons', couponData),
