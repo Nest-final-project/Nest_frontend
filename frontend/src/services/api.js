@@ -280,9 +280,9 @@ export const consultationAPI = {
   getConsultationDetail: (consultationId) => api.get(
       `/api/consultations/${consultationId}`),
 
-  getAvailableConsultationSlots: (mentorId, dayOfWeek) =>
+  getAvailableConsultationSlots: (mentorId, localDate) =>
       api.get(`/api/mentor/${mentorId}/availableConsultations`, {
-        params: {dayOfWeek}
+        params: { localDate }
       }),
 
   // 상담 상태 업데이트
@@ -373,10 +373,13 @@ export const reviewAPI = {
 
   // 리뷰 수정
   updateReview: (reviewId, reviewData) =>
-      api.put(`/api/reviews/${reviewId}`, reviewData),
+      api.patch(`/api/reviews/${reviewId}`, reviewData),
 
   // 리뷰 삭제
   deleteReview: (reviewId) => api.delete(`/api/reviews/${reviewId}`),
+
+  // 내 리뷰 목록 조회
+  getMyReviews: (params) => api.get('/api/reviews', { params }),
 };
 
 // Category API
