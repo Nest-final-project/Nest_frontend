@@ -9,13 +9,15 @@ import {
   Clock,
   LogOut,
   ArrowLeft,
-  UserPlus
+  UserPlus,
+  Star
 } from 'lucide-react';
 import './MyPage.css';
 import { userInfoUtils, authUtils } from '../utils/tokenUtils.js';
 import { userAPI, authAPI } from '../services/api.js';
 import BookingHistory from './MyPage/BookingHistory.jsx';
 import PaymentHistory from './MyPage/PaymentHistory.jsx';
+import Reviews from "./MyPage/Reviews.jsx";
 
 // Lazy load components for better performance
 const BasicInfo = lazy(() => import('./MyPage/BasicInfo.jsx'));
@@ -218,13 +220,23 @@ const MyPage = ({ onBack, onLogout }) => {
 
               {/* 멘티만 결제 내역 표시 */}
               {userInfo.userRole === 'MENTEE' && (
-                <button
-                  className={`sidebar-item ${activeTab === 'payments' ? 'active' : ''}`}
-                  onClick={() => handleTabChange('payments')}
-                >
-                  <CreditCard className="sidebar-icon" />
-                  <span>결제 내역</span>
-                </button>
+                  <>
+                    <button
+                        className={`sidebar-item ${activeTab === 'payments' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('payments')}
+                    >
+                      <CreditCard className="sidebar-icon" />
+                      <span>결제 내역</span>
+                    </button>
+
+                    <button
+                    className={`sidebar-item ${activeTab === 'reviews' ? 'active' : ''}`}
+                    onClick={() => handleTabChange('reviews')}
+                    >
+                      <Star className="sidebar-icon" />
+                      <span>리뷰 내역</span>
+                    </button>
+                  </>
               )}
 
               {/* 멘토 전용 메뉴 */}
@@ -321,6 +333,15 @@ const MyPage = ({ onBack, onLogout }) => {
                     <div className="access-denied">
                       <p>접근 권한이 없습니다.</p>
                     </div>
+                  )
+                } />
+                <Route path="/reviews" element={
+                  userInfo?.userRole === 'MENTEE' ? (
+                      <Reviews userInfo={userInfo}/>
+                  ) : (
+                      <div className="access-denied">
+                        <p>접근 권한이 없습니다.</p>
+                      </div>
                   )
                 } />
               </Routes>

@@ -73,7 +73,7 @@ const MentorList = ({ category, onBack, onMentorSelect }) => {
   return (
       <div className="mentor-list-container">
         <div className="mentor-list-header">
-          <button className="back-button" onClick={onBack}>
+          <button className="mentor-list-back-button" onClick={onBack}>
             <ArrowLeft className="icon" />
             뒤로가기
           </button>
@@ -83,15 +83,15 @@ const MentorList = ({ category, onBack, onMentorSelect }) => {
         </div>
 
         <div className="mentor-list-controls">
-          <div className="search-section">
-            <div className="search-input-wrapper">
+          <div className="mentor-list-search-section">
+            <div className="mentor-list-search-input-wrapper">
               <Search className="search-icon" />
               <input
                   type="text"
                   placeholder="키워드로 검색"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-input"
+                  className="mentor-list-search-input"
               />
             </div>
           </div>
