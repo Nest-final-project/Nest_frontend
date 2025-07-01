@@ -96,10 +96,23 @@ const NotificationToast = ({ notification, onClose }) => {
 
   // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString || dateString === '오늘' || dateString === '날짜 미정') {
+      return dateString; // 특수한 값들은 그대로 반환
+    }
     
     try {
+      // YYYY-MM-DD 형태인지 확인
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString; // 올바른 날짜 형태가 아니면 그대로 반환
+      }
+      
       const date = new Date(dateString);
+      
+      // 유효한 날짜인지 확인
+      if (isNaN(date.getTime())) {
+        return dateString;
+      }
+      
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
       const day = date.getDate();
@@ -108,15 +121,22 @@ const NotificationToast = ({ notification, onClose }) => {
       
       return `${year}년 ${month}월 ${day}일 (${dayName})`;
     } catch (error) {
-      return dateString;
+      return dateString; // 오류 시 원본 문자열 반환
     }
   };
 
   // 시간 포맷팅 함수  
   const formatTime = (timeString) => {
-    if (!timeString) return '';
+    if (!timeString || timeString === '지금' || timeString === '시간 미정') {
+      return timeString; // 특수한 값들은 그대로 반환
+    }
     
     try {
+      // HH:MM 형태인지 확인
+      if (!/^\d{1,2}:\d{2}$/.test(timeString)) {
+        return timeString; // 올바른 시간 형태가 아니면 그대로 반환
+      }
+      
       const [hours, minutes] = timeString.split(':');
       const hour = parseInt(hours);
       const ampm = hour >= 12 ? '오후' : '오전';
@@ -124,7 +144,7 @@ const NotificationToast = ({ notification, onClose }) => {
       
       return `${ampm} ${displayHour}:${minutes}`;
     } catch (error) {
-      return timeString;
+      return timeString; // 오류 시 원본 문자열 반환
     }
   };
 
@@ -194,6 +214,12 @@ const NotificationToast = ({ notification, onClose }) => {
                           {formatTime(reservationData.startTime)} - {formatTime(reservationData.endTime)}
                           {duration && ` (${duration})`}
                         </span>
+                      </div>
+                    )}
+                    {!reservationData.date && !reservationData.startTime && (
+                      <div className="date-time">
+                        <Clock />
+                        <span style={{color: '#ef4444'}}>예약 정보를 불러올 수 없습니다</span>
                       </div>
                     )}
                   </div>
@@ -281,6 +307,55 @@ const NotificationToast = ({ notification, onClose }) => {
   };
 
 
+
+  // 간단한 클린 토스트 렌더링
+  const renderCleanToast = () => {
+    return (
+      <div 
+        className={`notification-toast clean ${notification.type} ${isVisible ? 'visible' : ''} ${isExiting ? 'exiting' : ''} ${notification.chatRoomId ? 'clickable' : ''}`}
+        onClick={handleToastClick}
+      >
+        <button className="close-button" onClick={(e) => {
+          e.stopPropagation();
+          handleClose();
+        }}>
+          <X />
+        </button>
+        <div className="notification-content">
+          <div className="notification-header">
+            <div className="notification-icon">
+              {getIcon()}
+            </div>
+            <div className="notification-text">
+              <div className="notification-title">{notification.title}</div>
+              {notification.message && (
+                <div className="notification-message">{notification.message}</div>
+              )}
+            </div>
+          </div>
+          
+          {notification.chatRoomId && (
+            <button className="notification-action" onClick={(e) => {
+              e.stopPropagation();
+              handleToastClick();
+            }}>
+              <MessageCircle className="action-icon" />
+              <span>{notification.actionText || '채팅방 입장'}</span>
+            </button>
+          )}
+        </div>
+        
+        <div className="notification-progress">
+          <div 
+            className="progress-bar" 
+            style={{ 
+              animationDuration: `${getAutoCloseTime(notification.type)}ms` 
+            }}
+          ></div>
+        </div>
+      </div>
+    );
+  };
 
   // 스타일에 따른 토스트 렌더링
   if (notification.style === 'detailed') {

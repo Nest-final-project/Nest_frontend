@@ -38,6 +38,8 @@ const ChatRoom = ({
   const [selectedRating, setSelectedRating] = useState(0);
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [hasWrittenReview, setHasWrittenReview] = useState(false); // 실제로 리뷰를 작성했는지 추적
+  const [sessionEndTime, setSessionEndTime] = useState(null); // 세션 종료 시간
+  const [fiveMinuteWarningShown, setFiveMinuteWarningShown] = useState(false); // 5분 전 알림 표시 여부
 
   // 현재 사용자가 멘토인지 확인 (부모 컴포넌트에서 전달받은 userRole 사용)
   const isMentor = userRole === 'MENTOR';
@@ -188,6 +190,16 @@ const ChatRoom = ({
 
       const status = response.data.status; // 예: "PENDING", "IN_PROGRESS", "COMPLETE", "CANCELLED"
       setReservationStatus(status);
+      
+      // 예약 정보도 함께 받아서 종료 시간 설정
+      if (response.data.reservation) {
+        const reservation = response.data.reservation;
+        if (reservation.date && reservation.endTime) {
+          const endDateTime = new Date(`${reservation.date}T${reservation.endTime}`);
+          setSessionEndTime(endDateTime);
+          console.log('📅 세션 종료 시간 설정:', endDateTime.toLocaleString());
+        }
+      }
       
       console.log(`✅ 예약 ${reservationId} 상태: ${status}`);
       console.log(`🔧 reservationStatus 상태 설정됨:`, status);
@@ -415,11 +427,52 @@ const ChatRoom = ({
       setSelectedRating(0);
       setIsSubmittingRating(false);
       setHasWrittenReview(false);
+      setSessionEndTime(null);
+      setFiveMinuteWarningShown(false);
       
       // body 스크롤 복원 (모달이 열려있던 경우를 대비)
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // 5분 전 알림 타이머
+  useEffect(() => {
+    if (!sessionEndTime || fiveMinuteWarningShown || isChatRoomClosed || reservationStatus === 'COMPLETE') {
+      return;
+    }
+
+    const checkFiveMinuteWarning = () => {
+      const now = new Date();
+      const timeUntilEnd = sessionEndTime.getTime() - now.getTime();
+      const fiveMinutesInMs = 5 * 60 * 1000; // 5분 = 300,000ms
+
+      // 5분 전이거나 그 시점을 지났을 때 (하지만 아직 종료 시간은 지나지 않았을 때)
+      if (timeUntilEnd <= fiveMinutesInMs && timeUntilEnd > 0) {
+        console.log(`⏰ 세션 종료 5분 전 알림 표시 (남은 시간: ${Math.ceil(timeUntilEnd / 1000 / 60)}분)`);
+        
+        // 전역 알림 함수 사용
+        if (window.showChatTerminationNotification) {
+          const remainingMinutes = Math.ceil(timeUntilEnd / 1000 / 60);
+          window.showChatTerminationNotification(
+            `멘토링 세션이 ${remainingMinutes}분 후 종료됩니다. 마무리 준비를 해주세요.`,
+            sessionEndTime.toISOString()
+          );
+        }
+        
+        setFiveMinuteWarningShown(true);
+      }
+    };
+
+    // 즉시 한 번 체크
+    checkFiveMinuteWarning();
+
+    // 30초마다 체크
+    const interval = setInterval(checkFiveMinuteWarning, 30000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [sessionEndTime, fiveMinuteWarningShown, isChatRoomClosed, reservationStatus]);
 
   // 채팅방 변경 시 메시지 초기화 및 새 메시지 로드
   useEffect(() => {
@@ -437,6 +490,8 @@ const ChatRoom = ({
       setSelectedRating(0);
       setIsSubmittingRating(false);
       setHasWrittenReview(false);
+      setSessionEndTime(null);
+      setFiveMinuteWarningShown(false);
 
       console.log('🔄 리뷰 모달 및 예약 상태를 초기화했습니다.');
 

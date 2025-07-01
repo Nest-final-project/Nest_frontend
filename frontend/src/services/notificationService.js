@@ -207,28 +207,29 @@ class NotificationService {
     const chatRoomId = notification.chatRoomId;
     const reservationId = notification.reservationId;
     
+    console.log('🚀 채팅 시작 알림 처리:', { chatRoomId, reservationId });
+    
     try {
-      // 예약 정보가 있으면 상세 토스트 표시
-      if (reservationId) {
-        await this.showChatRoomCreatedNotification(chatRoomId, reservationId);
-      } else {
-        // 기본 토스트 표시
-        this.showBasicChatStartNotification(chatRoomId, notification);
-      }
+      // 항상 상세 토스트 표시 (예약 ID가 없어도 기본값으로)
+      await this.showChatRoomCreatedNotification(chatRoomId, reservationId);
     } catch (error) {
       console.error('채팅 시작 알림 처리 오류:', error);
-      // 오류 시 기본 토스트 표시
-      this.showBasicChatStartNotification(chatRoomId, notification);
+      // 오류 시에도 상세 토스트 표시 (기본값으로)
+      await this.showChatRoomCreatedNotification(chatRoomId, null);
     }
   }
 
-  // 예약 정보 포함 채팅방 생성 토스트
+  // 예약 정보 포함 채팅방 생성 토스트 (상세 토스트만 사용)
   async showChatRoomCreatedNotification(chatRoomId, reservationId = null) {
-    try {
-      let reservationData = null;
-      
-      // 예약 ID가 있으면 예약 정보 조회
-      if (reservationId) {
+    console.log('💬 채팅방 생성 토스트 표시 시작:', { chatRoomId, reservationId });
+    
+    let reservationData = null;
+    
+    // 예약 ID가 있으면 예약 정보 조회
+    if (reservationId) {
+      try {
+        console.log('🔍 예약 정보 API 호출 중...', reservationId);
+        
         const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
         const accessToken = accessTokenUtils.getAccessToken();
         
@@ -241,88 +242,48 @@ class NotificationService {
           headers: headers
         });
         
+        console.log('🌐 API 요청 URL:', `${baseUrl}/api/reservations/${reservationId}`);
+        console.log('🌐 API 응답 상태:', response.status, response.statusText);
+        
         if (response.ok) {
-          reservationData = await response.json();
+          const data = await response.json();
+          reservationData = data.data || data; // API 응답 구조에 따라 조정
+          console.log('✅ 예약 정보 조회 성공:', reservationData);
+          console.log('🔍 응답 전체 구조:', data);
+        } else {
+          const errorText = await response.text();
+          console.warn('⚠️ 예약 정보 조회 실패:', response.status, response.statusText);
+          console.warn('⚠️ 오류 응답 내용:', errorText);
         }
+      } catch (error) {
+        console.error('❌ 예약 정보 조회 실패:', error);
       }
-
-      // 예약 데이터가 있으면 상세 토스트, 없으면 기본 토스트
-      if (reservationData) {
-        const detailedNotification = {
-          id: `chat_created_${Date.now()}`,
-          type: 'success',
-          style: 'detailed',
-          title: '멘토링 채팅방이 준비되었습니다!',
-          chatRoomId: chatRoomId,
-          timestamp: new Date().toISOString(),
-          reservationData: {
-            mentorName: reservationData.mentor?.name || reservationData.mentorName || '멘토',
-            serviceName: reservationData.ticket?.name || reservationData.serviceName || '멘토링 서비스',
-            date: reservationData.date,
-            startTime: reservationData.startTime,
-            endTime: reservationData.endTime
-          },
-          actionText: '멘토링 시작하기'
-        };
-        
-        this.notifyListeners('notification', detailedNotification);
-      } else {
-        // 기본 토스트
-        const basicNotification = {
-          id: `chat_created_${Date.now()}`,
-          type: 'success',
-          style: 'clean',
-          title: '채팅방이 생성되었습니다',
-          message: '새로운 대화를 시작해보세요',
-          chatRoomId: chatRoomId,
-          timestamp: new Date().toISOString(),
-          actionText: '채팅방 입장'
-        };
-        
-        this.notifyListeners('notification', basicNotification);
-      }
-    } catch (error) {
-      console.error('예약 정보 조회 실패:', error);
-      // 실패 시 기본 토스트 표시
-      const fallbackNotification = {
-        id: `chat_created_${Date.now()}`,
-        type: 'success',
-        style: 'clean',
-        title: '채팅방이 생성되었습니다',
-        message: '새로운 대화를 시작해보세요',
-        chatRoomId: chatRoomId,
-        timestamp: new Date().toISOString(),
-        actionText: '채팅방 입장'
-      };
-      
-      this.notifyListeners('notification', fallbackNotification);
     }
-  }
 
-  // 기본 채팅 시작 알림
-  showBasicChatStartNotification(chatRoomId, notification) {
-    const startNotification = {
-      id: `chat_start_${Date.now()}`,
+    // 항상 상세 토스트 표시 (예약 정보가 실제로 조회되어야 함)
+    console.log('🎨 상세 토스트 생성 중...');
+    
+    const detailedNotification = {
+      id: `chat_created_${Date.now()}`,
       type: 'success',
-      title: '상담 시작 알림',
-      message: notification.content || notification.message || '상담이 시작되었습니다.',
-      timestamp: notification.createdAt || new Date().toISOString(),
+      style: 'detailed',
+      title: '멘토링 채팅방이 준비되었습니다!',
       chatRoomId: chatRoomId,
-      actions: [
-        {
-          label: '채팅방으로 이동',
-          type: 'primary',
-          onClick: () => this.openChatRoom(chatRoomId)
-        },
-        {
-          label: '확인',
-          type: 'secondary',
-          onClick: () => {}
-        }
-      ]
+      timestamp: new Date().toISOString(),
+      reservationData: {
+        // 백엔드 응답 구조에 맞게 수정
+        mentorName: reservationData?.mentorName || `멘토 ID: ${reservationData?.mentor}` || '멘토 정보 없음',
+        serviceName: reservationData?.serviceName || reservationData?.ticketName || `티켓 ID: ${reservationData?.ticket}` || '서비스 정보 없음',
+        date: reservationData?.date || reservationData?.reservationStartAt?.split(' ')[0] || null,
+        startTime: reservationData?.startTime || reservationData?.reservationStartAt?.split(' ')[1]?.substring(0, 5) || null,
+        endTime: reservationData?.endTime || reservationData?.reservationEndAt?.split(' ')[1]?.substring(0, 5) || null
+      },
+      actionText: '멘토링 시작하기'
     };
-
-    this.notifyListeners('notification', startNotification);
+    
+    console.log('✅ 상세 토스트 표시:', detailedNotification);
+    console.log('🔍 API 응답 원본 데이터:', reservationData);
+    this.notifyListeners('notification', detailedNotification);
   }
 
   // 세션 연장 요청
@@ -500,6 +461,27 @@ window.showChatTerminationNotification = (content, endTime = null) => {
     content: content,
     endTime: endTime,
     createdAt: new Date().toISOString()
+  });
+};
+
+// 🚨 디버깅용 테스트 함수들
+window.testChatRoomNotification = () => {
+  console.log('🧪 채팅방 생성 알림 테스트 시작');
+  // 숫자 타입으로 전달 (백엔드에서 Long 타입 요구)
+  notificationService.showChatRoomCreatedNotification('test_chat_123', 119);
+};
+
+window.testSSEConnection = () => {
+  console.log('🔌 SSE 연결 상태:', notificationService.isServiceConnected());
+  console.log('🔌 SSE ReadyState:', sseService.getReadyState());
+  console.log('🔌 EventSource States: CONNECTING=0, OPEN=1, CLOSED=2');
+};
+
+window.testChatOpenEvent = () => {
+  console.log('🧪 chat-open 이벤트 시뮬레이션');
+  notificationService.handleChatStartNotification({
+    chatRoomId: 'test_123',
+    reservationId: 119  // 숫자로 전달
   });
 };
 
