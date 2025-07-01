@@ -1,7 +1,7 @@
 /* ===== 컨테이너 기본 스타일 ===== */
 .mypage-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #fff8e1 0%, #FFF8E1 100%);
   position: relative;
   overflow-x: hidden;
 }
@@ -13,9 +13,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-  radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-  radial-gradient(circle at 40% 80%, rgba(120, 200, 255, 0.3) 0%, transparent 50%);
+  background: radial-gradient(circle at 20% 50%, rgb(255, 248, 225) 0%, transparent 50%),
+  radial-gradient(circle at 80% 20%, rgb(255, 248, 225) 0%, transparent 50%),
+  radial-gradient(circle at 40% 80%, rgb(255, 248, 225) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -27,7 +27,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);

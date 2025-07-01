@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useRef, useState} from 'react';
 import { 
   User, 
   Edit3, 
@@ -18,6 +18,12 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
   const [tempValue, setTempValue] = useState('');
   const [tempBankInfo, setTempBankInfo] = useState({ bank: '', accountNumber: '' });
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const [phone1, setPhone1] = useState('');
+  const [phone2, setPhone2] = useState('');
+  const [phone3, setPhone3] = useState('');
+  const phone2Ref = useRef(null);
+  const phone3Ref = useRef(null);
   
   // 비밀번호 변경 모달 관련 state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -79,7 +85,21 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
           bank: tempBankInfo.bank,
           accountNumber: tempBankInfo.accountNumber
         };
-      } else {
+      } else if (field === 'phoneNumber') { // <-- 이 부분 추가
+        // phone1, phone2, phone3의 현재 상태 값을 조합합니다.
+        const combinedPhoneNumber = `${phone1}-${phone2}-${phone3}`;
+
+        // 유효성 검사 (선택 사항): 모든 전화번호 부분이 채워져 있는지 확인
+        if (phone1.length !== 3 || phone2.length !== 4 || phone3.length !== 4) {
+          alert('전화번호를 정확히 입력해주세요.');
+          setIsUpdating(false);
+          return;
+        }
+
+        updateData = { [field]: combinedPhoneNumber };
+        updatedUserInfo = { ...userInfo, [field]: combinedPhoneNumber };
+
+      } else { // 다른 일반 필드
         updateData = { [field]: tempValue };
         updatedUserInfo = { ...userInfo, [field]: tempValue };
       }
@@ -263,6 +283,14 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
     }));
   };
 
+  // 전화번호 입력 시 자동 포커스 이동
+  const handlePhoneInput = (value, setter, nextRef, maxLength) => {
+    setter(value);
+    if (value.length === maxLength && nextRef) {
+      nextRef.current?.focus();
+    }
+  };
+
   return (
     <div className="profile-tab">
       <div className="info-card">
@@ -335,12 +363,44 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
             {editingField === 'phoneNumber' ? (
               <div className="edit-field">
                 <input
-                  type="tel"
-                  value={tempValue}
-                  onChange={(e) => setTempValue(e.target.value)}
-                  className="edit-input"
-                  autoFocus
-                  placeholder="전화번호를 입력하세요"
+                    type="tel"
+                    placeholder="010"
+                    value={phone1}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 3);
+                      handlePhoneInput(value, setPhone1, phone2Ref, 3);
+                    }}
+                    className="phone-field"
+                    maxLength="3"
+                    required
+                />
+                <span className="phone-separator">-</span>
+                <input
+                    ref={phone2Ref}
+                    type="tel"
+                    placeholder="0000"
+                    value={phone2}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      handlePhoneInput(value, setPhone2, phone3Ref, 4);
+                    }}
+                    className="phone-field"
+                    maxLength="4"
+                    required
+                />
+                <span className="phone-separator">-</span>
+                <input
+                    ref={phone3Ref}
+                    type="tel"
+                    placeholder="0000"
+                    value={phone3}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      setPhone3(value);
+                    }}
+                    className="phone-field"
+                    maxLength="4"
+                    required
                 />
                 <div className="edit-buttons">
                   <button
