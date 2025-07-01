@@ -10,7 +10,7 @@ import {
   LogOut,
   ArrowLeft,
   UserPlus,
-  Star
+  Star, Ticket
 } from 'lucide-react';
 import './MyPage.css';
 import { userInfoUtils, authUtils } from '../utils/tokenUtils.js';
@@ -18,6 +18,7 @@ import { userAPI, authAPI } from '../services/api.js';
 import BookingHistory from './MyPage/BookingHistory.jsx';
 import PaymentHistory from './MyPage/PaymentHistory.jsx';
 import Reviews from "./MyPage/Reviews.jsx";
+import Coupons from "./MyPage/Coupons.jsx";
 
 // Lazy load components for better performance
 const BasicInfo = lazy(() => import('./MyPage/BasicInfo.jsx'));
@@ -236,6 +237,13 @@ const MyPage = ({ onBack, onLogout }) => {
                       <Star className="sidebar-icon" />
                       <span>리뷰 내역</span>
                     </button>
+                    <button
+                        className={`sidebar-item ${activeTab === 'coupons' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('coupons')}
+                    >
+                      <Ticket className="sidebar-icon" />
+                      <span>보유 쿠폰</span>
+                    </button>
                   </>
               )}
 
@@ -344,6 +352,15 @@ const MyPage = ({ onBack, onLogout }) => {
                       </div>
                   )
                 } />
+                <Route path="/coupons" element={
+                  userInfo?.userRole === 'MENTEE' ? (
+                      <Coupons userInfo={userInfo}/>
+                  ) : (
+                      <div className="access-denied">
+                        <p>접근 권한이 없습니다.</p>
+                      </div>
+                )
+                }/>
               </Routes>
             </Suspense>
           </div>

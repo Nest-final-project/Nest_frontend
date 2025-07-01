@@ -24,7 +24,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
   const [phone3, setPhone3] = useState('');
   const phone2Ref = useRef(null);
   const phone3Ref = useRef(null);
-  
+
   // 비밀번호 변경 모달 관련 state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -326,7 +326,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     {isUpdating && editingField === 'nickName' ? (
                       <div className="spinner-small"></div>
                     ) : (
-                      <Check size={16} />
+                      '확인'
                     )}
                   </button>
                   <button
@@ -334,7 +334,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     onClick={handleCancelEdit}
                     disabled={isUpdating}
                   >
-                    <X size={16} />
+                    취소
                   </button>
                 </div>
               </div>
@@ -411,7 +411,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     {isUpdating && editingField === 'phoneNumber' ? (
                       <div className="spinner-small"></div>
                     ) : (
-                      <Check size={16} />
+                      '확인'
                     )}
                   </button>
                   <button
@@ -419,7 +419,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     onClick={handleCancelEdit}
                     disabled={isUpdating}
                   >
-                    <X size={16} />
+                    취소
                   </button>
                 </div>
               </div>
@@ -474,7 +474,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                       {isUpdating && editingField === 'bankInfo' ? (
                         <div className="spinner-small"></div>
                       ) : (
-                        <Check size={16} />
+                        '확인'
                       )}
                     </button>
                     <button
@@ -482,7 +482,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                       onClick={handleCancelEdit}
                       disabled={isUpdating}
                     >
-                      <X size={16} />
+                      취소
                     </button>
                   </div>
                 </div>

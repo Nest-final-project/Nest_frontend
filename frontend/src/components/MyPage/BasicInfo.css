@@ -245,8 +245,7 @@
 }
 
 .save-btn, .cancel-btn {
-  width: 36px !important;
-  height: 36px !important;
+  padding: 0.6rem 1.2rem !important;
   border-radius: 10px !important;
   border: none !important;
   display: flex !important;
@@ -254,28 +253,93 @@
   justify-content: center !important;
   cursor: pointer !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  min-width: 70px !important;
+  height: 36px !important;
 }
 
 .save-btn {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  color: white !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid rgba(102, 126, 234, 0.3) !important;
+  color: #667eea !important;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15) !important;
+}
+
+.save-btn::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.2), transparent) !important;
+  transition: left 0.5s !important;
 }
 
 .save-btn:hover {
-  background: linear-gradient(135deg, #059669, #047857) !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
+  border-color: transparent !important;
+}
+
+.save-btn:hover::before {
+  left: 100% !important;
 }
 
 .cancel-btn {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  color: white !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.3) !important;
+  color: #64748b !important;
+  box-shadow: 0 4px 20px rgba(148, 163, 184, 0.15) !important;
+}
+
+.cancel-btn::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.2), transparent) !important;
+  transition: left 0.5s !important;
 }
 
 .cancel-btn:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+  background: #64748b !important;
+  color: white !important;
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 8px 25px rgba(148, 163, 184, 0.3) !important;
+  border-color: transparent !important;
+}
+
+.cancel-btn:hover::before {
+  left: 100% !important;
+}
+
+.save-btn:active, .cancel-btn:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+/* 비활성화된 버튼 스타일 */
+.save-btn:disabled, .cancel-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(148, 163, 184, 0.1) !important;
+}
+
+.save-btn:disabled:hover, .cancel-btn:disabled:hover {
+  transform: none !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
 }
 
 .bank-edit {
@@ -354,57 +418,131 @@
   box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2) !important;
 }
 
-/* ===== 비밀번호 입력란/모달 트렌디하게 개선 ===== */
+/* ===== 비밀번호 필드 ===== */
 .password-field {
   margin-bottom: 1.5rem;
 }
 
-.password-input-container {
+.custom-password-input-container {
+  display: flex !important;
+  align-items: center !important;
+  background: #fff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.10) !important;
+  border: 1.5px solid #d1d5db !important;
+  padding: 0.7rem 1.2rem !important;
+  transition: border 0.2s, box-shadow 0.2s !important;
+}
+
+.custom-password-input-container:focus-within {
+  border: 1.5px solid #667eea !important;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18) !important;
+}
+
+.custom-password-input {
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  font-size: 1.1rem !important;
+  flex: 1 !important;
+  color: #2d3748 !important;
+  padding: 0.2rem 0 !important;
+}
+
+.custom-password-input::placeholder {
+  color: #a0aec0 !important;
+  opacity: 1 !important;
+  font-size: 1rem !important;
+}
+
+.custom-password-toggle {
+  background: none !important;
+  border: none !important;
+  color: #667eea !important;
+  cursor: pointer !important;
+  margin-left: 0.5rem !important;
+  font-size: 1.2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: color 0.2s !important;
+}
+
+.custom-password-toggle:hover {
+  color: #764ba2 !important;
+}
+
+/* ===== 모달 스타일 ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.10);
-  border: 1.5px solid #d1d5db;
-  padding: 0.7rem 1.2rem;
-  transition: border 0.2s, box-shadow 0.2s;
+  justify-content: center;
+  z-index: 1000;
 }
 
-.password-input-container:focus-within {
-  border: 1.5px solid #667eea;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18);
+.modal-container {
+  background: #fff !important;
+  border-radius: 18px !important;
+  box-shadow: 0 8px 40px rgba(102, 126, 234, 0.18) !important;
+  padding: 2.5rem 2rem !important;
+  max-width: 380px !important;
+  margin: 0 auto !important;
 }
 
-.password-input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 1.1rem;
-  flex: 1;
-  color: #2d3748;
-  padding: 0.2rem 0;
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
-.password-input::placeholder {
-  color: #a0aec0;
-  opacity: 1;
-  font-size: 1rem;
+.modal-header h3 {
+  color: #667eea !important;
+  font-weight: 800 !important;
+  font-size: 1.3rem !important;
+  margin: 0 !important;
 }
 
-.password-toggle {
+.modal-close {
   background: none;
   border: none;
-  color: #667eea;
   cursor: pointer;
-  margin-left: 0.5rem;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s;
+  color: #64748b;
 }
 
-.password-toggle:hover {
-  color: #764ba2;
+.modal-body {
+  margin-bottom: 2rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.modal-btn {
+  border-radius: 10px !important;
+  padding: 0.7rem 1.5rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.modal-btn.cancel {
+  background: #e2e8f0 !important;
+  color: #667eea !important;
+}
+
+.modal-btn.confirm, .modal-btn.delete {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #fff !important;
 }
 
 /* ===== 경고 메시지 ===== */
@@ -456,6 +594,21 @@
   font-weight: bold !important;
 }
 
+/* ===== 스피너 ===== */
+.spinner-small {
+  width: 16px !important;
+  height: 16px !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-top: 2px solid currentColor !important;
+  border-radius: 50% !important;
+  animation: spin 0.8s linear infinite !important;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* ===== 반응형 디자인 ===== */
 @media (max-width: 768px) {
   .profile-section {
@@ -468,103 +621,22 @@
     width: 100px;
     height: 100px;
   }
+
+  .account-actions {
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 480px) {
   .profile-info h2 {
     font-size: 1.5rem;
   }
-}
 
-/* 소셜 로그인 사용자는 비밀번호 관련 UI 숨김 */
-.hide-on-social {
-  display: none !important;
-}
+  .info-card-header {
+    padding: 1.5rem 2rem 1rem 2rem !important;
+  }
 
-/* ===== 커스텀 비밀번호 입력란/모달 트렌디하게 개선 (모든 속성에 !important) ===== */
-.custom-password-input-container {
-  display: flex !important;
-  align-items: center !important;
-  background: #fff !important;
-  border-radius: 12px !important;
-  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.10) !important;
-  border: 1.5px solid #d1d5db !important;
-  padding: 0.7rem 1.2rem !important;
-  transition: border 0.2s, box-shadow 0.2s !important;
-}
-
-.custom-password-input-container:focus-within {
-  border: 1.5px solid #667eea !important;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.18) !important;
-}
-
-.custom-password-input {
-  border: none !important;
-  background: transparent !important;
-  outline: none !important;
-  font-size: 1.1rem !important;
-  flex: 1 !important;
-  color: #2d3748 !important;
-  padding: 0.2rem 0 !important;
-}
-
-.custom-password-input::placeholder {
-  color: #a0aec0 !important;
-  opacity: 1 !important;
-  font-size: 1rem !important;
-}
-
-.custom-password-toggle {
-  background: none !important;
-  border: none !important;
-  color: #667eea !important;
-  cursor: pointer !important;
-  margin-left: 0.5rem !important;
-  font-size: 1.2rem !important;
-  display: flex !important;
-  align-items: center !important;
-  transition: color 0.2s !important;
-}
-
-.custom-password-toggle:hover {
-  color: #764ba2 !important;
-}
-
-/* ===== 모달 전체 트렌디하게 개선 ===== */
-.modal-container {
-  background: #fff !important;
-  border-radius: 18px !important;
-  box-shadow: 0 8px 40px rgba(102, 126, 234, 0.18) !important;
-  padding: 2.5rem 2rem !important;
-  max-width: 380px !important;
-  margin: 0 auto !important;
-}
-
-.modal-header h3 {
-  color: #667eea !important;
-  font-weight: 800 !important;
-  font-size: 1.3rem !important;
-  margin-bottom: 1.2rem !important;
-}
-
-.modal-btn {
-  border-radius: 10px !important;
-  padding: 0.7rem 1.5rem !important;
-  font-size: 1.1rem !important;
-  font-weight: 700 !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: #fff !important;
-  border: none !important;
-  margin: 0 0.5rem !important;
-  transition: background 0.2s !important;
-}
-
-.modal-btn.cancel {
-  background: #e2e8f0 !important;
-  color: #667eea !important;
-}
-
-.modal-btn.confirm, .modal-btn.delete {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: #fff !important;
+  .info-card-body {
+    padding: 2rem !important;
+  }
 }
