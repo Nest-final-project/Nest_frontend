@@ -108,6 +108,7 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
 
       const fetchedRooms = response.data.content.map(room => {
         console.log('🔍 ChatList - 백엔드에서 받은 room 데이터:', room);
+        console.log('🔍 예약 ID 확인:', room.reservationId);
         
         const currentUserId = parseInt(getCurrentUserId()); // 문자열을 숫자로 변환
 
@@ -172,6 +173,7 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
           mentorId: room.mentorId,
           menteeId: room.menteeId,
           isCurrentUserMentor,
+          reservationId: room.reservationId || null, // 예약 ID 추가
           // 디버깅용 추가 정보
           currentUserId,
           mentorName: room.mentorName,

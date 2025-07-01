@@ -15,11 +15,8 @@ const ReviewWrite = () => {
   const mentorName = searchParams.get('mentorName');
   const chatRoomId = searchParams.get('chatRoomId');
   const reservationId = searchParams.get('reservationId'); // 예약 ID 추가
-  const initialRating = parseInt(searchParams.get('rating')) || 0;
-
   // 상태 관리
-  const [rating, setRating] = useState(initialRating);
-  const [hoverRating, setHoverRating] = useState(0);
+
   const [reviewText, setReviewText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mentorInfo, setMentorInfo] = useState(null);
@@ -59,10 +56,11 @@ const ReviewWrite = () => {
             
             // 티켓 정보도 함께 조회
             let ticketInfo = null;
-            if (reservation.ticket) {
+            if (reservation.ticket || reservation.ticketId) {
               try {
-                console.log('🎫 티켓 정보 조회 시작 - ticketId:', reservation.ticket);
-                const ticketResponse = await ticketAPI.getTicket(reservation.ticket);
+                const ticketId = reservation.ticket || reservation.ticketId;
+                console.log('🎫 티켓 정보 조회 시작 - ticketId:', ticketId);
+                const ticketResponse = await ticketAPI.getTicket(ticketId);
                 console.log('🎫 티켓 API 응답:', ticketResponse);
                 ticketInfo = ticketResponse.data.data || ticketResponse.data;
                 console.log('🎫 티켓 데이터:', ticketInfo);
@@ -135,17 +133,9 @@ const ReviewWrite = () => {
     }
   }, [mentorId, mentorName, chatRoomId, reservationId]);
 
-  // 별점 클릭 핸들러
-  const handleStarClick = (selectedRating) => {
-    setRating(selectedRating);
-  };
 
   // 리뷰 제출
   const handleSubmit = async () => {
-    if (rating === 0) {
-      alert('별점을 선택해주세요.');
-      return;
-    }
 
     if (!reviewText.trim()) {
       alert('리뷰 내용을 입력해주세요.');
@@ -161,43 +151,62 @@ const ReviewWrite = () => {
     try {
       setIsSubmitting(true);
       
-      // 백엔드 DTO에 맞는 데이터 구조
+      // ReviewRequestDto에 맞는 데이터 구조
       const reviewData = {
-        content: reviewText.trim(),
-        mentor: parseInt(mentorId),
-        mentee: null, // 백엔드에서 현재 로그인 사용자로 설정할 것으로 예상
-        reservationId: parseInt(reservationId)
+        content: reviewText.trim()
+        // mentor와 mentee는 백엔드에서 자동으로 설정됨
+        // rating 필드는 ReviewRequestDto에 있는지 확인 필요
       };
 
       console.log('리뷰 제출 데이터:', reviewData);
+      console.log('리뷰 제출 URL:', `/api/reservations/${reservationId}/reviews`);
 
-      // 백엔드 API 엔드포인트에 맞춰 호출
-      const response = await axios.post(`/api/reservations/${reservationId}/reviews`, reviewData, {
-        headers: {
-          'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // reviewAPI 사용하여 리뷰 제출
+      const response = await reviewAPI.createReview(reservationId, reviewData);
 
       console.log('리뷰 제출 성공:', response.data);
       
-      // 성공 메시지 + 사용자 선택권 제공
-      const userChoice = confirm(
-        '리뷰가 성공적으로 제출되었습니다! 감사합니다!\n\n' +
-        '확인: 홈으로 이동하여 새로운 멘토를 찾아보세요\n' +
-        '취소: 마이페이지에서 예약 내역과 리뷰를 확인하세요'
-      );
+      // 리뷰 제출 완료를 localStorage에 저장 (다른 탭/창에서도 확인 가능)
+      const reviewCompletedKey = `review_completed_${reservationId}`;
+      localStorage.setItem(reviewCompletedKey, 'true');
+      console.log(`✅ localStorage에 리뷰 완료 상태 저장: ${reviewCompletedKey} = true`);
 
-      if (userChoice) {
-        // 확인 선택 시 홈으로 이동
-        navigate('/');
-      } else {
-        // 취소 선택 시 마이페이지로 이동
-        navigate('/mypage');
-      }
+      console.log('리뷰 제출 성공:', response.data);
+
+      alert('리뷰가 성공적으로 제출되었습니다! 감사합니다!');
       
     } catch (error) {
       console.error('리뷰 제출 실패:', error);
+      
+      // 409 에러(이미 리뷰 존재)는 성공으로 처리
+      if (error.response?.status === 409) {
+        console.log('✅ 이미 리뷰가 존재합니다. 리뷰 완료로 처리합니다.');
+        console.log('🔍 현재 reservationId:', reservationId);
+        
+        // 리뷰 제출 완료를 localStorage에 저장
+        const reviewCompletedKey = `review_completed_${reservationId}`;
+        localStorage.setItem(reviewCompletedKey, 'true');
+        console.log(`✅ localStorage에 리뷰 완료 상태 저장: ${reviewCompletedKey} = true`);
+        
+        // 저장 확인
+        const savedValue = localStorage.getItem(reviewCompletedKey);
+        console.log(`🔍 저장 확인: ${reviewCompletedKey} = ${savedValue}`);
+        
+        // 성공 메시지 표시
+        const userChoice = confirm(
+          '이미 리뷰를 작성하셨습니다! 감사합니다!\n\n' +
+          '확인: 홈으로 이동하여 새로운 멘토를 찾아보세요\n' +
+          '취소: 마이페이지에서 예약 내역과 리뷰를 확인하세요'
+        );
+
+        if (userChoice) {
+          navigate('/');
+        } else {
+          navigate('/mypage');
+        }
+        
+        return; // 에러 처리 로직 실행하지 않고 종료
+      }
       
       // 구체적인 에러 메시지 표시
       let errorMessage = '리뷰 제출에 실패했습니다.';
@@ -383,18 +392,6 @@ const ReviewWrite = () => {
                   </div>
                 </div>
               </div>
-              
-              {/* 디버깅용 - 개발 중에만 표시 */}
-              {process.env.NODE_ENV === 'development' && (
-                <div style={{ marginTop: '1rem', padding: '0.5rem', background: '#f3f4f6', borderRadius: '8px', fontSize: '0.75rem' }}>
-                  <details>
-                    <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>디버깅 정보 (개발용)</summary>
-                    <pre style={{ marginTop: '0.5rem', fontSize: '0.7rem', overflow: 'auto' }}>
-                      {JSON.stringify(reservationInfo, null, 2)}
-                    </pre>
-                  </details>
-                </div>
-              )}
             </div>
           </section>
         )}
@@ -520,41 +517,6 @@ const ReviewWrite = () => {
           </section>
         )}
 
-        {/* 별점 섹션 */}
-        <section className="rating-section">
-          <h3 className="section-title">멘토링 만족도</h3>
-          <div className="stars-container">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                className={`star-button ${(hoverRating || rating) >= star ? 'active' : ''}`}
-                onClick={() => handleStarClick(star)}
-                onMouseEnter={() => setHoverRating(star)}
-                onMouseLeave={() => setHoverRating(0)}
-                disabled={isSubmitting}
-              >
-                <Star className="star-icon" />
-              </button>
-            ))}
-          </div>
-          <p className="rating-text">
-            {rating > 0 ? (
-              <>
-                <span className="rating-number">{rating}점</span>
-                <span className="rating-description">
-                  {rating === 5 && '정말 만족해요!'}
-                  {rating === 4 && '만족해요'}
-                  {rating === 3 && '보통이에요'}
-                  {rating === 2 && '아쉬워요'}
-                  {rating === 1 && '많이 아쉬워요'}
-                </span>
-              </>
-            ) : (
-              '별점을 선택해주세요'
-            )}
-          </p>
-        </section>
-
         {/* 리뷰 텍스트 섹션 */}
         <section className="review-text-section">
           <h3 className="section-title">상세 후기</h3>
@@ -586,9 +548,9 @@ const ReviewWrite = () => {
             </div>
           ) : (
             <button
-              className={`submit-button ${rating > 0 && reviewText.trim() ? 'active' : ''}`}
+              className={`submit-button ${reviewText.trim() ? 'active' : ''}`}
               onClick={handleSubmit}
-              disabled={isSubmitting || rating === 0 || !reviewText.trim()}
+              disabled={isSubmitting || !reviewText.trim()}
             >
               {isSubmitting ? (
                 <>
