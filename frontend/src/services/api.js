@@ -456,6 +456,10 @@ export const inquiryAPI = {
   getUserInquiries: (params) => api.get('/api/complaints/myComplaints',
       {params}),
 
+  // [사용자] 문의 답변 조회
+  getUserAnswer: (complaintId) => api.get(`/api/complaints/${complaintId}/answers`),
+
+
   // [사용자] 내 문의 상세 조회 (== 일반 상세 조회)
   getUserInquiryDetail: (complaintId) => api.get(
       `/api/complaints/${complaintId}`),
@@ -546,7 +550,7 @@ export const adminAPI = {
       api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
 
   // [관리자] 문의 답변 조회
-  getAdaminAnswer: (answerId) => api.get(`/api/admin/complaints/${complaintId}/answers`),
+  getAdminAnswer: (complaintId) => api.get(`/api/admin/complaints/${complaintId}/answers`),
 
   // [관리자] 문의 삭제
   deleteInquiry: (complaintId) => api.delete(

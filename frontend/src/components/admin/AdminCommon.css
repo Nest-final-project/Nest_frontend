@@ -3,8 +3,20 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  background: transparent; /* 부모의 배경을 따라감 */
+  background: transparent !important; /* 부모의 배경을 따라감 - 강제 적용 */
   min-height: 100vh;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* 다크모드와 라이트모드 모두에서 배경 강제 투명 */
+.admin-content-wrapper,
+.admin-content-wrapper.dark-mode,
+.dark-mode .admin-content-wrapper,
+div.admin-content-wrapper {
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
 }
 
 /* 헤더 스타일 */
@@ -31,6 +43,39 @@
 .admin-content-wrapper.dark-mode .header-left h2 {
   color: white !important;
   text-shadow: 0 2px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 다크모드에서 전체 래퍼 배경 투명 */
+.dark-mode,
+.admin-content-wrapper.dark-mode {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
+
+/* 경력 관리 컴포넌트 특별 스타일 */
+.career-management {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.career-management.dark-mode {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: white;
+}
+
+.admin-content-wrapper:has(.career-title),
+.admin-content-wrapper:has(.career-table) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.dark-mode .admin-content-wrapper:has(.career-title),
+.dark-mode .admin-content-wrapper:has(.career-table) {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* 쿠폰 제목 CoffeeChat 테마 */
@@ -105,6 +150,12 @@
   position: relative;
 }
 
+/* 경력 제목 아이콘 색상 */
+.career-title svg {
+  color: #ffffff !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
 
 /* 다크모드에서 쿠폰 제목 */
 .dark-mode .coupon-title,
@@ -160,6 +211,12 @@
   background-clip: text;
   text-shadow: 0 2px 12px rgba(255, 179, 0, 0.3);
   position: relative;
+}
+
+/* 민원 제목 아이콘 색상 */
+.complaint-title svg {
+  color: #ffffff !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 /* 다크모드에서 민원 제목 */
@@ -228,6 +285,12 @@
   background-clip: text;
   text-shadow: 0 2px 12px rgba(255, 179, 0, 0.3);
   position: relative;
+}
+
+/* 경력 제목 아이콘 색상 */
+.career-title svg {
+  color: #ffffff !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 
@@ -532,6 +595,12 @@ html .admin-content-wrapper.dark-mode.career-management .career-title {
   background-clip: text;
   text-shadow: 0 2px 12px rgba(255, 179, 0, 0.3);
   position: relative;
+}
+
+/* 민원 제목 아이콘 색상 */
+.complaint-title svg {
+  color: #ffffff !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 
@@ -3062,7 +3131,7 @@ html .admin-content-wrapper.dark-mode.career-management .career-title {
 }
 
 .cell-content strong {
-  color: #374151;
+  color: #ffffff;
   font-weight: 600;
 }
 

@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Edit3, RefreshCw, Briefcase, CheckCircle, XCircle, User, AlertTriangle } from 'lucide-react';
-import { adminAPI } from '../../services/api';
-import { accessTokenUtils } from '../../utils/tokenUtils.js';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
+import {
+  Edit3,
+  RefreshCw,
+  Briefcase,
+  CheckCircle,
+  XCircle,
+  User,
+  AlertTriangle
+} from 'lucide-react';
+import {adminAPI} from '../../services/api';
+import {accessTokenUtils} from '../../utils/tokenUtils.js';
 import CareerDetailModal from './CareerDetailModal';
 import './AdminCommon.css';
 
-const CareerManagement = ({ isDarkMode }) => {
+const CareerManagement = ({isDarkMode}) => {
   console.log('🚀 CareerManagement 컴포넌트 렌더링 시작');
-  
+
   const [careers, setCareers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
@@ -62,7 +70,8 @@ const CareerManagement = ({ isDarkMode }) => {
       // 응답 데이터 처리
       let careerData = [];
       if (response.data) {
-        if (response.data.data && response.data.data.content && Array.isArray(response.data.data.content)) {
+        if (response.data.data && response.data.data.content && Array.isArray(
+            response.data.data.content)) {
           // 페이징된 응답 처리 - 중첩된 구조
           careerData = response.data.data.content;
           console.log('✅ response.data.data.content 경로 사용');
@@ -71,7 +80,8 @@ const CareerManagement = ({ isDarkMode }) => {
             totalElements: response.data.data.totalElements || 0,
             totalPages: response.data.data.totalPages || 0
           }));
-        } else if (response.data.content && Array.isArray(response.data.content)) {
+        } else if (response.data.content && Array.isArray(
+            response.data.content)) {
           // 페이징된 응답 처리 - 일반 구조
           careerData = response.data.content;
           console.log('✅ response.data.content 경로 사용');
@@ -190,12 +200,12 @@ const CareerManagement = ({ isDarkMode }) => {
     try {
       await adminAPI.updateMentorCareerStatus(careerId, newStatus);
       setCareers(prevCareers => prevCareers.map(career =>
-          career.careerId === careerId ? { ...career, status: newStatus } : career
+          career.careerId === careerId ? {...career, status: newStatus} : career
       ));
       // 상세 모달이 열려있고, 대상 경력이 바뀐 거라면 모달 내용도 업데이트
       setSelectedCareer(prevSelected => {
         if (prevSelected && prevSelected.careerId === careerId) {
-          return { ...prevSelected, status: newStatus };
+          return {...prevSelected, status: newStatus};
         }
         return prevSelected;
       });
@@ -227,7 +237,6 @@ const CareerManagement = ({ isDarkMode }) => {
       setDetailLoading(false);
     }
   }, []);
-
 
   // 첨부파일 다운로드
   const handleFileDownload = async (filename) => {
@@ -276,16 +285,18 @@ const CareerManagement = ({ isDarkMode }) => {
   const getStatusBadge = useCallback((status) => {
     switch (status) {
       case 'AUTHORIZED':
-        return { className: 'approved', text: '승인됨', icon: CheckCircle };
+        return {className: 'approved', text: '승인됨', icon: CheckCircle};
       case 'UNAUTHORIZED':
       default:
-        return { className: 'rejected', text: '거절됨', icon: XCircle };
+        return {className: 'rejected', text: '거절됨', icon: XCircle};
     }
   }, []);
 
   // 날짜 포맷
   const formatDate = useCallback((dateStr) => {
-    if (!dateStr) return '-';
+    if (!dateStr) {
+      return '-';
+    }
     return dateStr.slice(0, 10);
   }, []);
 
@@ -312,7 +323,7 @@ const CareerManagement = ({ isDarkMode }) => {
   // 필터 초기화
   const handleResetFilters = () => {
     setFilterStatus('all');
-    setPagination(prev => ({ ...prev, page: 0 }));
+    setPagination(prev => ({...prev, page: 0}));
   };
 
   // 컴포넌트 언마운트 시 정리
@@ -332,11 +343,11 @@ const CareerManagement = ({ isDarkMode }) => {
   });
 
   return (
-      <div className={isDarkMode ? 'dark-mode' : ''}>
+      <div className={`career-management ${isDarkMode ? 'dark-mode' : ''}`} style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', minHeight: '100vh' }}>
         <div className="content-header">
           <div className="header-left">
             <h2 className="career-title">
-              <Briefcase size={28} />
+              <Briefcase size={28} color="#ffffff"/>
               경력 관리
             </h2>
             <p>멘토들의 경력 정보를 검토하고 관리합니다</p>
@@ -347,7 +358,7 @@ const CareerManagement = ({ isDarkMode }) => {
                 onClick={handleManualRefresh}
                 disabled={loading}
             >
-              <RefreshCw size={18} className={loading ? 'spinning' : ''} />
+              <RefreshCw size={18} className={loading ? 'spinning' : ''}/>
               새로고침
             </button>
           </div>
@@ -356,7 +367,7 @@ const CareerManagement = ({ isDarkMode }) => {
         {/* 에러 표시 */}
         {error && (
             <div className="error-message">
-              <AlertTriangle size={18} />
+              <AlertTriangle size={18}/>
               {error}
               <button onClick={handleManualRefresh} className="retry-btn">
                 재시도
@@ -370,11 +381,13 @@ const CareerManagement = ({ isDarkMode }) => {
             <div className="stat-label">총 건수</div>
           </div>
           <div className="stat-card approved">
-            <div className="stat-number">{careers.filter(c => c.status === 'AUTHORIZED').length}</div>
+            <div className="stat-number">{careers.filter(
+                c => c.status === 'AUTHORIZED').length}</div>
             <div className="stat-label">승인됨</div>
           </div>
           <div className="stat-card rejected">
-            <div className="stat-number">{careers.filter(c => c.status === 'UNAUTHORIZED').length}</div>
+            <div className="stat-number">{careers.filter(
+                c => c.status === 'UNAUTHORIZED').length}</div>
             <div className="stat-label">거절됨</div>
           </div>
         </div>
@@ -391,12 +404,12 @@ const CareerManagement = ({ isDarkMode }) => {
           </div>
           {loading ? (
               <div className="loading-state">
-                <RefreshCw className="spinning" size={24} />
+                <RefreshCw className="spinning" size={24}/>
                 <p>경력 데이터를 불러오는 중...</p>
               </div>
           ) : careers.length === 0 ? (
               <div className="empty-state">
-                <Briefcase size={48} />
+                <Briefcase size={48}/>
                 <h3>경력이 없습니다</h3>
                 <p>
                   {filterStatus !== 'all'
@@ -421,17 +434,20 @@ const CareerManagement = ({ isDarkMode }) => {
                     <div key={career.careerId} className="table-row">
                       <div className="table-cell">
                         <div className="cell-content">
-                          <User size={16} />
+                          <User size={16}/>
                           <strong>{career.mentorName}</strong>
                         </div>
                       </div>
                       <div className="table-cell">{career.mentorEmail}</div>
                       <div className="table-cell">{career.company}</div>
-                      <div className="table-cell">{formatDate(career.startAt)}</div>
-                      <div className="table-cell">{formatDate(career.endAt)}</div>
+                      <div className="table-cell">{formatDate(
+                          career.startAt)}</div>
+                      <div className="table-cell">{formatDate(
+                          career.endAt)}</div>
                       <div className="table-cell">
-                        <span className={`status-badge ${statusBadge.className}`}>
-                          <StatusIcon size={14} />
+                        <span
+                            className={`status-badge ${statusBadge.className}`}>
+                          <StatusIcon size={14}/>
                           {statusBadge.text}
                         </span>
                       </div>
@@ -443,26 +459,28 @@ const CareerManagement = ({ isDarkMode }) => {
                               title="상세보기"
                               disabled={detailLoading}
                           >
-                            <Edit3 size={16} />
+                            <Edit3 size={16}/>
                           </button>
                           {career.status !== 'AUTHORIZED' && (
                               <button
                                   className="action-btn approve"
-                                  onClick={() => handleStatusChange(career.careerId, 'AUTHORIZED')}
+                                  onClick={() => handleStatusChange(
+                                      career.careerId, 'AUTHORIZED')}
                                   title="승인"
                                   disabled={detailLoading}
                               >
-                                <CheckCircle size={16} />
+                                <CheckCircle size={16}/>
                               </button>
                           )}
                           {career.status !== 'UNAUTHORIZED' && (
                               <button
                                   className="action-btn reject"
-                                  onClick={() => handleStatusChange(career.careerId, 'UNAUTHORIZED')}
+                                  onClick={() => handleStatusChange(
+                                      career.careerId, 'UNAUTHORIZED')}
                                   title="거절"
                                   disabled={detailLoading}
                               >
-                                <XCircle size={16} />
+                                <XCircle size={16}/>
                               </button>
                           )}
                         </div>
@@ -499,14 +517,16 @@ const CareerManagement = ({ isDarkMode }) => {
               <button
                   className="pagination-btn"
                   onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page >= pagination.totalPages - 1 || loading}
+                  disabled={pagination.page >= pagination.totalPages - 1
+                      || loading}
               >
                 다음
               </button>
               <button
                   className="pagination-btn"
                   onClick={() => handlePageChange(pagination.totalPages - 1)}
-                  disabled={pagination.page >= pagination.totalPages - 1 || loading}
+                  disabled={pagination.page >= pagination.totalPages - 1
+                      || loading}
               >
                 마지막
               </button>

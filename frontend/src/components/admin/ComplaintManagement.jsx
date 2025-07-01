@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Edit3, RefreshCw, FileText, Clock, User, AlertTriangle } from 'lucide-react';
-import { adminAPI, userAPI } from '../../services/api';
-import { accessTokenUtils } from '../../utils/tokenUtils.js';
+import React, {useState, useEffect, useCallback} from 'react';
+import {
+  Edit3,
+  RefreshCw,
+  FileText,
+  Clock,
+  User,
+  AlertTriangle
+} from 'lucide-react';
+import {adminAPI, userAPI} from '../../services/api';
+import {accessTokenUtils} from '../../utils/tokenUtils.js';
 import ComplaintDetailModal from './ComplaintDetailModal.jsx';
 import './AdminCommon.css';
 
-const ComplaintManagement = ({ isDarkMode }) => {
+const ComplaintManagement = ({isDarkMode}) => {
   console.log('🚀 ComplaintManagement 컴포넌트 렌더링 시작');
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,7 +52,6 @@ const ComplaintManagement = ({ isDarkMode }) => {
         sort: 'createdAt,desc'
       };
 
-
       // 필터가 'all'이 아닌 경우 상태 필터 추가
       if (filterType !== 'all') {
         params.status = filterType;
@@ -61,7 +67,8 @@ const ComplaintManagement = ({ isDarkMode }) => {
       // 응답 데이터 처리
       let complaintData = [];
       if (response.data) {
-        if (response.data.data && response.data.data.content && Array.isArray(response.data.data.content)) {
+        if (response.data.data && response.data.data.content && Array.isArray(
+            response.data.data.content)) {
           // 페이징된 응답 처리 - 중첩된 구조
           complaintData = response.data.data.content;
           console.log('✅ response.data.data.content 경로 사용');
@@ -70,7 +77,8 @@ const ComplaintManagement = ({ isDarkMode }) => {
             totalElements: response.data.data.totalElements || 0,
             totalPages: response.data.data.totalPages || 0
           }));
-        } else if (response.data.content && Array.isArray(response.data.content)) {
+        } else if (response.data.content && Array.isArray(
+            response.data.content)) {
           // 페이징된 응답 처리 - 일반 구조
           complaintData = response.data.content;
           console.log('✅ response.data.content 경로 사용');
@@ -188,7 +196,9 @@ const ComplaintManagement = ({ isDarkMode }) => {
   const [userCache, setUserCache] = useState(new Map());
 
   const getUserInfo = async (userId) => {
-    if (!userId) return null;
+    if (!userId) {
+      return null;
+    }
 
     // 캐시에서 먼저 확인
     if (userCache.has(userId)) {
@@ -248,7 +258,7 @@ const ComplaintManagement = ({ isDarkMode }) => {
         console.log('🔄 기본 데이터로 모달 열기');
 
         // 기본 데이터에서도 사용자 정보 조회 시도
-        let fallbackComplaint = { ...complaint };
+        let fallbackComplaint = {...complaint};
         if (complaint.userId) {
           try {
             const userInfo = await getUserInfo(complaint.userId);
@@ -276,7 +286,7 @@ const ComplaintManagement = ({ isDarkMode }) => {
   // 답변 등록
   const handleAnswerSubmit = async (complaintId, answerContent) => {
     try {
-      console.log('📤 답변 등록 시작:', { complaintId, answerContent });
+      console.log('📤 답변 등록 시작:', {complaintId, answerContent});
 
       const answerData = {
         contents: answerContent,  // contents 필드로 수정
@@ -312,7 +322,6 @@ const ComplaintManagement = ({ isDarkMode }) => {
     }
   };
 
-
   // 페이지 변경
   const handlePageChange = (newPage) => {
     setPagination(prev => ({
@@ -320,7 +329,6 @@ const ComplaintManagement = ({ isDarkMode }) => {
       page: newPage
     }));
   };
-
 
   // 수동 새로고침
   const handleManualRefresh = () => {
@@ -330,51 +338,74 @@ const ComplaintManagement = ({ isDarkMode }) => {
   // 필터 초기화
   const handleResetFilters = () => {
     setFilterType('all');
-    setPagination(prev => ({ ...prev, page: 0 }));
+    setPagination(prev => ({...prev, page: 0}));
   };
 
   // 유틸리티 함수들
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending': return '#f59e0b';
-      case 'answered': return '#3b82f6';
-      case 'resolved': return '#10b981';
-      case 'closed': return '#6b7280';
-      default: return '#6b7280';
+      case 'pending':
+        return '#f59e0b';
+      case 'answered':
+        return '#3b82f6';
+      case 'resolved':
+        return '#10b981';
+      case 'closed':
+        return '#6b7280';
+      default:
+        return '#6b7280';
     }
   };
 
   const getStatusText = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending': return '대기중';
-      case 'answered': return '답변완료';
-      case 'resolved': return '해결완료';
-      case 'closed': return '종료';
-      default: return status || '알 수 없음';
+      case 'pending':
+        return '대기중';
+      case 'answered':
+        return '답변완료';
+      case 'resolved':
+        return '해결완료';
+      case 'closed':
+        return '종료';
+      default:
+        return status || '알 수 없음';
     }
   };
 
   const getCategoryText = (category) => {
     switch (category?.toLowerCase()) {
-      case 'complaint': return '민원';
-      case 'inquiry_account': return '계정 문의';
-      case 'inquiry_chat': return '채팅 문의';
-      case 'inquiry_pay': return '결제 문의';
-      case 'inquiry_reservation': return '예약 문의';
-      case 'inquiry_ticket': return '이용권 문의';
-      case 'inquiry_profile': return '프로필 문의';
+      case 'complaint':
+        return '민원';
+      case 'inquiry_account':
+        return '계정 문의';
+      case 'inquiry_chat':
+        return '채팅 문의';
+      case 'inquiry_pay':
+        return '결제 문의';
+      case 'inquiry_reservation':
+        return '예약 문의';
+      case 'inquiry_ticket':
+        return '이용권 문의';
+      case 'inquiry_profile':
+        return '프로필 문의';
         // 기존 호환성을 위한 값들
-      case 'payment': return '결제 문의';
-      case 'account': return '계정 문의';
-      case 'chat': return '채팅 문의';
-      case 'reservation': return '예약 문의';
-      case 'ticket': return '이용권 문의';
-      case 'profile': return '프로필 문의';
-      default: return category || '기타';
+      case 'payment':
+        return '결제 문의';
+      case 'account':
+        return '계정 문의';
+      case 'chat':
+        return '채팅 문의';
+      case 'reservation':
+        return '예약 문의';
+      case 'ticket':
+        return '이용권 문의';
+      case 'profile':
+        return '프로필 문의';
+      default:
+        return category || '기타';
     }
   };
-
 
   // 답변 제출 상태 관리
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
@@ -416,7 +447,7 @@ const ComplaintManagement = ({ isDarkMode }) => {
         <div className="content-header">
           <div className="header-left">
             <h2 className="complaint-title">
-              <FileText size={28} />
+              <FileText size={28} color="#ffffff"/>
               민원 관리
             </h2>
             <p>사용자 문의 및 신고를 관리합니다</p>
@@ -427,7 +458,7 @@ const ComplaintManagement = ({ isDarkMode }) => {
                 onClick={handleManualRefresh}
                 disabled={loading}
             >
-              <RefreshCw size={18} className={loading ? 'spinning' : ''} />
+              <RefreshCw size={18} className={loading ? 'spinning' : ''}/>
               새로고침
             </button>
           </div>
@@ -439,11 +470,13 @@ const ComplaintManagement = ({ isDarkMode }) => {
             <div className="stat-label">총 건수</div>
           </div>
           <div className="stat-card pending">
-            <div className="stat-number">{complaints.filter(c => c.status?.toLowerCase() === 'pending').length}</div>
+            <div className="stat-number">{complaints.filter(
+                c => c.status?.toLowerCase() === 'pending').length}</div>
             <div className="stat-label">대기중</div>
           </div>
           <div className="stat-card approved">
-            <div className="stat-number">{complaints.filter(c => c.status?.toLowerCase() === 'answered').length}</div>
+            <div className="stat-number">{complaints.filter(
+                c => c.status?.toLowerCase() === 'answered').length}</div>
             <div className="stat-label">답변완료</div>
           </div>
         </div>
@@ -451,7 +484,7 @@ const ComplaintManagement = ({ isDarkMode }) => {
         {/* 에러 표시 */}
         {error && (
             <div className="error-message">
-              <AlertTriangle size={18} />
+              <AlertTriangle size={18}/>
               {error}
               <button onClick={handleManualRefresh} className="retry-btn">
                 재시도
@@ -472,12 +505,12 @@ const ComplaintManagement = ({ isDarkMode }) => {
 
           {loading ? (
               <div className="loading-state">
-                <RefreshCw className="spinning" size={24} />
+                <RefreshCw className="spinning" size={24}/>
                 <p>민원 데이터를 불러오는 중...</p>
               </div>
           ) : complaints.length === 0 ? (
               <div className="empty-state">
-                <FileText size={48} />
+                <FileText size={48}/>
                 <h3>민원이 없습니다</h3>
                 <p>
                   {filterType !== 'all'
@@ -499,33 +532,47 @@ const ComplaintManagement = ({ isDarkMode }) => {
                 const getStatusBadge = (status) => {
                   switch (status?.toLowerCase()) {
                     case 'pending':
-                      return { className: 'pending', text: '대기중', icon: Clock };
+                      return {className: 'pending', text: '대기중', icon: Clock};
                     case 'answered':
-                      return { className: 'approved', text: '답변완료', icon: AlertTriangle };
+                      return {
+                        className: 'approved',
+                        text: '답변완료',
+                        icon: AlertTriangle
+                      };
                     case 'resolved':
-                      return { className: 'approved', text: '해결완료', icon: AlertTriangle };
+                      return {
+                        className: 'approved',
+                        text: '해결완료',
+                        icon: AlertTriangle
+                      };
                     case 'closed':
                     default:
-                      return { className: 'rejected', text: '종료', icon: AlertTriangle };
+                      return {
+                        className: 'rejected',
+                        text: '종료',
+                        icon: AlertTriangle
+                      };
                   }
                 };
                 const statusBadge = getStatusBadge(complaint.status);
                 const StatusIcon = statusBadge.icon;
 
                 return (
-                    <div key={complaint.id ?? `${complaint.title}-${index}`} className="table-row">
+                    <div key={complaint.id ?? `${complaint.title}-${index}`}
+                         className="table-row">
                       <div className="table-cell">
-                        <span className="category-badge">{getCategoryText(complaint.category || complaint.type)}</span>
+                        <span className="category-badge">{getCategoryText(
+                            complaint.category || complaint.type)}</span>
                       </div>
                       <div className="table-cell">
                         <div className="cell-content">
-                          <FileText size={16} />
+                          <FileText size={16}/>
                           <strong>{complaint.title || '제목 없음'}</strong>
                         </div>
                       </div>
                       <div className="table-cell">
                         <div className="cell-content">
-                          <User size={16} />
+                          <User size={16}/>
                           {complaint.userName ||
                               userCache.get(complaint.userId)?.name ||
                               complaint.userEmail ||
@@ -533,10 +580,12 @@ const ComplaintManagement = ({ isDarkMode }) => {
                               `사용자${complaint.userId || '익명'}`}
                         </div>
                       </div>
-                      <div className="table-cell">{new Date(complaint.createdAt).toLocaleDateString('ko-KR')}</div>
+                      <div className="table-cell">{new Date(
+                          complaint.createdAt).toLocaleDateString(
+                          'ko-KR')}</div>
                       <div className="table-cell">
                   <span className={`status-badge ${statusBadge.className}`}>
-                    <StatusIcon size={14} />
+                    <StatusIcon size={14}/>
                     {statusBadge.text}
                   </span>
                       </div>
@@ -548,7 +597,7 @@ const ComplaintManagement = ({ isDarkMode }) => {
                               title="상세보기 및 답변"
                               disabled={loading}
                           >
-                            <Edit3 size={16} />
+                            <Edit3 size={16}/>
                           </button>
                         </div>
                       </div>
@@ -584,14 +633,16 @@ const ComplaintManagement = ({ isDarkMode }) => {
               <button
                   className="pagination-btn"
                   onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page >= pagination.totalPages - 1 || loading}
+                  disabled={pagination.page >= pagination.totalPages - 1
+                      || loading}
               >
                 다음
               </button>
               <button
                   className="pagination-btn"
                   onClick={() => handlePageChange(pagination.totalPages - 1)}
-                  disabled={pagination.page >= pagination.totalPages - 1 || loading}
+                  disabled={pagination.page >= pagination.totalPages - 1
+                      || loading}
               >
                 마지막
               </button>
