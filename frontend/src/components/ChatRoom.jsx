@@ -14,6 +14,7 @@ import './ChatRoom.css';
 import axios from 'axios';
 import {accessTokenUtils} from '../utils/tokenUtils';
 import {useWebSocket} from '../hooks/useWebSocket';
+import {reservationAPI, reviewAPI} from '../services/api';
 
 const ChatRoom = ({
   contact,
@@ -35,9 +36,8 @@ const ChatRoom = ({
   const [hasClosedModal, setHasClosedModal] = useState(false);
   const [reservationStatus, setReservationStatus] = useState(null);
   const [reservationLoading, setReservationLoading] = useState(false);
-  const [selectedRating, setSelectedRating] = useState(0);
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [hasWrittenReview, setHasWrittenReview] = useState(false); // 실제로 리뷰를 작성했는지 추적
+  const [reviewCheckLoading, setReviewCheckLoading] = useState(false); // 리뷰 확인 로딩 상태
   const [sessionEndTime, setSessionEndTime] = useState(null); // 세션 종료 시간
   const [fiveMinuteWarningShown, setFiveMinuteWarningShown] = useState(false); // 5분 전 알림 표시 여부
 
@@ -75,10 +75,25 @@ const ChatRoom = ({
     const shouldShowModal = (isChatRoomClosed || reservationStatus === 'COMPLETE') && 
                            !statusLoading && 
                            !reservationLoading && 
+                           !reviewCheckLoading && // 리뷰 확인 로딩 중이 아닐 때
                            !hasClosedModal && 
                            !showReviewModal &&
                            !hasWrittenReview && // 아직 리뷰를 작성하지 않았어야 함
                            !isMentor; // 멘토가 아닌 경우에만
+
+    console.log('🔍 리뷰 모달 표시 조건 확인:', {
+      isChatRoomClosed,
+      reservationStatus,
+      statusLoading,
+      reservationLoading,
+      reviewCheckLoading,
+      hasClosedModal,
+      showReviewModal,
+      hasWrittenReview,
+      isMentor,
+      shouldShowModal,
+      '최종 결과': shouldShowModal ? '모달 표시' : '모달 숨김'
+    });
 
     if (shouldShowModal) {
       const reason = isChatRoomClosed ? '채팅방 종료' : '예약 완료';
@@ -93,7 +108,7 @@ const ChatRoom = ({
       
       return () => clearTimeout(timer);
     }
-  }, [isChatRoomClosed, reservationStatus, statusLoading, reservationLoading, hasClosedModal, showReviewModal, hasWrittenReview, isMentor]);
+  }, [isChatRoomClosed, reservationStatus, statusLoading, reservationLoading, reviewCheckLoading, hasClosedModal, showReviewModal, hasWrittenReview, isMentor]);
 
   // 리뷰 모달 키보드 이벤트 (ESC 키로 닫기) 및 접근성
   useEffect(() => {
@@ -166,6 +181,99 @@ const ChatRoom = ({
     }
   };
 
+  // 리뷰 작성 여부 확인 (localStorage + API)
+  const checkReviewExists = async (reservationId) => {
+    if (!reservationId) {
+      console.warn('❌ checkReviewExists: 예약 ID가 없습니다');
+      return false;
+    }
+
+    try {
+      setReviewCheckLoading(true);
+      console.log(`🔍 예약 ${reservationId}의 리뷰 존재 여부 확인 중...`);
+
+      // 1. 먼저 localStorage에서 리뷰 완료 상태 확인
+      const reviewCompletedKey = `review_completed_${reservationId}`;
+      const isReviewCompletedLocally = localStorage.getItem(reviewCompletedKey) === 'true';
+      
+      console.log(`📋 localStorage 확인: ${reviewCompletedKey} = ${localStorage.getItem(reviewCompletedKey)}`);
+      console.log(`📋 localStorage 리뷰 완료 여부: ${isReviewCompletedLocally}`);
+      
+      if (isReviewCompletedLocally) {
+        console.log(`✅ localStorage에서 예약 ${reservationId} 리뷰 완료 확인됨`);
+        setHasWrittenReview(true);
+        return true;
+      }
+
+      // 2. localStorage에 없으면 API로 확인
+      console.log(`📡 API로 리뷰 존재 여부 확인 시작...`);
+      console.log(`📡 API 호출 파라미터:`, { reservationId: reservationId });
+      
+      try {
+        const response = await reviewAPI.getMyReviews({ reservationId: reservationId });
+        console.log(`📡 API 응답:`, response.data);
+        
+        const reviews = response.data.content || response.data.data || response.data || [];
+        const hasReview = reviews.length > 0;
+        
+        console.log(`📡 API에서 조회된 리뷰 개수: ${reviews.length}`);
+        console.log(`📡 조회된 리뷰 목록:`, reviews);
+        console.log(`✅ API에서 예약 ${reservationId} 리뷰 존재 여부: ${hasReview ? '있음' : '없음'}`);
+        setHasWrittenReview(hasReview);
+        
+        // API에서 리뷰가 확인되면 localStorage에도 저장
+        if (hasReview) {
+          localStorage.setItem(reviewCompletedKey, 'true');
+          console.log(`💾 API 확인 후 localStorage에 저장: ${reviewCompletedKey} = true`);
+        }
+        
+        return hasReview;
+      } catch (apiError) {
+        console.error(`❌ API 호출 실패:`, apiError);
+        
+        // API 호출 실패 시 직접 리뷰 존재 확인 API 시도
+        console.log(`🔄 대체 API 시도: 직접 예약별 리뷰 확인`);
+        try {
+          // 만약 getMyReviews가 작동하지 않으면 대체 방법 시도
+          const directResponse = await axios.get(`/api/reservations/${reservationId}/reviews`, {
+            headers: {
+              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
+            }
+          });
+          
+          console.log(`📡 대체 API 응답:`, directResponse.data);
+          const hasDirectReview = directResponse.status === 200;
+          setHasWrittenReview(hasDirectReview);
+          
+          if (hasDirectReview) {
+            localStorage.setItem(reviewCompletedKey, 'true');
+            console.log(`💾 대체 API로 localStorage에 저장: ${reviewCompletedKey} = true`);
+          }
+          
+          return hasDirectReview;
+        } catch (directError) {
+          console.error(`❌ 대체 API도 실패:`, directError);
+          if (directError.response?.status === 404) {
+            console.log(`📡 404 에러 = 리뷰 없음으로 판단`);
+            setHasWrittenReview(false);
+            return false;
+          }
+          throw directError;
+        }
+      }
+
+    } catch (err) {
+      console.error(`❌ 예약 ${reservationId} 리뷰 확인 실패:`, err);
+      console.error('❌ 에러 상세:', err.response?.data || err.message);
+      
+      // 에러 발생 시 리뷰가 없는 것으로 가정
+      setHasWrittenReview(false);
+      return false;
+    } finally {
+      setReviewCheckLoading(false);
+    }
+  };
+
   // 예약 상태 확인
   const checkReservationStatus = async (reservationId) => {
     if (!reservationId) {
@@ -177,28 +285,25 @@ const ChatRoom = ({
       setReservationLoading(true);
       console.log(`🔍 예약 ${reservationId}의 상태 확인 중...`);
 
-      const response = await axios.get(
-          `/api/reservations/${reservationId}/status`,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
-            }
-          }
-      );
+      // reservationAPI 사용하여 예약 정보 조회
+      const response = await reservationAPI.getReservation(reservationId);
+      
+      console.log('📋 예약 정보 API 응답:', response.data);
 
-      console.log('📋 예약 상태 API 응답:', response.data);
-
-      const status = response.data.status; // 예: "PENDING", "IN_PROGRESS", "COMPLETE", "CANCELLED"
+      const reservationData = response.data.data || response.data;
+      const status = reservationData.reservationStatus || reservationData.status;
+      
       setReservationStatus(status);
       
-      // 예약 정보도 함께 받아서 종료 시간 설정
-      if (response.data.reservation) {
-        const reservation = response.data.reservation;
-        if (reservation.date && reservation.endTime) {
-          const endDateTime = new Date(`${reservation.date}T${reservation.endTime}`);
-          setSessionEndTime(endDateTime);
-          console.log('📅 세션 종료 시간 설정:', endDateTime.toLocaleString());
-        }
+      // 예약 정보에서 종료 시간 설정
+      if (reservationData.reservationEndAt) {
+        const endDateTime = new Date(reservationData.reservationEndAt);
+        setSessionEndTime(endDateTime);
+        console.log('📅 세션 종료 시간 설정:', endDateTime.toLocaleString());
+      } else if (reservationData.date && reservationData.endTime) {
+        const endDateTime = new Date(`${reservationData.date}T${reservationData.endTime}`);
+        setSessionEndTime(endDateTime);
+        console.log('📅 세션 종료 시간 설정:', endDateTime.toLocaleString());
       }
       
       console.log(`✅ 예약 ${reservationId} 상태: ${status}`);
@@ -424,9 +529,8 @@ const ChatRoom = ({
       setHasClosedModal(false);
       setReservationStatus(null);
       setReservationLoading(false);
-      setSelectedRating(0);
-      setIsSubmittingRating(false);
       setHasWrittenReview(false);
+      setReviewCheckLoading(false);
       setSessionEndTime(null);
       setFiveMinuteWarningShown(false);
       
@@ -434,6 +538,47 @@ const ChatRoom = ({
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // localStorage 변경 감지 (리뷰 완료 시 실시간 업데이트)
+  useEffect(() => {
+    if (!reservationId) return;
+
+    const reviewCompletedKey = `review_completed_${reservationId}`;
+    
+    // 초기 localStorage 확인
+    const initialCheck = localStorage.getItem(reviewCompletedKey) === 'true';
+    console.log(`📋 초기 localStorage 확인: ${reviewCompletedKey} = ${localStorage.getItem(reviewCompletedKey)}, hasWrittenReview = ${hasWrittenReview}`);
+    if (initialCheck && !hasWrittenReview) {
+      console.log(`📝 초기 확인에서 예약 ${reservationId} 리뷰 완료 감지됨`);
+      setHasWrittenReview(true);
+    }
+    
+    // localStorage 변경 감지 함수
+    const handleStorageChange = (e) => {
+      console.log(`📋 localStorage 변경 감지:`, e.key, e.newValue);
+      if (e.key === reviewCompletedKey && e.newValue === 'true') {
+        console.log(`📝 localStorage에서 예약 ${reservationId} 리뷰 완료 감지됨`);
+        setHasWrittenReview(true);
+      }
+    };
+
+    // storage 이벤트 리스너 등록 (다른 탭에서의 변경 감지)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // 현재 탭에서의 변경도 감지하기 위한 주기적 체크
+    const checkInterval = setInterval(() => {
+      const isCompleted = localStorage.getItem(reviewCompletedKey) === 'true';
+      if (isCompleted && !hasWrittenReview) {
+        console.log(`📝 주기적 체크에서 예약 ${reservationId} 리뷰 완료 감지됨`);
+        setHasWrittenReview(true);
+      }
+    }, 1000); // 1초마다 체크 (더 빠르게)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(checkInterval);
+    };
+  }, [reservationId, hasWrittenReview]);
 
   // 5분 전 알림 타이머
   useEffect(() => {
@@ -487,9 +632,8 @@ const ChatRoom = ({
       setHasClosedModal(false);
       setReservationStatus(null);
       setReservationLoading(false);
-      setSelectedRating(0);
-      setIsSubmittingRating(false);
       setHasWrittenReview(false);
+      setReviewCheckLoading(false);
       setSessionEndTime(null);
       setFiveMinuteWarningShown(false);
 
@@ -501,16 +645,22 @@ const ChatRoom = ({
           // 1. 채팅방 상태 확인
           const isClosed = await checkChatRoomStatus(chatRoomId);
           
-          // 2. 채팅방이 종료된 경우에만 예약 상태 확인
+          // 2. 메시지 가져오기 (종료된 채팅방이나 완료된 예약이어도 기존 메시지는 볼 수 있음)
+          await fetchMessages(chatRoomId);
+          
+          // 3. 예약 ID가 있으면 항상 리뷰 확인 (채팅방 상태와 무관하게)
+          if (reservationId) {
+            console.log('📝 예약 ID가 있어 리뷰 존재 여부를 확인합니다...');
+            await checkReviewExists(reservationId);
+          }
+          
+          // 4. 채팅방이 종료된 경우에만 예약 상태 확인
           let reservationComplete = false;
           if (isClosed && reservationId) {
             console.log('📋 채팅방이 종료되어 예약 상태를 확인합니다...');
             const status = await checkReservationStatus(reservationId);
             reservationComplete = status === 'COMPLETE';
           }
-          
-          // 3. 메시지 가져오기 (종료된 채팅방이나 완료된 예약이어도 기존 메시지는 볼 수 있음)
-          await fetchMessages(chatRoomId);
           
           if (isClosed) {
             console.log(`🔒 채팅방 ${chatRoomId}이 종료되었습니다. 읽기 전용 모드입니다.`);
@@ -663,41 +813,9 @@ const ChatRoom = ({
     console.log('❌ 사용자가 리뷰 모달을 닫았습니다.');
     setShowReviewModal(false);
     setHasClosedModal(true);
-    setSelectedRating(0); // 별점 초기화
   };
 
-  const handleStarClick = async (rating) => {
-    console.log(`⭐ 사용자가 ${rating}점을 선택했습니다.`);
-    setSelectedRating(rating);
-    
-    // 간단한 만족도 제출 (선택사항)
-    if (!isSubmittingRating) {
-      setIsSubmittingRating(true);
-      try {
-        // 간단한 만족도 점수만 먼저 제출
-        const response = await axios.post(
-          `/api/reviews/rating`,
-          {
-            reservationId: reservationId,
-            chatRoomId: chatRoomId,
-            rating: rating,
-            mentorId: contact?.id || contact?.mentorId
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
-            }
-          }
-        );
-        console.log('✅ 만족도 점수 제출 완료:', response.data);
-      } catch (error) {
-        console.error('❌ 만족도 점수 제출 실패:', error);
-        // 실패해도 사용자 경험을 해치지 않도록 조용히 처리
-      } finally {
-        setIsSubmittingRating(false);
-      }
-    }
-  };
+
 
   const handleGoToReview = () => {
     console.log('📝 리뷰 작성 페이지로 이동합니다.');
@@ -712,12 +830,11 @@ const ChatRoom = ({
       setShowReviewModal(false);
       setHasClosedModal(true);
       
-      // 선택된 별점과 예약 ID도 URL에 포함
-      const ratingParam = selectedRating > 0 ? `&rating=${selectedRating}` : '';
+      // 예약 ID를 URL에 포함
       const reservationParam = reservationId ? `&reservationId=${reservationId}` : '';
       
       // 리뷰 페이지로 이동
-      window.location.href = `/review/write?mentorId=${mentorId}&mentorName=${encodeURIComponent(mentorName || '멘토')}&chatRoomId=${chatRoomId}${ratingParam}${reservationParam}`;
+      window.location.href = `/review/write?mentorId=${mentorId}&mentorName=${encodeURIComponent(mentorName || '멘토')}&chatRoomId=${chatRoomId}${reservationParam}`;
     } else {
       console.error('❌ 멘토 ID를 찾을 수 없습니다:', contact);
       alert('리뷰 작성 페이지로 이동할 수 없습니다. 멘토 정보가 없습니다.');
@@ -874,37 +991,6 @@ const ChatRoom = ({
                     <h3>{contact?.name || contact?.mentorName || '멘토'}님과의 멘토링</h3>
                     <p>소중한 시간을 함께해 주셔서 감사합니다!</p>
                   </div>
-                </div>
-
-                <div className="satisfaction-section">
-                  <h4>오늘 멘토링은 어떠셨나요?</h4>
-                  <div className="satisfaction-stars" role="radiogroup" aria-label="만족도 평가">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        className={`star-button ${selectedRating >= star ? 'active' : ''}`}
-                        onClick={() => handleStarClick(star)}
-                        disabled={isSubmittingRating}
-                        role="radio"
-                        aria-checked={selectedRating >= star}
-                        aria-label={`${star}점 만족도`}
-                        title={`${star}점 만족도`}
-                      >
-                        ⭐
-                      </button>
-                    ))}
-                  </div>
-                  <p className="satisfaction-text">
-                    {selectedRating > 0 
-                      ? `${selectedRating}점을 선택하셨습니다. 감사합니다!` 
-                      : '별을 클릭해서 만족도를 알려주세요'
-                    }
-                  </p>
-                  {isSubmittingRating && (
-                    <div className="rating-submitting">
-                      <span>만족도를 저장하는 중...</span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="review-actions">
@@ -1070,39 +1156,50 @@ const ChatRoom = ({
                     <span className="chat-closed-subtitle">
                       {isMentor 
                         ? "멘티가 리뷰를 남길 수 있습니다. 대화 내용은 계속 확인하실 수 있습니다"
-                        : hasClosedModal 
-                          ? "대화 내용은 계속 확인하실 수 있습니다" 
-                          : "잠시만 기다리시면 리뷰 작성 안내가 표시됩니다"
+                        : hasWrittenReview
+                          ? "소중한 리뷰를 남겨주셔서 감사합니다! 멘토님께 큰 도움이 될 것입니다"
+                          : hasClosedModal 
+                            ? "리뷰를 작성하시면 멘토님께 도움이 됩니다" 
+                            : "잠시만 기다리시면 리뷰 작성 안내가 표시됩니다"
                       }
                     </span>
                   </div>
                   
-                  {/* 모달을 닫은 멘티에게만 리뷰 버튼 표시 - 위쪽 배치 */}
+                  {/* 리뷰 관련 버튼 - 상황에 따라 다르게 표시 */}
                   {(() => {
-                    const shouldShowButton = hasClosedModal && !isMentor && !hasWrittenReview;
-                    console.log('🔍 리뷰 버튼 표시 조건 확인:', {
-                      hasClosedModal,
-                      isMentor,
-                      hasWrittenReview,
-                      userRole,
-                      shouldShowButton,
-                      '모달을 닫았나?': hasClosedModal ? '예' : '아니오',
-                      '멘토인가?': isMentor ? '예 (버튼 숨김)' : '아니오 (버튼 표시 가능)',
-                      '리뷰 작성했나?': hasWrittenReview ? '예 (버튼 숨김)' : '아니오 (버튼 표시)',
-                      '최종 결과': shouldShowButton ? '버튼 표시' : '버튼 숨김'
-                    });
-                    return shouldShowButton;
-                  })() && (
-                    <div className="review-button-section compact top">
-                      <button 
-                        className="compact-review-button"
-                        onClick={handleGoToReview}
-                      >
-                        <span className="button-icon">⭐</span>
-                        <span className="button-text">리뷰 작성</span>
-                      </button>
-                    </div>
-                  )}
+                    // 멘토는 버튼 표시 안함
+                    if (isMentor) return null;
+                    
+                    // 리뷰를 작성한 경우
+                    if (hasWrittenReview) {
+                      return (
+                        <div className="review-button-section compact top completed">
+                          <div className="review-completed-message">
+                            <span className="completion-icon">💝</span>
+                            <span className="completion-text">소중한 리뷰 감사합니다</span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    // 모달을 닫았지만 아직 리뷰를 작성하지 않은 경우
+                    if (hasClosedModal) {
+                      return (
+                        <div className="review-button-section compact top">
+                          <button 
+                            className="compact-review-button"
+                            onClick={handleGoToReview}
+                          >
+                            <span className="button-icon">⭐</span>
+                            <span className="button-text">리뷰 작성</span>
+                          </button>
+                        </div>
+                      );
+                    }
+                    
+                    // 아직 모달도 닫지 않은 경우 - 버튼 없음
+                    return null;
+                  })()}
                 </div>
               </div>
             </div>
