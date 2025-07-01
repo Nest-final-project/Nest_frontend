@@ -368,8 +368,12 @@ export const reviewAPI = {
   getReviews: (mentorId, params) =>
       api.get(`/api/reviews/mentors/${mentorId}`, {params}),
 
-  // 리뷰 작성
-  createReview: (reviewData) => api.post('/api/reviews', reviewData),
+  // 리뷰 작성 (예약 기반)
+  createReview: (reservationId, reviewData) => 
+      api.post(`/api/reservations/${reservationId}/reviews`, reviewData),
+
+  // 일반 리뷰 작성 (기존 API가 있는 경우)
+  createGeneralReview: (reviewData) => api.post('/api/reviews', reviewData),
 
   // 리뷰 수정
   updateReview: (reviewId, reviewData) =>
