@@ -203,7 +203,7 @@ export const authAPI = {
 
   // 인증코드 검증
   verifyEmail: (email, authCode) => api.post('/api/auth/signup/code/verify', {email, authCode}),
-  
+
 };
 
 // User API
@@ -459,6 +459,10 @@ export const inquiryAPI = {
   getUserInquiries: (params) => api.get('/api/complaints/myComplaints',
       {params}),
 
+  // [사용자] 문의 답변 조회
+  getUserAnswer: (complaintId) => api.get(`/api/complaints/${complaintId}/answer`),
+
+
   // [사용자] 내 문의 상세 조회 (== 일반 상세 조회)
   getUserInquiryDetail: (complaintId) => api.get(
       `/api/complaints/${complaintId}`),
@@ -491,13 +495,13 @@ export const careerAPI = {
   updateCertificate: (careerId, certificateData) => {
     const token = accessTokenUtils.getAccessToken();
     return fileApi.patch(
-      `/api/careers/${careerId}/certificates`,
-      certificateData,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      }
+        `/api/careers/${careerId}/certificates`,
+        certificateData,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
     );
   },
 
@@ -505,13 +509,13 @@ export const careerAPI = {
   createCareer: (profileId, careerData) => {
     const token = accessTokenUtils.getAccessToken();
     return fileApi.post(
-      `/api/profiles/${profileId}/careers`,
-      careerData,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      }
+        `/api/profiles/${profileId}/careers`,
+        careerData,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
     )
   },
 
@@ -548,13 +552,15 @@ export const adminAPI = {
   createInquiryAnswer: (complaintId, answerData) =>
       api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
 
+  // [관리자] 문의 답변 조회
+  getAdminAnswer: (complaintId) => api.get(`/api/admin/complaints/${complaintId}/answer`),
+
   // [관리자] 문의 삭제
   deleteInquiry: (complaintId) => api.delete(
       `/api/admin/complaints/${complaintId}`),
 
   // [관리자] 문의 답변 수정
-  updateInquiryStatus: (complaintId, status) =>
-      api.patch(`/api/admin/answers/{answerId}`, {status}),
+  updateAnswer: (answerId) => api.patch(`/answers/${answerId}`),
 
   // [관리자] 쿠폰 등록
   registerCoupon: (couponData) => api.post('/api/admin/coupons', couponData),

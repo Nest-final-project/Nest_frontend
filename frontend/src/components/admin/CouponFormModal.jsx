@@ -5,12 +5,14 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving }) => {
   const [form, setForm] = useState({
     name: '',
     discountAmount: '',
+    discountType: 'FIXED_AMOUNT', // 할인 타입 (기본값: 금액 할인)
     totalQuantity: '', //총 쿠폰 수
     issuedQuantity: '', // 발급된 쿠폰 수
     startDate: '',
     validFrom: '', // 유효 시작일
     validTo: '',  // 유효 종료일
-    minGrade: ''
+    minGrade: '',
+    minOrderAmount: '' // 최소 주문 금액
   });
 
   useEffect(() => {
@@ -37,12 +39,13 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving }) => {
     console.log('🔍 폼 제출 시작:', form);
     
     // 필수 항목 검증
-    if (!form.name || !form.validFrom || !form.validTo || !form.minGrade) {
+    if (!form.name || !form.validFrom || !form.validTo || !form.minGrade || !form.minOrderAmount) {
       console.warn('⚠️ 필수 항목 누락:', {
         name: !!form.name,
         validFrom: !!form.validFrom,
         validTo: !!form.validTo,
-        minGrade: !!form.minGrade
+        minGrade: !!form.minGrade,
+        minOrderAmount: !!form.minOrderAmount
       });
       alert('필수 항목을 모두 입력해주세요.');
       return;
@@ -52,6 +55,13 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving }) => {
     if (!form.discountAmount || form.discountAmount <= 0) {
       console.warn('⚠️ 할인 금액이 유효하지 않음:', form.discountAmount);
       alert('할인 금액을 올바르게 입력해주세요.');
+      return;
+    }
+    
+    // 퍼센트 할인인 경우 100% 초과하지 않도록 검증
+    if (form.discountType === 'PERCENT_AMOUNT' && form.discountAmount > 100) {
+      console.warn('⚠️ 퍼센트 할인이 100%를 초과함:', form.discountAmount);
+      alert('퍼센트 할인은 100%를 초과할 수 없습니다.');
       return;
     }
     
@@ -92,20 +102,39 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving }) => {
             </div>
 
             <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="discountType">할인 타입</label>
+                <select
+                  id="discountType"
+                  name="discountType"
+                  value={form.discountType}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="FIXED_AMOUNT">금액 할인</option>
+                  <option value="PERCENT_AMOUNT">퍼센트 할인</option>
+                </select>
+              </div>
+
               <div className="form-group" data-field="discountAmount">
-                <label htmlFor="discountAmount">할인 금액 (₩)</label>
+                <label htmlFor="discountAmount">
+                  할인 {form.discountType === 'FIXED_AMOUNT' ? '금액 (₩)' : '퍼센트 (%)'}
+                </label>
                 <input
                   id="discountAmount"
                   name="discountAmount"
                   type="number"
                   min="1"
+                  max={form.discountType === 'PERCENT_AMOUNT' ? 100 : undefined}
                   value={form.discountAmount}
                   onChange={handleChange}
-                  placeholder="5000"
+                  placeholder={form.discountType === 'FIXED_AMOUNT' ? '5000' : '10'}
                   required
                 />
               </div>
+            </div>
 
+            <div className="form-row">
               <div className="form-group">
                 <label htmlFor="totalQuantity">총 쿠폰 수</label>
                 <input
@@ -132,7 +161,6 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving }) => {
                   value={form.issuedQuantity}
                   onChange={handleChange}
                   placeholder="0"
-                  readOnly={!coupon} // 신규 생성 시에는 수정 불가
                 />
               </div>
 
@@ -174,22 +202,38 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving }) => {
               </div>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="minGrade">최소 등급</label>
-              <select
-                id="minGrade"
-                name="minGrade"
-                value={form.minGrade}
-                onChange={handleChange}
-                required
-              >
-                <option value="">등급을 선택하세요</option>
-                <option value="SEED">SEED (씨앗)</option>
-                <option value="SPROUT">SPROUT (새싹)</option>
-                <option value="BRANCH">BRANCH (가지)</option>
-                <option value="BLOOM">BLOOM (꽃)</option>
-                <option value="NEST">NEST (둥지)</option>
-              </select>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="minGrade">최소 등급</label>
+                <select
+                  id="minGrade"
+                  name="minGrade"
+                  value={form.minGrade}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">등급을 선택하세요</option>
+                  <option value="SEED">SEED (씨앗)</option>
+                  <option value="SPROUT">SPROUT (새싹)</option>
+                  <option value="BRANCH">BRANCH (가지)</option>
+                  <option value="BLOOM">BLOOM (꽃)</option>
+                  <option value="NEST">NEST (둥지)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="minOrderAmount">최소 주문 금액 (₩)</label>
+                <input
+                  id="minOrderAmount"
+                  name="minOrderAmount"
+                  type="number"
+                  min="0"
+                  value={form.minOrderAmount}
+                  onChange={handleChange}
+                  placeholder="10000"
+                  required
+                />
+              </div>
             </div>
             <div className="modal-actions">
               <button type="button" onClick={onClose} disabled={saving}>취소</button>

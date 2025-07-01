@@ -147,7 +147,7 @@ const CategoryManagement = ({ isDarkMode }) => {
   });
 
   return (
-    <div className={`admin-content-wrapper ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={isDarkMode ? 'dark-mode' : ''}>
       <div className="content-header">
         <div className="header-left">
           <h2 className="category-title">
@@ -158,26 +158,11 @@ const CategoryManagement = ({ isDarkMode }) => {
         </div>
         <div className="header-actions">
           <button 
-            className="btn-primary"
+            className="coffee-btn coffee-btn-primary"
             onClick={() => {
               console.log('🔘 카테고리 추가 버튼 클릭됨');
               setSelectedCategory(null);
               setShowCreateModal(true);
-            }}
-            style={{ 
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              zIndex: 10,
-              position: 'relative',
-              visibility: 'visible',
-              opacity: 1,
-              backgroundColor: '#6366f1',
-              color: 'white',
-              border: 'none',
-              padding: '12px 20px',
-              borderRadius: '12px',
-              cursor: 'pointer'
             }}
           >
             <Plus size={18} />
