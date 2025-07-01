@@ -72,11 +72,11 @@ const ChatRoom = ({
 
   // 채팅방 상태가 종료되거나 예약이 완료될 때 리뷰 모달 표시 (멘티만, 리뷰 작성까지)
   useEffect(() => {
-    const shouldShowModal = (isChatRoomClosed || reservationStatus === 'COMPLETE') && 
-                           !statusLoading && 
-                           !reservationLoading && 
+    const shouldShowModal = (isChatRoomClosed || reservationStatus === 'COMPLETE') &&
+                           !statusLoading &&
+                           !reservationLoading &&
                            !reviewCheckLoading && // 리뷰 확인 로딩 중이 아닐 때
-                           !hasClosedModal && 
+                           !hasClosedModal &&
                            !showReviewModal &&
                            !hasWrittenReview && // 아직 리뷰를 작성하지 않았어야 함
                            !isMentor; // 멘토가 아닌 경우에만
@@ -98,14 +98,14 @@ const ChatRoom = ({
     if (shouldShowModal) {
       const reason = isChatRoomClosed ? '채팅방 종료' : '예약 완료';
       console.log(`📝 ${reason}으로 리뷰 모달을 표시합니다 (리뷰 작성까지 반복)`);
-      
+
       // 사용자가 변화를 충분히 인지할 수 있도록 적절한 딜레이
       const delay = hasClosedModal ? 1000 : (isChatRoomClosed ? 3000 : 1500); // 이미 한번 닫았으면 1초, 처음이면 기존 딜레이
-      
+
       const timer = setTimeout(() => {
         setShowReviewModal(true);
       }, delay);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isChatRoomClosed, reservationStatus, statusLoading, reservationLoading, reviewCheckLoading, hasClosedModal, showReviewModal, hasWrittenReview, isMentor]);
@@ -121,10 +121,10 @@ const ChatRoom = ({
       };
 
       document.addEventListener('keydown', handleEscKey);
-      
+
       // 모달이 열렸을 때 body 스크롤 방지
       document.body.style.overflow = 'hidden';
-      
+
       // 모달에 포커스 설정 (접근성)
       const modalElement = document.querySelector('.review-modal');
       if (modalElement) {
@@ -135,7 +135,7 @@ const ChatRoom = ({
         );
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
-        
+
         const trapFocus = (e) => {
           if (e.key === 'Tab') {
             if (e.shiftKey) {
@@ -151,21 +151,21 @@ const ChatRoom = ({
             }
           }
         };
-        
+
         document.addEventListener('keydown', trapFocus);
-        
+
         // 첫 번째 요소에 포커스
         setTimeout(() => {
           if (firstElement) firstElement.focus();
         }, 100);
-        
+
         return () => {
           document.removeEventListener('keydown', handleEscKey);
           document.removeEventListener('keydown', trapFocus);
           document.body.style.overflow = 'unset';
         };
       }
-      
+
       return () => {
         document.removeEventListener('keydown', handleEscKey);
         document.body.style.overflow = 'unset';
@@ -195,10 +195,10 @@ const ChatRoom = ({
       // 1. 먼저 localStorage에서 리뷰 완료 상태 확인
       const reviewCompletedKey = `review_completed_${reservationId}`;
       const isReviewCompletedLocally = localStorage.getItem(reviewCompletedKey) === 'true';
-      
+
       console.log(`📋 localStorage 확인: ${reviewCompletedKey} = ${localStorage.getItem(reviewCompletedKey)}`);
       console.log(`📋 localStorage 리뷰 완료 여부: ${isReviewCompletedLocally}`);
-      
+
       if (isReviewCompletedLocally) {
         console.log(`✅ localStorage에서 예약 ${reservationId} 리뷰 완료 확인됨`);
         setHasWrittenReview(true);
@@ -208,29 +208,29 @@ const ChatRoom = ({
       // 2. localStorage에 없으면 API로 확인
       console.log(`📡 API로 리뷰 존재 여부 확인 시작...`);
       console.log(`📡 API 호출 파라미터:`, { reservationId: reservationId });
-      
+
       try {
         const response = await reviewAPI.getMyReviews({ reservationId: reservationId });
         console.log(`📡 API 응답:`, response.data);
-        
+
         const reviews = response.data.content || response.data.data || response.data || [];
         const hasReview = reviews.length > 0;
-        
+
         console.log(`📡 API에서 조회된 리뷰 개수: ${reviews.length}`);
         console.log(`📡 조회된 리뷰 목록:`, reviews);
         console.log(`✅ API에서 예약 ${reservationId} 리뷰 존재 여부: ${hasReview ? '있음' : '없음'}`);
         setHasWrittenReview(hasReview);
-        
+
         // API에서 리뷰가 확인되면 localStorage에도 저장
         if (hasReview) {
           localStorage.setItem(reviewCompletedKey, 'true');
           console.log(`💾 API 확인 후 localStorage에 저장: ${reviewCompletedKey} = true`);
         }
-        
+
         return hasReview;
       } catch (apiError) {
         console.error(`❌ API 호출 실패:`, apiError);
-        
+
         // API 호출 실패 시 직접 리뷰 존재 확인 API 시도
         console.log(`🔄 대체 API 시도: 직접 예약별 리뷰 확인`);
         try {
@@ -240,16 +240,16 @@ const ChatRoom = ({
               'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
             }
           });
-          
+
           console.log(`📡 대체 API 응답:`, directResponse.data);
           const hasDirectReview = directResponse.status === 200;
           setHasWrittenReview(hasDirectReview);
-          
+
           if (hasDirectReview) {
             localStorage.setItem(reviewCompletedKey, 'true');
             console.log(`💾 대체 API로 localStorage에 저장: ${reviewCompletedKey} = true`);
           }
-          
+
           return hasDirectReview;
         } catch (directError) {
           console.error(`❌ 대체 API도 실패:`, directError);
@@ -265,7 +265,7 @@ const ChatRoom = ({
     } catch (err) {
       console.error(`❌ 예약 ${reservationId} 리뷰 확인 실패:`, err);
       console.error('❌ 에러 상세:', err.response?.data || err.message);
-      
+
       // 에러 발생 시 리뷰가 없는 것으로 가정
       setHasWrittenReview(false);
       return false;
@@ -287,14 +287,14 @@ const ChatRoom = ({
 
       // reservationAPI 사용하여 예약 정보 조회
       const response = await reservationAPI.getReservation(reservationId);
-      
+
       console.log('📋 예약 정보 API 응답:', response.data);
 
       const reservationData = response.data.data || response.data;
       const status = reservationData.reservationStatus || reservationData.status;
-      
+
       setReservationStatus(status);
-      
+
       // 예약 정보에서 종료 시간 설정
       if (reservationData.reservationEndAt) {
         const endDateTime = new Date(reservationData.reservationEndAt);
@@ -305,7 +305,7 @@ const ChatRoom = ({
         setSessionEndTime(endDateTime);
         console.log('📅 세션 종료 시간 설정:', endDateTime.toLocaleString());
       }
-      
+
       console.log(`✅ 예약 ${reservationId} 상태: ${status}`);
       console.log(`🔧 reservationStatus 상태 설정됨:`, status);
 
@@ -314,7 +314,7 @@ const ChatRoom = ({
     } catch (err) {
       console.error(`❌ 예약 ${reservationId} 상태 확인 실패:`, err);
       console.error('에러 상세:', err.response?.data || err.message);
-      
+
       // 상태 확인 실패 시 null로 설정
       setReservationStatus(null);
       console.log('🔧 에러로 인해 reservationStatus를 null로 설정');
@@ -349,7 +349,7 @@ const ChatRoom = ({
       // 백엔드에서 "closed" 필드로 응답하므로 이를 사용
       const isClosed = response.data.closed;
       setIsChatRoomClosed(isClosed);
-      
+
       console.log(`✅ 채팅방 ${chatRoomId} 상태: ${isClosed ? '종료됨' : '활성'}`);
       console.log(`🔧 isChatRoomClosed 상태 설정됨:`, isClosed);
 
@@ -358,7 +358,7 @@ const ChatRoom = ({
     } catch (err) {
       console.error(`❌ 채팅방 ${chatRoomId} 상태 확인 실패:`, err);
       console.error('에러 상세:', err.response?.data || err.message);
-      
+
       // 상태 확인 실패 시 기본적으로 열린 상태로 가정
       setIsChatRoomClosed(false);
       console.log('🔧 에러로 인해 isChatRoomClosed를 false로 설정');
@@ -396,9 +396,10 @@ const ChatRoom = ({
       .map(msg => ({
         id: msg.messageId,
         text: msg.content,
-        sender: msg.mine ? 'user' : 'other',
+        sender: msg.isMine ? 'user' : 'other',
+        isMine: msg.isMine,
         timestamp: msg.sentAt,
-        status: msg.mine ? 'sent' : 'received'
+        status: msg.isMine ? 'sent' : 'received'
       }));
 
       console.log(`✅ 채팅방 ${chatRoomId}: ${newMessages.length}개 메시지 로드`);
@@ -461,9 +462,9 @@ const ChatRoom = ({
         const newMessage = {
           id: messageData.id || messageData.messageId || `ws-${Date.now()}`,
           text: messageData.content,
-          sender: messageData.mine ? 'user' : 'other',
+          sender: messageData.isMine ? 'user' : 'other',
           timestamp: messageData.sentAt || new Date().toISOString(),
-          status: messageData.mine ? 'sent' : 'received'
+          status: messageData.isMine ? 'sent' : 'received'
         };
 
         console.log(`✅ 채팅방 ${chatRoomId}에 실시간 메시지 추가:`, newMessage);
@@ -473,15 +474,15 @@ const ChatRoom = ({
           const exists = prev.some(msg => {
             // ID가 같은 경우
             if (msg.id === newMessage.id) return true;
-            
+
             // 임시 메시지와 실제 메시지가 매칭되는 경우
-            if (typeof msg.id === 'string' && msg.id.startsWith('temp-') && 
-                msg.text === newMessage.text && 
+            if (typeof msg.id === 'string' && msg.id.startsWith('temp-') &&
+                msg.text === newMessage.text &&
                 msg.sender === newMessage.sender &&
                 Math.abs(new Date(msg.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 5000) {
               return true;
             }
-            
+
             return false;
           });
 
@@ -489,8 +490,8 @@ const ChatRoom = ({
             console.log('🚫 중복 메시지이므로 무시:', newMessage);
             // 임시 메시지를 실제 메시지로 교체
             return prev.map(msg => {
-              if (typeof msg.id === 'string' && msg.id.startsWith('temp-') && 
-                  msg.text === newMessage.text && 
+              if (typeof msg.id === 'string' && msg.id.startsWith('temp-') &&
+                  msg.text === newMessage.text &&
                   msg.sender === newMessage.sender &&
                   Math.abs(new Date(msg.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 5000) {
                 console.log('🔄 임시 메시지를 실제 메시지로 교체:', newMessage);
@@ -533,7 +534,7 @@ const ChatRoom = ({
       setReviewCheckLoading(false);
       setSessionEndTime(null);
       setFiveMinuteWarningShown(false);
-      
+
       // body 스크롤 복원 (모달이 열려있던 경우를 대비)
       document.body.style.overflow = 'unset';
     };
@@ -544,7 +545,7 @@ const ChatRoom = ({
     if (!reservationId) return;
 
     const reviewCompletedKey = `review_completed_${reservationId}`;
-    
+
     // 초기 localStorage 확인
     const initialCheck = localStorage.getItem(reviewCompletedKey) === 'true';
     console.log(`📋 초기 localStorage 확인: ${reviewCompletedKey} = ${localStorage.getItem(reviewCompletedKey)}, hasWrittenReview = ${hasWrittenReview}`);
@@ -552,7 +553,7 @@ const ChatRoom = ({
       console.log(`📝 초기 확인에서 예약 ${reservationId} 리뷰 완료 감지됨`);
       setHasWrittenReview(true);
     }
-    
+
     // localStorage 변경 감지 함수
     const handleStorageChange = (e) => {
       console.log(`📋 localStorage 변경 감지:`, e.key, e.newValue);
@@ -564,7 +565,7 @@ const ChatRoom = ({
 
     // storage 이벤트 리스너 등록 (다른 탭에서의 변경 감지)
     window.addEventListener('storage', handleStorageChange);
-    
+
     // 현재 탭에서의 변경도 감지하기 위한 주기적 체크
     const checkInterval = setInterval(() => {
       const isCompleted = localStorage.getItem(reviewCompletedKey) === 'true';
@@ -594,7 +595,7 @@ const ChatRoom = ({
       // 5분 전이거나 그 시점을 지났을 때 (하지만 아직 종료 시간은 지나지 않았을 때)
       if (timeUntilEnd <= fiveMinutesInMs && timeUntilEnd > 0) {
         console.log(`⏰ 세션 종료 5분 전 알림 표시 (남은 시간: ${Math.ceil(timeUntilEnd / 1000 / 60)}분)`);
-        
+
         // 전역 알림 함수 사용
         if (window.showChatTerminationNotification) {
           const remainingMinutes = Math.ceil(timeUntilEnd / 1000 / 60);
@@ -603,7 +604,7 @@ const ChatRoom = ({
             sessionEndTime.toISOString()
           );
         }
-        
+
         setFiveMinuteWarningShown(true);
       }
     };
@@ -644,16 +645,16 @@ const ChatRoom = ({
         try {
           // 1. 채팅방 상태 확인
           const isClosed = await checkChatRoomStatus(chatRoomId);
-          
+
           // 2. 메시지 가져오기 (종료된 채팅방이나 완료된 예약이어도 기존 메시지는 볼 수 있음)
           await fetchMessages(chatRoomId);
-          
+
           // 3. 예약 ID가 있으면 항상 리뷰 확인 (채팅방 상태와 무관하게)
           if (reservationId) {
             console.log('📝 예약 ID가 있어 리뷰 존재 여부를 확인합니다...');
             await checkReviewExists(reservationId);
           }
-          
+
           // 4. 채팅방이 종료된 경우에만 예약 상태 확인
           let reservationComplete = false;
           if (isClosed && reservationId) {
@@ -661,11 +662,11 @@ const ChatRoom = ({
             const status = await checkReservationStatus(reservationId);
             reservationComplete = status === 'COMPLETE';
           }
-          
+
           if (isClosed) {
             console.log(`🔒 채팅방 ${chatRoomId}이 종료되었습니다. 읽기 전용 모드입니다.`);
           }
-          
+
           if (reservationComplete) {
             console.log(`✅ 예약 ${reservationId}이 완료되었습니다.`);
           }
@@ -711,8 +712,8 @@ const ChatRoom = ({
     if (isChatRoomClosed || reservationStatus === 'COMPLETE') {
       const reason = isChatRoomClosed ? '종료된 채팅방' : '완료된 예약';
       console.log(`🚫 ${reason}에서는 메시지 전송 차단`);
-      
-      const message = isChatRoomClosed 
+
+      const message = isChatRoomClosed
         ? '종료된 채팅방에서는 메시지를 보낼 수 없습니다.'
         : '완료된 멘토링에서는 메시지를 보낼 수 없습니다.';
       alert(message);
@@ -732,7 +733,9 @@ const ChatRoom = ({
     const optimisticMessage = {
       id: `temp-${Date.now()}`,
       text: messageContent,
-      sender: 'user',
+      sender:'user',
+      senderId: userId,  // 백엔드와 동일하게
+      isMine: true,
       timestamp: new Date().toISOString(),
       status: 'sending'
     };
@@ -779,7 +782,7 @@ const ChatRoom = ({
 
       // 입력창에 메시지 복원
       setMessage(messageContent);
-      
+
       // 입력창 높이도 복원
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
@@ -801,7 +804,7 @@ const ChatRoom = ({
   const handleTextareaChange = (e) => {
     const textarea = e.target;
     setMessage(textarea.value);
-    
+
     // 높이 자동 조절
     textarea.style.height = 'auto';
     const newHeight = Math.min(textarea.scrollHeight, 120); // 최대 120px
@@ -820,19 +823,19 @@ const ChatRoom = ({
   const handleGoToReview = () => {
     console.log('📝 리뷰 작성 페이지로 이동합니다.');
     console.log('✅ 리뷰 작성 시도로 hasWrittenReview = true 설정');
-    
+
     const mentorId = contact?.id || contact?.mentorId;
     const mentorName = contact?.name || contact?.mentorName;
-    
+
     if (mentorId) {
       // 리뷰 작성 완료로 표시
       setHasWrittenReview(true);
       setShowReviewModal(false);
       setHasClosedModal(true);
-      
+
       // 예약 ID를 URL에 포함
       const reservationParam = reservationId ? `&reservationId=${reservationId}` : '';
-      
+
       // 리뷰 페이지로 이동
       window.location.href = `/review/write?mentorId=${mentorId}&mentorName=${encodeURIComponent(mentorName || '멘토')}&chatRoomId=${chatRoomId}${reservationParam}`;
     } else {
@@ -872,12 +875,12 @@ const ChatRoom = ({
   // 연속 메시지인지 확인하는 함수 (같은 사람이 연속으로 보낸 메시지)
   const isConsecutiveMessage = (currentMessage, previousMessage) => {
     if (!previousMessage) return false;
-    
+
     // 같은 발신자이고, 5분 이내에 보낸 메시지인지 확인
     const timeDiff = new Date(currentMessage.timestamp) - new Date(previousMessage.timestamp);
     const fiveMinutes = 5 * 60 * 1000; // 5분을 밀리초로
-    
-    return currentMessage.sender === previousMessage.sender && 
+
+    return currentMessage.sender === previousMessage.sender &&
            timeDiff < fiveMinutes &&
            isSameDay(currentMessage.timestamp, previousMessage.timestamp);
   };
@@ -885,12 +888,12 @@ const ChatRoom = ({
   // 연속 메시지의 마지막인지 확인하는 함수
   const isLastInConsecutiveGroup = (currentMessage, nextMessage) => {
     if (!nextMessage) return true; // 마지막 메시지는 항상 시간 표시
-    
+
     // 다음 메시지와 연속되지 않으면 현재 메시지가 그룹의 마지막
     const timeDiff = new Date(nextMessage.timestamp) - new Date(currentMessage.timestamp);
     const fiveMinutes = 5 * 60 * 1000;
-    
-    return currentMessage.sender !== nextMessage.sender || 
+
+    return currentMessage.sender !== nextMessage.sender ||
            timeDiff >= fiveMinutes ||
            !isSameDay(currentMessage.timestamp, nextMessage.timestamp);
   };
@@ -899,7 +902,7 @@ const ChatRoom = ({
   const shouldShowDateSeparator = (currentMessage, previousMessage) => {
     // 메시지가 없으면 날짜 구분선도 표시하지 않음
     if (messages.length === 0) return false;
-    
+
     if (!previousMessage) return true; // 첫 번째 메시지는 항상 날짜 표시
     return !isSameDay(currentMessage.timestamp, previousMessage.timestamp);
   };
@@ -953,31 +956,31 @@ const ChatRoom = ({
       <div className="chat-room-container">
         {/* 리뷰 작성 모달 */}
         {showReviewModal && (
-          <div 
-            className="review-modal-overlay" 
+          <div
+            className="review-modal-overlay"
             onClick={handleOverlayClick}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
             aria-describedby="modal-description"
           >
-            <div 
-              className="review-modal" 
+            <div
+              className="review-modal"
               onClick={(e) => e.stopPropagation()}
               tabIndex="-1"
               role="document"
             >
               <div className="review-modal-header">
                 <h2 id="modal-title">🎉 멘토링이 완료되었습니다!</h2>
-                <button 
-                  className="modal-close-button" 
+                <button
+                  className="modal-close-button"
                   onClick={handleReviewModalClose}
                   aria-label="모달 닫기"
                 >
                   <X className="icon" />
                 </button>
               </div>
-              
+
               <div className="review-modal-content" id="modal-description">
                 <div className="mentor-info">
                   <div className="mentor-avatar">
@@ -994,8 +997,8 @@ const ChatRoom = ({
                 </div>
 
                 <div className="review-actions">
-                  <button 
-                    className="review-detail-button" 
+                  <button
+                    className="review-detail-button"
                     onClick={handleGoToReview}
                     aria-describedby="review-detail-description"
                   >
@@ -1004,8 +1007,8 @@ const ChatRoom = ({
                   <div id="review-detail-description" className="sr-only">
                     멘토에게 자세한 피드백을 남길 수 있는 페이지로 이동합니다
                   </div>
-                  <button 
-                    className="review-later-button" 
+                  <button
+                    className="review-later-button"
                     onClick={handleReviewModalClose}
                   >
                     나중에 하기
@@ -1084,22 +1087,35 @@ const ChatRoom = ({
                       <div className="date-separator-line"></div>
                     </div>
                   )}
-                  
+
                   {/* 메시지 */}
+                  {/*<div*/}
+                  {/*    className={`message ${msg.sender === 'user' ? 'sent'*/}
+                  {/*        : 'received'} ${isConsecutiveMessage(msg, messages[index - 1]) ? 'consecutive' : ''}`}*/}
+                  {/*>*/}
+                  {/*  {msg.sender === 'other' && (*/}
+                  {/*      <div className="message-avatar">*/}
+                  {/*        {contact?.profileImage ? (*/}
+                  {/*            <img src={contact.profileImage} alt={contact.name}/>*/}
+                  {/*        ) : (*/}
+                  {/*            <User className="avatar-icon"/>*/}
+                  {/*        )}*/}
+                  {/*      </div>*/}
+                  {/*  )}*/}
                   <div
-                      className={`message ${msg.sender === 'user' ? 'sent'
-                          : 'received'} ${isConsecutiveMessage(msg, messages[index - 1]) ? 'consecutive' : ''}`}
+                      className={`message ${
+                          msg.isMine ? 'sent' : 'received'
+                      } ${isConsecutiveMessage(msg, messages[index - 1]) ? 'consecutive' : ''}`}
                   >
-                    {msg.sender === 'other' && (
+                    {!msg.isMine && (
                         <div className="message-avatar">
                           {contact?.profileImage ? (
-                              <img src={contact.profileImage} alt={contact.name}/>
+                              <img src={contact.profileImage} alt={contact.name} />
                           ) : (
-                              <User className="avatar-icon"/>
+                              <User className="avatar-icon" />
                           )}
                         </div>
                     )}
-
                     <div className="message-content">
                       <div className="message-bubble">
                         <span style={{whiteSpace: 'pre-wrap'}}>{msg.text}</span>
@@ -1109,7 +1125,7 @@ const ChatRoom = ({
                         <div className="message-info">
                           <span className="message-time">{formatTime(
                               msg.timestamp)}</span>
-                          {msg.sender === 'user' && (
+                          {msg.isMine && (
                               <span className={`message-status ${msg.status}`}>
                           {msg.status === 'sending' && '⏳'}
                                 {msg.status === 'sent' && '✓'}
@@ -1154,22 +1170,22 @@ const ChatRoom = ({
                       {isChatRoomClosed ? '멘토링이 종료되었습니다' : '멘토링이 완료되었습니다'}
                     </span>
                     <span className="chat-closed-subtitle">
-                      {isMentor 
+                      {isMentor
                         ? "멘티가 리뷰를 남길 수 있습니다. 대화 내용은 계속 확인하실 수 있습니다"
                         : hasWrittenReview
                           ? "소중한 리뷰를 남겨주셔서 감사합니다! 멘토님께 큰 도움이 될 것입니다"
-                          : hasClosedModal 
-                            ? "리뷰를 작성하시면 멘토님께 도움이 됩니다" 
+                          : hasClosedModal
+                            ? "리뷰를 작성하시면 멘토님께 도움이 됩니다"
                             : "잠시만 기다리시면 리뷰 작성 안내가 표시됩니다"
                       }
                     </span>
                   </div>
-                  
+
                   {/* 리뷰 관련 버튼 - 상황에 따라 다르게 표시 */}
                   {(() => {
                     // 멘토는 버튼 표시 안함
                     if (isMentor) return null;
-                    
+
                     // 리뷰를 작성한 경우
                     if (hasWrittenReview) {
                       return (
@@ -1181,12 +1197,12 @@ const ChatRoom = ({
                         </div>
                       );
                     }
-                    
+
                     // 모달을 닫았지만 아직 리뷰를 작성하지 않은 경우
                     if (hasClosedModal) {
                       return (
                         <div className="review-button-section compact top">
-                          <button 
+                          <button
                             className="compact-review-button"
                             onClick={handleGoToReview}
                           >
@@ -1196,7 +1212,7 @@ const ChatRoom = ({
                         </div>
                       );
                     }
-                    
+
                     // 아직 모달도 닫지 않은 경우 - 버튼 없음
                     return null;
                   })()}
