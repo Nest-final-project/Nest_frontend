@@ -83,7 +83,7 @@ const CareerHistory = ({ userInfo }) => {
   const handleDelete = async (id) => {
     if (window.confirm("정말 삭제하시겠습니까?")) {
       try {
-        // await careerAPI.deleteCareer(id);
+        await careerAPI.deleteCareer(id);
         fetchCareers();
       } catch (err) {
         console.error("경력 삭제 실패:", err);
