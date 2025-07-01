@@ -197,7 +197,10 @@ const NotificationToast = ({ notification, onClose }) => {
               {reservationData && (
                 <div className="reservation-info-toast">
                   <div className="mentor-info-toast">
-                    <div className="mentor-name-toast">{reservationData.mentorName}</div>
+                    <div className="mentor-name-toast">
+                      {reservationData.partnerRole === 'MENTOR' ? '👨‍🏫 ' : '👤 '}
+                      {reservationData.partnerName}님
+                    </div>
                     <div className="service-name-toast">{reservationData.serviceName}</div>
                   </div>
                   <div className="schedule-info">
