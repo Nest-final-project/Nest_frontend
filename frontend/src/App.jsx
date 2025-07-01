@@ -26,7 +26,6 @@ import AdminDashboard from './components/admin/AdminDashboard.jsx';
 import {authUtils, userInfoUtils} from './utils/tokenUtils';
 import {registerDebugFunctions} from './utils/websocketDebug';
 import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 'react-router-dom';
-import SSEExample from './components/SSEExample.jsx';
 import MentorProfilePage from './components/MentorProfilePage.jsx';
 import OAuth2CallbackPage from "./components/OAuth2CallbackPage.jsx";
 import Signup from './components/Signup';
@@ -793,6 +792,8 @@ const AppContent = () => {
                   <StatsSection />
                   <MentorSection onMentorSelect={handleMentorSelect} />
                   <CTASection />
+                  
+
                 </main>
               }
           />
