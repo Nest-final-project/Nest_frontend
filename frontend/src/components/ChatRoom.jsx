@@ -1581,8 +1581,6 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
                     return <User className="avatar-icon"/>;
                   }
                 })()}
-                <div className={`online-indicator ${isConnected ? 'connected'
-                    : 'disconnected'}`}></div>
               </div>
               <div className="contact-details">
                 <h3 className="contact-name">

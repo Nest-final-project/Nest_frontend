@@ -21,6 +21,71 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
   // 검색 모드 상태
   const [isSearchMode, setIsSearchMode] = useState(false);
 
+  // 프로필 이미지 관련 상태
+  const [profileImages, setProfileImages] = useState(new Map()); // userId -> imageUrl 매핑
+  const [loadingImages, setLoadingImages] = useState(new Set()); // 로딩 중인 userId들
+
+  // 프로필 이미지 로딩 함수
+  const loadProfileImage = useCallback(async (userId) => {
+    // 이미 로딩 중이거나 캐시에 있으면 건너뛰기
+    if (loadingImages.has(userId) || profileImages.has(userId)) {
+      return;
+    }
+
+    console.log(`🖼️ 프로필 이미지 로딩 시작: userId=${userId}`);
+    
+    setLoadingImages(prev => new Set(prev).add(userId));
+    
+    try {
+      const response = await userAPI.getUserProfileImage(userId);
+      console.log(`✅ 프로필 이미지 조회 성공: userId=${userId}`, response.data);
+      
+      if (response.data && response.data.data && response.data.data.imgUrl) {
+        const imageUrl = response.data.data.imgUrl;
+        setProfileImages(prev => new Map(prev).set(userId, imageUrl));
+        console.log(`🎨 프로필 이미지 캐시 저장: userId=${userId}, url=${imageUrl}`);
+      } else {
+        console.log(`📷 프로필 이미지 없음: userId=${userId}`);
+        // 프로필 이미지가 없는 경우 null로 저장하여 재요청 방지
+        setProfileImages(prev => new Map(prev).set(userId, null));
+      }
+    } catch (error) {
+      console.error(`❌ 프로필 이미지 로딩 실패: userId=${userId}`, error);
+      // 에러 발생시에도 null로 저장하여 재요청 방지
+      setProfileImages(prev => new Map(prev).set(userId, null));
+    } finally {
+      setLoadingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    }
+  }, [loadingImages, profileImages]);
+
+  // 여러 사용자의 프로필 이미지를 배치로 로딩
+  const loadMultipleProfileImages = useCallback(async (userIds) => {
+    console.log(`📦 배치 프로필 이미지 로딩: ${userIds.length}개 사용자`);
+    
+    // 아직 로딩하지 않은 userId들만 필터링
+    const unloadedUserIds = userIds.filter(userId => 
+      !loadingImages.has(userId) && !profileImages.has(userId)
+    );
+
+    if (unloadedUserIds.length === 0) {
+      console.log(`✅ 모든 프로필 이미지가 이미 로딩됨`);
+      return;
+    }
+
+    console.log(`🔄 새로 로딩할 사용자: ${unloadedUserIds.length}개`);
+
+    // 동시에 너무 많은 요청을 보내지 않도록 제한 (최대 5개씩)
+    const batchSize = 5;
+    for (let i = 0; i < unloadedUserIds.length; i += batchSize) {
+      const batch = unloadedUserIds.slice(i, i + batchSize);
+      await Promise.all(batch.map(userId => loadProfileImage(userId)));
+    }
+  }, [loadProfileImage, loadingImages, profileImages]);
+
   // 채팅방 상태 확인 함수
   const checkChatRoomStatus = async (chatRoomId) => {
     try {
@@ -177,6 +242,15 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
         setChatRooms(prev => [...prev, ...fetchedRooms]);
       }
 
+      // 🖼️ 프로필 이미지 로딩: 모든 상대방 userId 수집
+      const partnerUserIds = fetchedRooms.map(room => room.contact.id);
+      console.log(`🎯 프로필 이미지 로딩 대상: ${partnerUserIds.join(', ')}`);
+      
+      // 프로필 이미지 배치 로딩 (비동기 - UI 블로킹 없음)
+      loadMultipleProfileImages(partnerUserIds).catch(error => {
+        console.error('❌ 배치 프로필 이미지 로딩 실패:', error);
+      });
+
       // 다음 페이지를 위한 커서 설정
       if (fetchedRooms.length > 0) {
         const lastRoom = fetchedRooms[fetchedRooms.length - 1];
@@ -203,7 +277,7 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
         setInitialLoading(false);
       }
     }
-  }, [lastMessageId, cursorTime, hasNext, loading, initialLoading]);
+  }, [lastMessageId, cursorTime, hasNext, loading, initialLoading, loadMultipleProfileImages]);
 
   // JWT 토큰에서 사용자 정보 추출
   const getCurrentUserInfo = () => {
@@ -455,31 +529,50 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
               </div>
           ) : (
               <>
-                {filteredChatRooms.map((chat) => (
+                {filteredChatRooms.map((chat) => {
+                  // 현재 채팅방 상대방의 프로필 이미지 가져오기
+                  const profileImageUrl = profileImages.get(chat.contact.id);
+                  const isImageLoading = loadingImages.has(chat.contact.id);
+                  
+                  return (
                     <div
                         key={chat.id}
                         className={`chat-room-item ${currentChatId === chat.id
                             ? 'active' : ''}`}
                         onClick={() => handleChatClick(chat)}
                     >
-                      <div className="chat-avatar-container">
+                      <div className={`chat-avatar-container ${
+                        isImageLoading ? 'loading' : profileImageUrl ? 'loaded' : ''
+                      }`}>
                         <div className="chat-avatar">
-                          {chat.contact.profileImage ? (
-                              <img
-                                  src={chat.contact.profileImage}
-                                  alt={chat.contact.name}
-                                  onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                  }}
-                              />
+                          {isImageLoading ? (
+                            // 로딩 중일 때 스켈레톤 표시
+                            <div className="avatar-skeleton">
+                              <div className="skeleton-circle"></div>
+                            </div>
+                          ) : profileImageUrl ? (
+                            // 프로필 이미지가 있을 때
+                            <img
+                                src={profileImageUrl}
+                                alt={chat.contact.name}
+                                className="profile-image"
+                                onError={(e) => {
+                                  console.warn(`이미지 로드 실패: ${profileImageUrl}`);
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
                           ) : null}
-                          <User className="avatar-icon" style={{
-                            display: chat.contact.profileImage ? 'none' : 'flex'
-                          }}/>
+                          
+                          {/* 기본 아이콘 (이미지 없거나 로딩 실패시) */}
+                          <User 
+                            className="avatar-icon" 
+                            style={{
+                              display: (!isImageLoading && !profileImageUrl) ? 'flex' : 'none'
+                            }}
+                          />
                         </div>
-                        {chat.isOnline && <div
-                            className="online-indicator"></div>}
+                        {chat.isOnline}
                       </div>
 
                       <div className="chat-info">
@@ -523,7 +616,8 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
                         </div>
                       </div>
                     </div>
-                ))}
+                  );
+                })}
 
                 {/* 로딩 인디케이터 */}
                 {loading && (
@@ -536,12 +630,6 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
           )}
         </div>
 
-        {/* 온라인 상태 표시 */}
-        <div className="online-status">
-          <div className="online-count">
-            온라인: {chatRooms.filter(chat => chat.isOnline).length}명
-          </div>
-        </div>
       </div>
   );
 };

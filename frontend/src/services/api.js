@@ -249,7 +249,7 @@ export const userAPI = {
     const formData = new FormData();
     formData.append('files', file);
     
-    return api.patch('/api/users', formData, {
+    return api.patch('/api/users/profile-image', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
