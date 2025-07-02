@@ -1498,7 +1498,7 @@ body.dark .career-management,
 .modal-actions {
   padding: 24px 32px;
   border-top: 1px solid rgba(255, 179, 0, 0.1);
-  background: linear-gradient(145deg, #fafafa, #ffffff);
+  background: #FBF9EF;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1956,7 +1956,7 @@ body.dark .career-management,
 
 .dark-mode .modal-actions {
   border-top: 1px solid rgba(255, 179, 0, 0.2);
-  background: linear-gradient(145deg, #111827, #1f2937);
+  background: #FBF9EF;
 }
 
 /* 다크모드에서 상태 배지 색상 개선 */
@@ -3496,6 +3496,7 @@ body.dark .career-management,
   border-top: 1px solid #f3f4f6;
   margin-top: 24px;
   padding-top: 24px;
+  background: #FBF9EF;
 }
 
 /* 민원 관리 특별 스타일 */

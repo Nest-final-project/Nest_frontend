@@ -149,7 +149,19 @@ const CouponManagement = ({ isDarkMode }) => {
           <p>할인 쿠폰을 생성하고 관리합니다</p>
         </div>
         <div className="header-actions">
-          <button className="btn-secondary" onClick={loadCoupons}>
+          <button 
+            className="btn-secondary" 
+            onClick={loadCoupons}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: '600',
+              minWidth: 'auto'
+            }}
+          >
             <RefreshCw size={18} className={loading ? 'spinning' : ''} />
             새로고침
           </button>
@@ -158,6 +170,15 @@ const CouponManagement = ({ isDarkMode }) => {
             onClick={() => {
               setSelectedCoupon(null);
               setShowCreateModal(true);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: '600',
+              minWidth: 'auto'
             }}
           >
             <Plus size={18} />

@@ -422,11 +422,11 @@ const ComplaintDetailModal = ({
             
             {adminAnswer && !isEditing && (
               <button 
-                className="btn-secondary"
+                className="btn-primary"
                 onClick={handleEditAnswer}
                 disabled={isSubmitting}
               >
-                수정하기
+                답변 수정
               </button>
             )}
             

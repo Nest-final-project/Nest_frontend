@@ -347,14 +347,8 @@ const ComplaintManagement = ({isDarkMode}) => {
     switch (status?.toLowerCase()) {
       case 'pending':
         return '#f59e0b';
-      case 'answered':
-        return '#3b82f6';
       case 'resolved':
         return '#10b981';
-      case 'closed':
-        return '#6b7280';
-      default:
-        return '#6b7280';
     }
   };
 
@@ -362,12 +356,8 @@ const ComplaintManagement = ({isDarkMode}) => {
     switch (status?.toLowerCase()) {
       case 'pending':
         return '대기중';
-      case 'answered':
-        return '답변완료';
       case 'resolved':
-        return '해결완료';
-      case 'closed':
-        return '종료';
+        return '답변완료';
       default:
         return status || '알 수 없음';
     }
@@ -476,7 +466,7 @@ const ComplaintManagement = ({isDarkMode}) => {
           </div>
           <div className="stat-card approved" style={{ background: '#FBF9EF' }}>
             <div className="stat-number">{complaints.filter(
-                c => c.status?.toLowerCase() === 'answered').length}</div>
+                c => c.status?.toLowerCase() === 'resolved').length}</div>
             <div className="stat-label">답변완료</div>
           </div>
         </div>
@@ -533,23 +523,10 @@ const ComplaintManagement = ({isDarkMode}) => {
                   switch (status?.toLowerCase()) {
                     case 'pending':
                       return {className: 'pending', text: '대기중', icon: Clock};
-                    case 'answered':
-                      return {
-                        className: 'approved',
-                        text: '답변완료',
-                        icon: AlertTriangle
-                      };
                     case 'resolved':
                       return {
                         className: 'approved',
-                        text: '해결완료',
-                        icon: AlertTriangle
-                      };
-                    case 'closed':
-                    default:
-                      return {
-                        className: 'rejected',
-                        text: '종료',
+                        text: '답변완료',
                         icon: AlertTriangle
                       };
                   }
