@@ -297,7 +297,7 @@ export const consultationAPI = {
 // Reservation API
 export const reservationAPI = {
   // 예약 목록 조회
-  getReservations: () => api.get('/api/reservations'),
+  getReservations: ({ page, size }) => api.get(`/api/reservations?page=${page}&size=${size}`),
 
   // 예약 단건 조회
   getReservation: (reservationId) => api.get(
