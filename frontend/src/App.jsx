@@ -62,6 +62,45 @@ const AppContent = () => {
           setUserInfo(userData);
           console.log('세션에서 로그인 상태 복원됨:', userData);
 
+          // 🔍 [2단계] 앱 시작 시 최신 사용자 정보 API 재조회 (프로필 이미지 동기화)
+          try {
+            const { userAPI } = await import('./services/api');
+            const response = await userAPI.getUser();
+            
+            if (response.data && response.data.data) {
+              const latestUserData = response.data.data;
+              console.log('🔍 [3단계] 앱 시작 시 최신 사용자 정보:', latestUserData);
+              
+              // 🖼️ 별도 프로필 이미지 API 호출
+              let profileImageUrl = null;
+              try {
+                const imageResponse = await userAPI.getUserProfileImage(userData.id);
+                if (imageResponse.data && imageResponse.data.data && imageResponse.data.data.imgUrl) {
+                  profileImageUrl = imageResponse.data.data.imgUrl;
+                  console.log('✅ [3단계] 앱 시작 시 프로필 이미지 조회 성공:', profileImageUrl);
+                }
+              } catch (imageError) {
+                console.warn('⚠️ [3단계] 앱 시작 시 프로필 이미지 조회 실패 (기본 이미지 사용):', imageError);
+              }
+              
+              // 세션 데이터와 최신 API 데이터 병합
+              const mergedUserData = {
+                ...userData,
+                profileImage: profileImageUrl,
+                imgUrl: profileImageUrl,
+                // 다른 최신 정보들도 반영
+                nickName: latestUserData.nickName || userData.nickName,
+                phoneNumber: latestUserData.phoneNumber || userData.phoneNumber,
+              };
+              
+              console.log('🔄 [3단계] 앱 시작 시 병합된 사용자 정보 (이미지 포함):', mergedUserData);
+              setUserInfo(mergedUserData);
+              userInfoUtils.setUserInfo(mergedUserData);
+            }
+          } catch (error) {
+            console.warn('⚠️ 앱 시작 시 사용자 정보 재조회 실패 (세션 정보 사용):', error);
+          }
+
           // 🔐 ADMIN 사용자인 경우 즉시 관리자 대시보드로 이동
           if (userData.userRole === 'ADMIN' && location.pathname === '/') {
             console.log('🔐 ADMIN 사용자 감지됨 - 바로 관리자 대시보드로 이동');
@@ -167,7 +206,7 @@ const AppContent = () => {
   }, [userInfo, location.pathname, navigate]);
 
   // 로그인 성공 처리
-  const handleLoginSuccess = (userData) => {
+  const handleLoginSuccess = async (userData) => {
     console.log('🎉 handleLoginSuccess 호출됨!');
     console.log('📦 받은 userData:', userData);
     console.log('🔐 사용자 역할:', userData?.userRole);
@@ -178,6 +217,45 @@ const AppContent = () => {
     setIsLoginOpen(false);
 
     console.log('로그인 성공, App 상태 업데이트됨');
+
+    // 🔍 [2단계] 로그인 후 최신 사용자 정보 API 재조회 (프로필 이미지 포함)
+    try {
+      const { userAPI } = await import('./services/api');
+      const response = await userAPI.getUser();
+      
+      if (response.data && response.data.data) {
+        const latestUserData = response.data.data;
+        console.log('🔍 [3단계] 로그인 후 최신 사용자 정보:', latestUserData);
+        
+        // 🖼️ 별도 프로필 이미지 API 호출
+        let profileImageUrl = null;
+        try {
+          const imageResponse = await userAPI.getUserProfileImage(userData.id);
+          if (imageResponse.data && imageResponse.data.data && imageResponse.data.data.imgUrl) {
+            profileImageUrl = imageResponse.data.data.imgUrl;
+            console.log('✅ [3단계] 프로필 이미지 조회 성공:', profileImageUrl);
+          }
+        } catch (imageError) {
+          console.warn('⚠️ [3단계] 프로필 이미지 조회 실패 (기본 이미지 사용):', imageError);
+        }
+        
+        // 기존 로그인 데이터와 최신 API 데이터 병합
+        const mergedUserData = {
+          ...userData,
+          profileImage: profileImageUrl,
+          imgUrl: profileImageUrl,
+          // 다른 최신 정보들도 반영
+          nickName: latestUserData.nickName || userData.nickName,
+          phoneNumber: latestUserData.phoneNumber || userData.phoneNumber,
+        };
+        
+        console.log('🔄 [3단계] 병합된 사용자 정보 (이미지 포함):', mergedUserData);
+        setUserInfo(mergedUserData);
+        userInfoUtils.setUserInfo(mergedUserData);
+      }
+    } catch (error) {
+      console.warn('⚠️ 로그인 후 사용자 정보 재조회 실패 (기본 정보 사용):', error);
+    }
 
     // 관리자 역할인 경우 자동으로 관리자 대시보드로 이동
     if (userData.userRole === 'ADMIN') {

@@ -66,9 +66,21 @@ const MyPage = ({ onBack, onLogout }) => {
 
     try {
       const response = await userAPI.getUser();
+      
+      // 🔍 [2단계] 사용자 정보 API 응답 전체 확인
+      console.log('🔍 [2단계] 사용자 정보 API 전체 응답:', response);
+      console.log('🔍 [2단계] 사용자 정보 API 응답 데이터:', response.data);
+      console.log('🔍 [2단계] 사용자 정보 API backendUserData:', response.data.data);
 
       if (response.data && response.data.data) {
         const backendUserData = response.data.data;
+        
+        // 🔍 [2단계] backendUserData 모든 필드 확인
+        console.log('🔍 [2단계] backendUserData 모든 필드:', Object.keys(backendUserData));
+        console.log('🔍 [2단계] profileImage 필드 확인:', backendUserData.profileImage);
+        console.log('🔍 [2단계] imgUrl 필드 확인:', backendUserData.imgUrl);
+        console.log('🔍 [2단계] image 필드 확인:', backendUserData.image);
+        console.log('🔍 [2단계] avatar 필드 확인:', backendUserData.avatar);
 
         // 기존 세션의 토큰 유지
         const prevUserData = userInfoUtils.getUserInfo();
