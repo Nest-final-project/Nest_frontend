@@ -486,7 +486,7 @@ const fileApi = axios.create({
 // Career API
 export const careerAPI = {
   // 경력 전체 목록 조회
-  getAllCareers: () => api.get('/api/careers'),
+  getAllCareers: ({page, size}) => api.get(`/api/careers?page=${page}&size=${size}`),
 
   // 경력 상세 조회
   getCareerDetail: (profileId, careerId) => api.get(
