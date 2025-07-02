@@ -231,6 +231,36 @@ export const userAPI = {
   deleteUser: (deleteData) => {
     return api.delete('/api/users/me', {data: deleteData});
   },
+
+  // 프로필 이미지 업로드 (최초 등록)
+  uploadProfileImage: (file) => {
+    const formData = new FormData();
+    formData.append('files', file);
+    
+    return api.post('/api/users/profile-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // 프로필 이미지 수정
+  updateProfileImage: (file) => {
+    const formData = new FormData();
+    formData.append('files', file);
+    
+    return api.patch('/api/users', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // 프로필 이미지 삭제
+  deleteProfileImage: () => api.delete('/api/users/profile-image'),
+
+  // 프로필 이미지 조회
+  getUserProfileImage: (userId) => api.get(`/api/users/${userId}/profile-image`),
 };
 
 // Profile API
@@ -318,8 +348,14 @@ export const reservationAPI = {
 
 // Chatroom API
 export const chatroomAPI = {
-  // 채팅방 목록 조회
+  // 채팅방 목록 조회 (기본)
   getChatrooms: () => api.get('/api/chat_rooms'),
+
+  // 채팅방 목록 조회 (페이지네이션 지원)
+  getChatroomsWithPagination: (params) => api.get('/api/chat_rooms', { params }),
+
+  // 채팅방 상태 확인
+  getChatroomStatus: (chatroomId) => api.get(`/api/chat_rooms/${chatroomId}/status`),
 
   // 채팅방 생성
   //createChatroom: (chatroomData) => api.post('/api/chatrooms', chatroomData),
