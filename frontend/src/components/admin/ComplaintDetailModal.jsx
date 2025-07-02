@@ -46,7 +46,7 @@ const ComplaintDetailModal = ({
         });
         setUserInfo({
           name: actualComplaint.userName,
-          nickName: actualComplaint.userName,
+          nickName: actualComplaint.userName,  // nickName도 동일하게 설정
           email: actualComplaint.userEmail,
           phone: actualComplaint.userPhone
         });
@@ -127,9 +127,31 @@ const ComplaintDetailModal = ({
     try {
       console.log('🔍 사용자 정보 조회 시작:', userId);
       const response = await userAPI.getUserById(userId);
-      const userData = response.data;
+      
+      // 응답 구조 확인 및 파싱
+      let userData = null;
+      if (response.data && response.data.data) {
+        userData = response.data.data; // 중첩된 구조
+        console.log('📋 중첩된 구조 사용: response.data.data');
+      } else if (response.data) {
+        userData = response.data; // 일반 구조
+        console.log('📋 일반 구조 사용: response.data');
+      }
 
       console.log('✅ 사용자 정보 조회 성공:', userData);
+      console.log('📋 사용자 정보 필드들:', userData ? Object.keys(userData) : '없음');
+      
+      // 이름 관련 필드들 상세 확인
+      if (userData) {
+        console.log('📋 이름 관련 필드 확인:');
+        console.log('  - name:', userData.name);
+        console.log('  - nickName:', userData.nickName);
+        console.log('  - nickname:', userData.nickname);
+        console.log('  - displayName:', userData.displayName);
+        console.log('  - realName:', userData.realName);
+        console.log('  - username:', userData.username);
+      }
+      
       setUserInfo(userData);
     } catch (error) {
       console.error('❌ 사용자 정보 조회 실패:', error);
@@ -306,8 +328,12 @@ const ComplaintDetailModal = ({
                     {loadingUser ? (
                         '사용자 정보 로딩 중...'
                     ) : (
+                        userInfo?.name ||           // 🎯 name을 최우선으로
                         userInfo?.nickName ||
-                        userInfo?.name ||
+                        userInfo?.nickname ||
+                        userInfo?.displayName ||
+                        userInfo?.realName ||
+                        userInfo?.username ||
                         displayData.userName ||
                         `사용자${displayData.userId}` ||
                         '익명'
@@ -316,7 +342,7 @@ const ComplaintDetailModal = ({
                     </div>
                     <div className="info-row">
                       <label>예약번호:</label>
-                      <span>{displayData.reservationId ? `#${displayData.reservationId}` : '-'}</span>
+                      <span>{displayData.reservationId ? `#${displayData.reservationId}` : '해당 없음'}</span>
                     </div>
                     <div className="info-row">
                       <label>제목:</label>

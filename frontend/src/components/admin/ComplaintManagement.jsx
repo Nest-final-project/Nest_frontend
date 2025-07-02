@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import {
   Edit3,
   RefreshCw,
@@ -27,6 +27,98 @@ const ComplaintManagement = ({isDarkMode}) => {
     totalElements: 0,
     totalPages: 0
   });
+
+  // 사용자 정보 캐시 - useCallback으로 초기화 방지
+  const [userCache, setUserCache] = useState(() => new Map());
+
+  // 사용자 정보 조회 함수 - useCallback으로 메모이제이션
+  const getUserInfo = useCallback(async (userId) => {
+    if (!userId) {
+      console.log('⚠️ userId가 없음:', userId);
+      return null;
+    }
+
+    // 캐시에서 먼저 확인
+    if (userCache.has(userId)) {
+      const cachedUser = userCache.get(userId);
+      console.log(`📋 캐시에서 사용자 ${userId} 정보 반환:`, cachedUser);
+      return cachedUser;
+    }
+
+    try {
+      console.log('🔍 사용자 정보 조회 시작:', userId);
+      const response = await userAPI.getUserById(userId);
+      
+      console.log('📋 사용자 정보 응답:', response);
+      console.log('📋 response.status:', response.status);
+      console.log('📋 response.data 전체:', JSON.stringify(response.data, null, 2));
+      
+      // 응답 데이터 구조 확인
+      let userInfo = null;
+      if (response.data && response.data.data) {
+        userInfo = response.data.data; // 중첩된 구조
+        console.log('📋 중첩된 구조 사용: response.data.data');
+      } else if (response.data) {
+        userInfo = response.data; // 일반 구조
+        console.log('📋 일반 구조 사용: response.data');
+      }
+      
+      console.log('📋 파싱된 사용자 정보:', JSON.stringify(userInfo, null, 2));
+      console.log('📋 사용자 정보 필드들:', userInfo ? Object.keys(userInfo) : '없음');
+      
+      // 이름 관련 필드들 상세 확인
+      if (userInfo) {
+        console.log('📋 이름 관련 필드 확인:');
+        console.log('  - name:', userInfo.name);
+        console.log('  - nickName:', userInfo.nickName);
+        console.log('  - nickname:', userInfo.nickname);
+        console.log('  - displayName:', userInfo.displayName);
+        console.log('  - realName:', userInfo.realName);
+        console.log('  - username:', userInfo.username);
+        console.log('  - fullName:', userInfo.fullName);
+        console.log('  - memberName:', userInfo.memberName);
+        console.log('  - userName:', userInfo.userName);
+      }
+
+      // 캐시에 저장
+      setUserCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(userId, userInfo);
+        console.log(`✅ 사용자 ${userId} 캐시 저장 완료:`, userInfo);
+        return newCache;
+      });
+
+      return userInfo;
+    } catch (error) {
+      console.error('❌ 사용자 정보 조회 실패:', error);
+      
+      // 에러 시에도 캐시에 null 저장 (재호출 방지)
+      setUserCache(prev => {
+        const newCache = new Map(prev);
+        newCache.set(userId, null);
+        return newCache;
+      });
+      
+      return null;
+    }
+  }, [userCache]);
+
+  // 민원 목록의 사용자 정보를 미리 로드하는 함수
+  const preloadUserInfo = useCallback(async (complaintsData) => {
+    const userIds = [...new Set(complaintsData.map(c => c.userId).filter(Boolean))];
+    console.log('👥 미리 로드할 사용자 IDs:', userIds);
+    
+    // 병렬로 사용자 정보 로드
+    const userInfoPromises = userIds.map(async (userId) => {
+      if (!userCache.has(userId)) {
+        return getUserInfo(userId);
+      }
+      return userCache.get(userId);
+    });
+    
+    await Promise.allSettled(userInfoPromises);
+    console.log('👥 모든 사용자 정보 로드 완료');
+  }, [userCache, getUserInfo]);
 
   // API 요청 함수 - useCallback으로 메모이제이션
   const loadComplaints = useCallback(async (showLoading = true) => {
@@ -62,7 +154,6 @@ const ComplaintManagement = ({isDarkMode}) => {
       // API 호출
       const response = await adminAPI.getAllInquiries(params);
       console.log('📋 민원 목록 응답:', response);
-      console.log('📋 응답 데이터 구조:', JSON.stringify(response.data, null, 2));
 
       // 응답 데이터 처리
       let complaintData = [];
@@ -113,7 +204,17 @@ const ComplaintManagement = ({isDarkMode}) => {
       }
 
       console.log('📊 파싱된 민원 데이터:', complaintData);
+      
+      // 민원 데이터 설정
       setComplaints(complaintData);
+      
+      // 사용자 정보를 백그라운드에서 로드 (렌더링 블로킹 없이)
+      if (complaintData.length > 0) {
+        // 비동기로 사용자 정보 로드
+        preloadUserInfo(complaintData).catch(error => {
+          console.error('❌ 사용자 정보 프리로드 실패:', error);
+        });
+      }
 
       if (complaintData.length === 0) {
         setPagination(prev => ({
@@ -148,7 +249,7 @@ const ComplaintManagement = ({isDarkMode}) => {
         setLoading(false);
       }
     }
-  }, [pagination.page, pagination.size, filterType]);
+  }, [pagination.page, pagination.size, filterType, preloadUserInfo]);
 
   // 에러 메시지 처리 함수
   const getErrorMessage = (error) => {
@@ -172,7 +273,12 @@ const ComplaintManagement = ({isDarkMode}) => {
     }
   };
 
-  // 자동 새로고침 설정
+  // 데이터 로딩 (의존성 변경 시)
+  useEffect(() => {
+    loadComplaints();
+  }, [loadComplaints]);
+
+  // 자동 새로고침 설정 - 별도 useEffect로 분리
   useEffect(() => {
     const interval = setInterval(() => {
       loadComplaints(false); // 로딩 상태 표시 없이 조용히 새로고침
@@ -181,45 +287,9 @@ const ComplaintManagement = ({isDarkMode}) => {
     setRefreshInterval(interval);
 
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      clearInterval(interval);
     };
   }, [loadComplaints]);
-
-  // 데이터 로딩 (의존성 변경 시)
-  useEffect(() => {
-    loadComplaints();
-  }, [loadComplaints]);
-
-  // 사용자 정보 조회 및 캐시
-  const [userCache, setUserCache] = useState(new Map());
-
-  const getUserInfo = async (userId) => {
-    if (!userId) {
-      return null;
-    }
-
-    // 캐시에서 먼저 확인
-    if (userCache.has(userId)) {
-      return userCache.get(userId);
-    }
-
-    try {
-      console.log('🔍 사용자 정보 조회:', userId);
-      const response = await userAPI.getUserById(userId);
-      const userInfo = response.data;
-
-      // 캐시에 저장
-      setUserCache(prev => new Map(prev).set(userId, userInfo));
-      console.log('✅ 사용자 정보 조회 성공:', userInfo);
-
-      return userInfo;
-    } catch (error) {
-      console.error('❌ 사용자 정보 조회 실패:', error);
-      return null;
-    }
-  };
 
   // 민원 상세 조회
   const handleViewDetail = async (complaint) => {
@@ -237,7 +307,7 @@ const ComplaintManagement = ({isDarkMode}) => {
         if (userInfo) {
           complaintDetail = {
             ...complaintDetail,
-            userName: userInfo.name,
+            userName: userInfo.name || userInfo.nickName || userInfo.nickname,
             userEmail: userInfo.email,
             userPhone: userInfo.phone
           };
@@ -265,7 +335,7 @@ const ComplaintManagement = ({isDarkMode}) => {
             if (userInfo) {
               fallbackComplaint = {
                 ...fallbackComplaint,
-                userName: userInfo.name,
+                userName: userInfo.name || userInfo.nickName || userInfo.nickname,
                 userEmail: userInfo.email,
                 userPhone: userInfo.phone
               };
@@ -416,6 +486,51 @@ const ComplaintManagement = ({isDarkMode}) => {
     }
   };
 
+  // 사용자 이름을 가져오는 함수 - 메모이제이션
+  const getUserDisplayName = useCallback((complaint) => {
+    const cachedUser = userCache.get(complaint.userId);
+    
+    console.log(`👤 getUserDisplayName 호출 - userId: ${complaint.userId}`);
+    console.log(`👤 캐시된 사용자 정보:`, cachedUser);
+    
+    // 캐시된 사용자 정보에서 다양한 필드명 시도
+    if (cachedUser) {
+      console.log(`👤 캐시에서 이름 필드 확인:`);
+      console.log(`  - nickName: ${cachedUser.nickName}`);
+      console.log(`  - nickname: ${cachedUser.nickname}`);
+      console.log(`  - displayName: ${cachedUser.displayName}`);
+      console.log(`  - name: ${cachedUser.name}`);
+      console.log(`  - realName: ${cachedUser.realName}`);
+      console.log(`  - username: ${cachedUser.username}`);
+      console.log(`  - fullName: ${cachedUser.fullName}`);
+      console.log(`  - memberName: ${cachedUser.memberName}`);
+      console.log(`  - userName: ${cachedUser.userName}`);
+      
+      const displayName = cachedUser.name ||           // 🎯 name을 최우선으로
+             cachedUser.nickName ||
+             cachedUser.nickname ||
+             cachedUser.displayName ||
+             cachedUser.realName ||
+             cachedUser.username ||
+             cachedUser.fullName ||
+             cachedUser.memberName ||
+             cachedUser.userName ||
+             '사용자 정보 없음';
+             
+      console.log(`👤 최종 선택된 표시명: ${displayName}`);
+      return displayName;
+    }
+    
+    // 캐시되지 않은 경우 기본값 반환
+    const fallbackName = complaint.userName ||
+           complaint.userEmail ||
+           complaint.email ||
+           `사용자${complaint.userId || '익명'}`;
+           
+    console.log(`👤 캐시 없음 - 폴백 이름: ${fallbackName}`);
+    return fallbackName;
+  }, [userCache]);
+
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {
     return () => {
@@ -429,7 +544,8 @@ const ComplaintManagement = ({isDarkMode}) => {
     컴포넌트상태: 'rendering',
     민원개수: complaints.length,
     로딩상태: loading,
-    에러상태: error
+    에러상태: error,
+    캐시크기: userCache.size
   });
 
   return (
@@ -551,11 +667,7 @@ const ComplaintManagement = ({isDarkMode}) => {
                         <div className="cell-content">
                           <User size={16} style={{ color: '#ffb300' }}/>
                           <span style={{ color: '#6d4c41', fontWeight: '500' }}>
-                            {complaint.userName ||
-                                userCache.get(complaint.userId)?.name ||
-                                complaint.userEmail ||
-                                complaint.email ||
-                                `사용자${complaint.userId || '익명'}`}
+                            {getUserDisplayName(complaint)}
                           </span>
                         </div>
                       </div>
