@@ -149,13 +149,66 @@ const ComplaintDetailModal = ({
     console.log('📤 답변 제출 시작:', { complaintId: complaintId, answer: answer.trim() });
 
     try {
-      await onAnswerSubmit(complaintId, answer.trim());
-      console.log('✅ 답변 제출 완료');
+      if(adminAnswer && adminAnswer.id) {
+        console.log('🔄 기존 답변 수정 시도:', { 
+          answerId: adminAnswer.id, 
+          adminAnswer: adminAnswer,
+          requestData: {
+            contents: answer.trim()
+          }
+        });
+        
+        const updateData = {
+          contents: answer.trim()
+        };
+        
+        console.log('📡 PATCH 요청 데이터:', updateData);
+        console.log('🔢 답변 ID:', adminAnswer.id);
+        console.log('🔢 답변 ID 타입:', typeof adminAnswer.id);
+        console.log('🔍 전체 adminAnswer 객체:', JSON.stringify(adminAnswer, null, 2));
+        
+        // 백엔드 API: PATCH /api/admin/answers/{answerId}
+        // answerId를 사용하여 답변 수정
+        await adminAPI.updateAnswer(adminAnswer.id, updateData);
+        console.log('✅ 답변 수정 API 호출 완료');
+      } else {
+        console.log('🆕 새 답변 생성:', { complaintId, contents: answer.trim() });
+        await onAnswerSubmit(complaintId, answer.trim());
+        console.log('✅ 새 답변 생성 완료');
+      }
+      
+      console.log('🔄 최신 답변 데이터 재조회 시작...');
       // 답변 제출 후 다시 조회하여 최신 상태 반영
       await fetchAdminAnswer(complaintId);
       setIsEditing(false); // 저장 완료 후 읽기 모드로 전환
+      console.log('✅ 답변 제출 및 상태 업데이트 완료');
+      
+      // 성공 메시지 표시
+      alert(adminAnswer ? '답변이 성공적으로 수정되었습니다.' : '답변이 성공적으로 등록되었습니다.');
+      
     } catch (error) {
       console.error('❌ 답변 제출 실패:', error);
+      console.error('❌ 에러 응답:', error.response?.data);
+      console.error('❌ 에러 상태:', error.response?.status);
+      
+      // 에러 메시지 개선
+      let errorMessage = '답변 처리 중 오류가 발생했습니다.';
+      if (error.response?.status === 403) {
+        errorMessage = '답변 수정 권한이 없습니다.';
+      } else if (error.response?.status === 404) {
+        errorMessage = '답변을 찾을 수 없습니다.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      alert(errorMessage);
+      
+      // 에러 발생 시에도 최신 데이터로 상태 복원
+      try {
+        await fetchAdminAnswer(complaintId);
+      } catch (refreshError) {
+        console.error('❌ 데이터 새로고침 실패:', refreshError);
+      }
     }
   };
 

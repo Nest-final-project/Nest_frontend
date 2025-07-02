@@ -443,11 +443,11 @@ const ComplaintManagement = ({isDarkMode}) => {
   });
 
   return (
-      <div className={`admin-content-wrapper ${isDarkMode ? 'dark-mode' : ''}`}>
+      <div className={`complaint-management admin-content-wrapper ${isDarkMode ? 'dark-mode' : ''}`}>
         <div className="content-header">
           <div className="header-left">
             <h2 className="complaint-title">
-              <FileText size={28} color="#ffffff"/>
+              <FileText size={28}/>
               민원 관리
             </h2>
             <p>사용자 문의 및 신고를 관리합니다</p>
@@ -465,16 +465,16 @@ const ComplaintManagement = ({isDarkMode}) => {
         </div>
 
         <div className="content-stats">
-          <div className="stat-card total">
+          <div className="stat-card total" style={{ background: '#FBF9EF' }}>
             <div className="stat-number">{pagination.totalElements}</div>
             <div className="stat-label">총 건수</div>
           </div>
-          <div className="stat-card pending">
+          <div className="stat-card pending" style={{ background: '#FBF9EF' }}>
             <div className="stat-number">{complaints.filter(
                 c => c.status?.toLowerCase() === 'pending').length}</div>
             <div className="stat-label">대기중</div>
           </div>
-          <div className="stat-card approved">
+          <div className="stat-card approved" style={{ background: '#FBF9EF' }}>
             <div className="stat-number">{complaints.filter(
                 c => c.status?.toLowerCase() === 'answered').length}</div>
             <div className="stat-label">답변완료</div>
@@ -559,33 +559,34 @@ const ComplaintManagement = ({isDarkMode}) => {
 
                 return (
                     <div key={complaint.id ?? `${complaint.title}-${index}`}
-                         className="table-row">
+                         className="table-row" style={{ background: '#FBF9EF' }}>
                       <div className="table-cell">
                         <span className="category-badge">{getCategoryText(
                             complaint.category || complaint.type)}</span>
                       </div>
                       <div className="table-cell">
                         <div className="cell-content">
-                          <FileText size={16}/>
-                          <strong>{complaint.title || '제목 없음'}</strong>
+                          <FileText size={16} style={{ color: '#ffb300' }}/>
+                          <strong style={{ color: '#e65100', fontWeight: '700' }}>{complaint.title || '제목 없음'}</strong>
                         </div>
                       </div>
                       <div className="table-cell">
                         <div className="cell-content">
-                          <User size={16}/>
-                          {complaint.userName ||
-                              userCache.get(complaint.userId)?.name ||
-                              complaint.userEmail ||
-                              complaint.email ||
-                              `사용자${complaint.userId || '익명'}`}
+                          <User size={16} style={{ color: '#ffb300' }}/>
+                          <span style={{ color: '#6d4c41', fontWeight: '500' }}>
+                            {complaint.userName ||
+                                userCache.get(complaint.userId)?.name ||
+                                complaint.userEmail ||
+                                complaint.email ||
+                                `사용자${complaint.userId || '익명'}`}
+                          </span>
                         </div>
                       </div>
-                      <div className="table-cell">{new Date(
-                          complaint.createdAt).toLocaleDateString(
-                          'ko-KR')}</div>
+                      <div className="table-cell" style={{ color: '#6d4c41', fontWeight: '500' }}>
+                        {new Date(complaint.createdAt).toLocaleDateString('ko-KR')}
+                      </div>
                       <div className="table-cell">
                   <span className={`status-badge ${statusBadge.className}`}>
-                    <StatusIcon size={14}/>
                     {statusBadge.text}
                   </span>
                       </div>
