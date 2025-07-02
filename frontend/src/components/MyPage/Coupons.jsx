@@ -1,29 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import { userCouponAPI, userAPI } from "../../services/api.js";
-import { userInfoUtils } from "../../utils/tokenUtils.js"
+import { userCouponAPI } from "../../services/api.js";
+import { useSearchParams } from 'react-router-dom';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import './Coupons.css';
 
 const Coupons = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
+
+  useEffect(() => {
+    const pageFromUrl = parseInt(searchParams.get('page') || '0', 10);
+    // URL의 페이지가 현재 상태와 다르면 상태를 업데이트
+    if (pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [searchParams]);
 
   // 쿠폰 목록 조회
-  const fetchCoupons = async (page = 0) => {
+  const fetchCoupons = async () => {
     try {
       setLoading(true);
 
-      const response = await userCouponAPI.getUserCoupons({ page, size: 20 });
+      const response = await userCouponAPI.getUserCoupons({ page: currentPage, size: 20 });
       const data = response.data.data;
       
       setCoupons(data.content);
-      setCurrentPage(page);
       setTotalPages(data.totalPages);
       setTotalElements(data.totalElements);
+      setHasNext(data.hasNext);
+      setHasPrevious(data.hasPrevious);
 
     } catch (error) {
       console.error("❌ 쿠폰 목록을 불러오는 데 실패했습니다.", error);
@@ -33,12 +45,20 @@ const Coupons = () => {
     }
   };
 
+  useEffect(() => {
+    fetchCoupons();
+  }, [currentPage]);
+
   // 페이지 변경 함수
   const handlePageChange = (page) => {
     if (page >= 0 && page < totalPages && page !== currentPage) {
-      fetchCoupons(page);
       // 스크롤을 맨 위로 이동
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set('page', page.toString());
+
+      setSearchParams(newSearchParams);
     }
   };
 
@@ -59,10 +79,6 @@ const Coupons = () => {
     }
     return pages;
   };
-
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
 
   const formatDate = (dateString) => {
     if (!dateString) return '상시';
@@ -184,13 +200,13 @@ const Coupons = () => {
             )}
 
             {/* 현재 보이는 페이지들 */}
-            {getVisiblePages().map(page => (
+            {getVisiblePages().map(pageIdx => (
               <button
-                key={page}
-                className={`pagination-btn page-btn ${page === currentPage ? 'active' : ''}`}
-                onClick={() => handlePageChange(page)}
+                key={pageIdx}
+                className={`pagination-btn page-btn ${pageIdx === currentPage ? 'active' : ''}`}
+                onClick={() => handlePageChange(pageIdx)}
               >
-                {page + 1}
+                {pageIdx + 1}
               </button>
             ))}
 
