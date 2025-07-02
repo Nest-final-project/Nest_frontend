@@ -14,7 +14,7 @@ import './ChatRoom.css';
 import axios from 'axios';
 import {accessTokenUtils} from '../utils/tokenUtils';
 import {useWebSocket} from '../hooks/useWebSocket';
-import {reservationAPI, reviewAPI} from '../services/api';
+import {reservationAPI, reviewAPI, userAPI} from '../services/api';
 
 const ChatRoom = ({
   contact,
@@ -43,6 +43,9 @@ const ChatRoom = ({
   const[hasMore, setHasMore] = useState(true);
   const loadingMoreRef = useRef(false);
   const lastRequestedMessageIdRef = useRef(null); // 마지막으로 요청한 메시지 ID 추적
+  // 프로필 이미지 관련 상태
+  const [partnerProfileImage, setPartnerProfileImage] = useState(null);
+  const [profileImageLoading, setProfileImageLoading] = useState(false);
   // 현재 사용자가 멘토인지 확인 (부모 컴포넌트에서 전달받은 userRole 사용)
   const isMentor = userRole === 'MENTOR';
 
@@ -326,6 +329,91 @@ const ChatRoom = ({
     }
   };
 
+  // 상대방 프로필 이미지 가져오기
+  const fetchPartnerProfileImage = async () => {
+    const partnerId = contact?.id;
+    if (!partnerId) {
+      console.warn('❌ fetchPartnerProfileImage: 상대방 ID가 없습니다');
+      console.log('🔍 현재 contact 정보:', contact);
+      return;
+    }
+
+    try {
+      setProfileImageLoading(true);
+      console.log(`🖼️ 상대방 ${partnerId}의 프로필 이미지 가져오는 중...`);
+      console.log('🔍 API 호출 URL:', `/api/users/${partnerId}`);
+
+      // 방법 1: 사용자 정보 API를 통해 프로필 이미지 URL 가져오기
+      const userResponse = await userAPI.getUserProfileImage(partnerId);
+      const userData = userResponse.data.data || userResponse.data;
+      
+      console.log('👤 상대방 사용자 정보 (전체):', userData);
+      console.log('🔍 가능한 프로필 이미지 필드들:', {
+        imgUrl: userData.imgUrl
+      });
+      
+      // 다양한 필드명 시도
+      const imageUrl = userData.imgUrl;
+                      
+      if (imageUrl) {
+        console.log(`✅ 상대방 프로필 이미지 찾음: ${imageUrl}`);
+        setPartnerProfileImage(imageUrl);
+        
+        // 이미지 로드 테스트
+        const img = new Image();
+        img.onload = () => {
+          console.log(`✅ 프로필 이미지 로드 성공: ${imageUrl}`);
+        };
+        img.onerror = () => {
+          console.error(`❌ 프로필 이미지 로드 실패: ${imageUrl}`);
+          setPartnerProfileImage(null);
+        };
+        img.src = imageUrl;
+      } else {
+        console.log('📷 상대방이 프로필 이미지를 설정하지 않음');
+        setPartnerProfileImage(null);
+      }
+
+    } catch (error) {
+      console.error(`❌ 상대방 ${partnerId} 프로필 이미지 가져오기 실패:`, error);
+      console.error('❌ 에러 상세:', error.response?.data || error.message);
+      
+      // 404 에러인 경우 (사용자가 존재하지 않음) 기본 이미지 사용
+      if (error.response?.status === 404) {
+        console.log('❌ 사용자를 찾을 수 없음 - 기본 이미지 사용');
+      } else if (error.response?.status === 403) {
+        console.log('❌ 권한 없음 - 기본 이미지 사용');
+      }
+      
+      setPartnerProfileImage(null);
+    } finally {
+      setProfileImageLoading(false);
+    }
+  };
+
+  // 상대방 프로필 이미지 로드 (contact 정보가 변경될 때)
+  useEffect(() => {
+    console.log('🔄 useEffect [contact] 트리거됨');
+    console.log('🔍 현재 contact:', contact);
+    console.log('🔍 contact.id:', contact?.id);
+    console.log('🔍 contact.profileImage:', contact?.profileImage);
+    
+    if (contact?.id) {
+      if (contact.profileImage) {
+        console.log('✅ Contact에서 프로필 이미지 제공됨:', contact.profileImage);
+        setPartnerProfileImage(contact.profileImage);
+        setProfileImageLoading(false);
+      } else {
+        console.log('⚠️ Contact에 프로필 이미지 없음 - API 호출 시작');
+        fetchPartnerProfileImage();
+      }
+    } else {
+      console.log('❌ Contact ID가 없음');
+      setPartnerProfileImage(null);
+      setProfileImageLoading(false);
+    }
+  }, [contact]);
+
   // 채팅방 상태 확인
   const checkChatRoomStatus = async (chatRoomId) => {
     if (!chatRoomId) {
@@ -538,6 +626,52 @@ const ChatRoom = ({
 
   // 컴포넌트 unmount 시 정리
   useEffect(() => {
+    // 🧪 디버깅용 전역 함수 등록 (개발 환경에서만)
+    if (import.meta.env.MODE === 'development') {
+      window.testPartnerProfile = (testPartnerId) => {
+        console.log('🧪 상대방 프로필 API 직접 테스트:', testPartnerId);
+        
+        fetch(`/api/users/${testPartnerId}`, {
+          headers: {
+            'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(r => r.json())
+        .then(data => {
+          console.log('🔍 사용자 API 응답:', data);
+          console.log('🔍 가능한 프로필 이미지 필드들:', {
+            profileImage: data.data?.profileImage,
+            imgUrl: data.data?.imgUrl, 
+            imageUrl: data.data?.imageUrl,
+            profileImageUrl: data.data?.profileImageUrl,
+            avatar: data.data?.avatar,
+            photo: data.data?.photo,
+            picture: data.data?.picture
+          });
+        })
+        .catch(err => console.error('❌ API 오류:', err));
+      };
+      
+      window.getCurrentChatContact = () => {
+        console.log('🔍 현재 채팅방 contact 정보:', contact);
+        console.log('🔍 프로필 이미지 상태:', {
+          partnerProfileImage,
+          profileImageLoading,
+          contactProfileImage: contact?.profileImage
+        });
+      };
+      
+      window.testProfileImageLoad = () => {
+        console.log('🧪 프로필 이미지 강제 로드 테스트');
+        if (contact?.id) {
+          fetchPartnerProfileImage();
+        } else {
+          console.log('❌ contact.id가 없습니다');
+        }
+      };
+    }
+    
     return () => {
       // 상태 초기화
       setMessages([]);
@@ -554,6 +688,17 @@ const ChatRoom = ({
       setReviewCheckLoading(false);
       setSessionEndTime(null);
       setFiveMinuteWarningShown(false);
+      
+      // 프로필 이미지 관련 상태 초기화
+      setPartnerProfileImage(null);
+      setProfileImageLoading(false);
+      
+      // 디버깅 함수 정리
+      if (import.meta.env.MODE === 'development') {
+        delete window.testPartnerProfile;
+        delete window.getCurrentChatContact;
+        delete window.testProfileImageLoad;
+      }
       
       // 무한스크롤 관련 상태 초기화
       setHasMore(true); // 무한스크롤 활성화
@@ -668,6 +813,17 @@ const ChatRoom = ({
       setReviewCheckLoading(false);
       setSessionEndTime(null);
       setFiveMinuteWarningShown(false);
+      
+      // 프로필 이미지 관련 상태 초기화
+      setPartnerProfileImage(null);
+      setProfileImageLoading(false);
+      
+      // 디버깅 함수 정리
+      if (import.meta.env.MODE === 'development') {
+        delete window.testPartnerProfile;
+        delete window.getCurrentChatContact;
+        delete window.testProfileImageLoad;
+      }
       
       // 무한스크롤 관련 상태 초기화
       setHasMore(true); // 무한스크롤 활성화
@@ -1341,8 +1497,15 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
               <div className="review-modal-content" id="modal-description">
                 <div className="mentor-info">
                   <div className="mentor-avatar">
-                    {contact?.profileImage ? (
-                      <img src={contact.profileImage} alt={`${contact.name} 프로필`} />
+                    {partnerProfileImage || contact?.profileImage ? (
+                      <img 
+                        src={partnerProfileImage || contact.profileImage} 
+                        alt={`${contact.name} 프로필`} 
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
                     ) : (
                       <User className="avatar-icon" />
                     )}
@@ -1381,11 +1544,43 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
           <div className="chat-header-left">
             <div className="contact-info">
               <div className="contact-avatar">
-                {contact?.profileImage ? (
-                    <img src={contact.profileImage} alt={contact.name}/>
-                ) : (
-                    <User className="avatar-icon"/>
-                )}
+                {(() => {
+                  console.log('🎨 아바타 렌더링:', {
+                    partnerProfileImage,
+                    contactProfileImage: contact?.profileImage,
+                    profileImageLoading,
+                    finalImage: partnerProfileImage || contact?.profileImage
+                  });
+                  
+                  if (partnerProfileImage || contact?.profileImage) {
+                    const imageUrl = partnerProfileImage || contact.profileImage;
+                    console.log('🖼️ 이미지 렌더링:', imageUrl);
+                    return (
+                      <img 
+                        src={imageUrl} 
+                        alt={contact.name}
+                        onError={(e) => {
+                          console.warn('프로필 이미지 로드 실패:', e.target.src);
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                        onLoad={() => {
+                          console.log('✅ 프로필 이미지 로드 성공:', imageUrl);
+                        }}
+                      />
+                    );
+                  } else if (profileImageLoading) {
+                    console.log('⏳ 로딩 스피너 표시');
+                    return (
+                      <div className="avatar-loading">
+                        <div className="loading-spinner small"></div>
+                      </div>
+                    );
+                  } else {
+                    console.log('👤 기본 아이콘 표시');
+                    return <User className="avatar-icon"/>;
+                  }
+                })()}
                 <div className={`online-indicator ${isConnected ? 'connected'
                     : 'disconnected'}`}></div>
               </div>
@@ -1478,8 +1673,15 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
                   >
                     {!msg.isMine && (
                         <div className="message-avatar">
-                          {contact?.profileImage ? (
-                              <img src={contact.profileImage} alt={contact.name} />
+                          {partnerProfileImage || contact?.profileImage ? (
+                              <img 
+                                src={partnerProfileImage || contact.profileImage} 
+                                alt={contact.name} 
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
                           ) : (
                               <User className="avatar-icon" />
                           )}

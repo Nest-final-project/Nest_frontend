@@ -209,8 +209,20 @@ class NotificationService {
     console.log('📨 notification 타입:', typeof notification);
     console.log('📨 notification 키들:', Object.keys(notification));
     
-    const chatRoomId = notification.chatRoomId || notification.roomId || notification.id;
-    const reservationId = notification.reservationId || notification.reservation_id || notification.reservationID;
+    // 백엔드 SSE 이벤트의 다양한 필드명 패턴 매핑
+    const chatRoomId = notification.chatRoomId || 
+                      notification.roomId || 
+                      notification.chatRoom || 
+                      notification.room || 
+                      notification.id;
+    
+    const reservationId = notification.reservationId || 
+                         notification.reservation_id || 
+                         notification.reservationID || 
+                         notification.booking_id || 
+                         notification.bookingId ||
+                         notification.appointment_id ||
+                         notification.appointmentId;
     
     console.log('🔍 추출된 데이터:');
     console.log('  - chatRoomId:', chatRoomId, '(타입:', typeof chatRoomId, ')');
@@ -422,7 +434,17 @@ class NotificationService {
         } else {
           console.error('❌ API 호출 실패:', response.status, response.statusText);
           console.error('❌ 오류 응답 내용:', responseText);
-          apiError = `API 호출 실패 (${response.status}): ${responseText}`;
+          
+          // 403 권한 오류인 경우 특별 처리
+          if (response.status === 403) {
+            console.warn('⚠️ 예약 정보 조회 권한이 없습니다. 기본값으로 표시합니다.');
+            apiError = `권한 없음 (403): 예약 정보 조회 권한이 없습니다`;
+          } else if (response.status === 404) {
+            console.warn('⚠️ 예약 정보를 찾을 수 없습니다.');
+            apiError = `예약 정보 없음 (404): 해당 예약을 찾을 수 없습니다`;
+          } else {
+            apiError = `API 호출 실패 (${response.status}): ${responseText}`;
+          }
         }
       } catch (error) {
         console.error('❌ 예약 정보 조회 중 네트워크 오류:', error);
@@ -459,17 +481,17 @@ class NotificationService {
       reservationData: {
         // 상대방 이름 표시 (멘토 로그인 시 → 멘티 이름, 멘티 로그인 시 → 멘토 이름)
         partnerName: reservationData?.partnerInfo?.name || 
-                    (reservationData?.partnerInfo?.role === 'MENTOR' ? '멘토' : '멘티') ||
-                    (apiError ? '상대방 정보를 불러올 수 없습니다' : '상대방 정보 없음'),
-        partnerRole: reservationData?.partnerInfo?.role || 'UNKNOWN',
+                    (reservationData?.partnerInfo?.role === 'MENTOR' ? '멘토님' : '멘티님') ||
+                    (apiError ? '멘토' : '상대방'),
+        partnerRole: reservationData?.partnerInfo?.role || 'MENTOR',
         serviceName: reservationData?.ticketInfo?.name || 
                     reservationData?.ticketInfo?.title ||
                     reservationData?.serviceName || 
                     reservationData?.ticketName || 
                     '멘토링 서비스',
-        date: startDateTime.date || reservationData?.date || '날짜 정보 없음',
-        startTime: startDateTime.time || reservationData?.startTime || '시간 정보 없음',
-        endTime: endDateTime.time || reservationData?.endTime || '시간 정보 없음',
+        date: startDateTime.date || reservationData?.date || '오늘',
+        startTime: startDateTime.time || reservationData?.startTime || '지금',
+        endTime: endDateTime.time || reservationData?.endTime || '시간 미정',
         // 사용자에게 유용한 정보만 포함
         reservationId: reservationData?.id || reservationId,
         status: reservationData?.reservationStatus === 'PAID' ? '결제 완료' : 
