@@ -90,10 +90,6 @@ const MentorProfileModal = ({ onClose, onSubmit }) => {
               소개
               <textarea value={introduction} onChange={e => setIntroduction(e.target.value)} required />
             </label>
-            <label>
-              이미지 URL
-              <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
-            </label>
             {/* ⭐️ 계좌 번호 입력 필드 제거 */}
             <label>
               키워드

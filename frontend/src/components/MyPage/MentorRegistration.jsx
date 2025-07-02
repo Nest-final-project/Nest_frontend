@@ -1,19 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  UserPlus,
   Eye,
   Edit3,
-  Calendar,
-  CheckCircle,
-  ArrowRight,
-  X,
-  AlertTriangle,
-  Briefcase,
-  MessageSquare,
-  CreditCard
 } from 'lucide-react';
 import { profileAPI, categoryAPI, keywordAPI } from '../../services/api';
-import { authUtils } from '../../utils/tokenUtils';
 import ProfileEditModal from './ProfileEditModal.jsx';
 import ProfilePreviewModal from './ProfilePreviewModal.jsx';
 import MentorProfileModal from './MentorProfileModal';
@@ -23,7 +13,6 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [dataLoaded, setDataLoaded] = useState(false);
 
   // 프로필 수정 관련 state
   const [editingProfile, setEditingProfile] = useState(null);
@@ -38,13 +27,13 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
 
   const [modalOpen, setModalOpen] = useState(false);
 
-  const hasProfile = profiles.length > 0;
+  const hasAnyProfile = profiles.length > 0;
 
   useEffect(() => {
-    if (userInfo?.userRole === 'MENTOR' && !dataLoaded) {
+    if (userInfo?.userRole === 'MENTOR') {
       fetchMentorProfile();
     }
-  }, [userInfo, dataLoaded]);
+  }, [userInfo]);
 
   const fetchMentorProfile = async () => {
     console.log('🔍 멘토 프로필 로딩 시작...');
@@ -59,24 +48,20 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
 
       if (rawProfiles && rawProfiles.length > 0) {
         setProfiles(rawProfiles);
-        setDataLoaded(true);
       } else {
         setProfiles([]);
-        setDataLoaded(true);
       }
       console.log('✅ 프로필 설정 완료:', rawProfiles?.length || 0, '개');
     } catch (err) {
       console.error('❌ 프로필 로딩 실패:', err);
       setError("오류가 발생했습니다. 다시 시도해 주세요.");
       setProfiles([]);
-      setDataLoaded(true);
     } finally {
       setLoading(false);
     }
   };
 
   const handleRetry = () => {
-    setDataLoaded(false);
     setError(null);
     fetchMentorProfile();
   };
@@ -162,6 +147,7 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
         profile.id === updatedProfile.id ? updatedProfile : profile
       )
     );
+    fetchMentorProfile();
   };
 
   // 멘토가 아닌 경우 렌더링하지 않음
@@ -211,7 +197,7 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
         </div>
       </div>
 
-      {hasProfile ? (
+      {hasAnyProfile ? (
         <>
           <div className="mentor-profile-list">
             {profiles.map((profile, index) => (

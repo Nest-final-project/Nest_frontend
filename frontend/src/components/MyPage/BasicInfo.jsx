@@ -293,19 +293,19 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
 
   return (
     <div className="profile-tab">
-      <div className="info-card">
-        <div className="info-card-header">
+      <div className="my-info-card">
+        <div className="my-info-card-header">
           <h3>✨ 기본 정보</h3>
         </div>
-        <div className="info-card-body">
+        <div className="my-info-card-body">
           {/* 이름 - 읽기 전용 */}
-          <div className="info-item">
+          <div className="my-info-item">
             <label>👤 이름</label>
             <span>{userInfo.name}</span>
           </div>
 
           {/* 닉네임 - 편집 가능 */}
-          <div className="info-item editable">
+          <div className="my-info-item editable">
             <label>🏷️ 닉네임</label>
             {editingField === 'nickName' ? (
               <div className="edit-field">
@@ -342,7 +342,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               <div className="field-display">
                 <span>{userInfo.nickName}</span>
                 <button
-                  className="edit-btn"
+                  className="my-edit-btn"
                   onClick={() => handleEditField('nickName')}
                 >
                   <Edit3 size={16} />
@@ -352,13 +352,13 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
           </div>
 
           {/* 이메일 - 읽기 전용 */}
-          <div className="info-item">
+          <div className="my-info-item">
             <label>📧 이메일</label>
             <span>{userInfo.email}</span>
           </div>
 
           {/* 전화번호 - 편집 가능 */}
-          <div className="info-item editable">
+          <div className="my-info-item editable">
             <label>📱 전화번호</label>
             {editingField === 'phoneNumber' ? (
               <div className="edit-field">
@@ -427,7 +427,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               <div className="field-display">
                 <span>{userInfo.phoneNumber}</span>
                 <button
-                  className="edit-btn"
+                  className="my-edit-btn"
                   onClick={() => handleEditField('phoneNumber')}
                 >
                   <Edit3 size={16} />
@@ -438,7 +438,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
 
           {/* 멘토인 경우에만 은행 정보 표시 */}
           {userInfo.userRole === 'MENTOR' && (
-            <div className="info-item editable">
+            <div className="my-info-item editable">
               <label>🏦 은행 정보</label>
               {editingField === 'bankInfo' ? (
                 <div className="edit-field bank-edit">
@@ -495,7 +495,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     }
                   </span>
                   <button
-                    className="edit-btn"
+                    className="my-edit-btn"
                     onClick={() => handleEditField('bankInfo')}
                   >
                     <Edit3 size={16} />
@@ -506,11 +506,11 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
           )}
 
           {/* 읽기 전용 필드들 */}
-          <div className="info-item">
+          <div className="my-info-item">
             <label>📅 가입일</label>
             <span>{userInfo.createdAt}</span>
           </div>
-          <div className="info-item">
+          <div className="my-info-item">
             <label>🎯 사용자 유형</label>
             <span>{userInfo.userRole === 'MENTOR' ? '🎓 멘토' : '👨‍🎓 멘티'}</span>
           </div>
@@ -540,16 +540,16 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
 
       {/* 비밀번호 변경 모달 */}
       {showPasswordModal && userData?.socialType === 'LOCAL' && (
-        <div className="modal-overlay" onClick={closePasswordModal}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="my-modal-overlay" onClick={closePasswordModal}>
+          <div className="my-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="my-modal-header">
               <h3>비밀번호 변경</h3>
-              <button className="modal-close" onClick={closePasswordModal}>
+              <button className="my-modal-close" onClick={closePasswordModal}>
                 <X size={24} />
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="my-modal-body">
               <div className="password-field"> {/* 현재 비밀번호 */}
                 <label>현재 비밀번호</label>
                 <div className="custom-password-input-container">
@@ -597,16 +597,16 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               </div>
             </div>
 
-            <div className="modal-footer">
+            <div className="my-modal-footer">
               <button
-                className="modal-btn cancel"
+                className="my-modal-btn cancel"
                 onClick={closePasswordModal}
                 disabled={modalLoading}
               >
                 취소
               </button>
               <button
-                className="modal-btn confirm"
+                className="my-modal-btn confirm"
                 onClick={handlePasswordChange}
                 disabled={modalLoading || !passwordData.currentPassword || !passwordData.newPassword}
               >
@@ -623,16 +623,16 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
 
       {/* 회원탈퇴 모달 */}
       {showDeleteModal && (
-        <div className="modal-overlay" onClick={closeDeleteModal}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="my-modal-overlay" onClick={closeDeleteModal}>
+          <div className="my-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="my-modal-header">
               <h3>회원탈퇴</h3>
-              <button className="modal-close" onClick={closeDeleteModal}>
+              <button className="my-modal-close" onClick={closeDeleteModal}>
                 <X size={24} />
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="my-modal-body">
               <div className="warning-message">
                 <div className="warning-icon">
                   <UserX size={48} />
@@ -670,16 +670,16 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               )}
             </div>
 
-            <div className="modal-footer">
+            <div className="my-modal-footer">
               <button
-                className="modal-btn cancel"
+                className="my-modal-btn cancel"
                 onClick={closeDeleteModal}
                 disabled={modalLoading}
               >
                 취소
               </button>
               <button
-                className="modal-btn delete"
+                className="my-modal-btn delete"
                 onClick={handleAccountDelete}
                 disabled={modalLoading || (userData?.socialType === 'LOCAL' && !deletePassword)}
               >
