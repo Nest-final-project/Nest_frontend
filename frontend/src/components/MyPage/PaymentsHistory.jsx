@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Eye, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CreditCard, Eye, FileText, ChevronLeft, ChevronRight, MoreVertical, Edit3, Trash2, X } from 'lucide-react';
 import { paymentAPI } from '../../services/api';
-import './PaymentHistory.css';
+import './PaymentsHistory.css';
 import { Loader, AlertTriangle, Info } from 'lucide-react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
-const PaymentHistory = ({ userInfo }) => {
+const PaymentsHistory = ({ userInfo }) => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +20,60 @@ const PaymentHistory = ({ userInfo }) => {
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
 
+  const [showDropdown, setShowDropdown] = useState(null);
+
+  // 취소 모달 관련 상태
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReasonInput, setCancelReasonInput] = useState('');
+  const [paymentToCancelId, setPaymentToCancelId] = useState(null);
+
+  // 커스텀 메시지 박스 상태
+  const [messageBox, setMessageBox] = useState({
+    show: false,
+    type: '',
+    message: '',
+  });
+
+  // 커스텀 메시지 박스 표시 함수
+  const showMessageBox = (type, message) => {
+    setMessageBox({ show: true, type, message });
+  };
+
+  // 커스텀 메시지 박스 닫기 함수
+  const closeMessageBox = () => {
+    setMessageBox({ show: false, type: '', message: '' });
+  };
+
+  const fetchPayments = async (pageToFetch, currentUserInfo) => { // ⭐ pageToFetch와 currentUserInfo를 인자로 받음
+    // 멘티일 경우에만 결제 내역을 불러옴
+    if (currentUserInfo?.userRole !== 'MENTEE') { // ⭐ 인자로 받은 currentUserInfo 사용
+      setLoading(false); // 멘티가 아니면 로딩을 멈춤
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await paymentAPI.getPaymentHistory({
+        page: pageToFetch, // ⭐ 인자로 받은 pageToFetch 사용
+        size: 10,
+      });
+
+      const responseData = response.data.data;
+
+      setPayments(responseData.content || []);
+      setTotalPages(responseData.totalPages);
+      setTotalElements(responseData.totalElements);
+      setHasNext(responseData.hasNext);
+      setHasPrevious(responseData.hasPrevious);
+
+    } catch (err) {
+      console.error("결제 내역을 불러오는 데 실패했습니다:", err);
+      setError("결제 내역을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // URL 파라미터에서 현재 페이지를 가져옵니다.
     const pageFromUrl = parseInt(searchParams.get('page') || '0', 10);
@@ -30,38 +84,21 @@ const PaymentHistory = ({ userInfo }) => {
   }, [searchParams]); // URL 파라미터가 변경될 때마다 실행
 
   useEffect(() => {
-    // 멘티일 경우에만 결제 내역을 불러옴
-    if (userInfo?.userRole === 'MENTEE') {
-      const fetchPayments = async (page) => {
-        try {
-          setLoading(true);
-          const response = await paymentAPI.getPaymentHistory({
-            page: page,
-            size: 10,
-          });
+    // fetchPayments는 이제 최상위 함수이므로, 여기서 최신 상태 값을 인자로 전달합니다.
+    fetchPayments(currentPage, userInfo); // ⭐ currentPage와 userInfo를 인자로 전달
+  }, [userInfo, currentPage]);
 
-          const responseData = response.data.data;
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // 클릭된 요소가 드롭다운 액션 버튼이나 드롭다운 메뉴 자체가 아니라면 닫기
+      if (showDropdown !== null && !event.target.closest('.review-actions')) { // 클래스명은 Reviews 컴포넌트와 통일
+        setShowDropdown(null);
+      }
+    };
 
-          setPayments(responseData.content || []);
-          setTotalPages(responseData.totalPages);
-          setTotalElements(responseData.totalElements);
-          setHasNext(responseData.hasNext);
-          setHasPrevious(responseData.hasPrevious);
-
-        } catch (err) {
-          console.error("결제 내역을 불러오는 데 실패했습니다:", err);
-          setError("결제 내역을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.");
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchPayments(currentPage);
-    } else {
-      // 멘티가 아니면 로딩을 멈추고 빈 화면을 보여줌
-      setLoading(false);
-    }
-  }, [userInfo, currentPage]); // userInfo가 변경될 때만 실행
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showDropdown]); // showDropdown 상태가 변경될 때마다 이벤트 리스너 갱신
 
   // 페이지 변경 핸들러
   const handlePageChange = (newPage) => {
@@ -99,10 +136,43 @@ const PaymentHistory = ({ userInfo }) => {
     return pages;
   };
 
-  // 멘티가 아닌 경우 아무것도 렌더링하지 않음
-  if (userInfo?.userRole !== 'MENTEE') {
-    return null;
-  }
+  const toggleDropdown = (itemId) => {
+    setShowDropdown(showDropdown === itemId ? null : itemId);
+  };
+
+  const handleDeletePayment = async (paymentId) => {
+    setPaymentToCancelId(paymentId);
+    setCancelReasonInput('');
+    setShowCancelModal(true);
+    setShowDropdown(null);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelReasonInput.trim()) {
+      showMessageBox('error', '취소 사유를 입력해주세요.');
+      return;
+    }
+    if (!paymentToCancelId) {
+      showMessageBox('error', '취소할 결제 내역을 찾을 수 없습니다.');
+      return;
+    }
+
+    try {
+      await paymentAPI.cancelPayment(paymentToCancelId, { cancelReason: cancelReasonInput });
+      fetchPayments(currentPage, userInfo);
+      showMessageBox('success', '결제 내역이 성공적으로 취소되었습니다.');
+      handleCancelModalClose();
+    } catch (error) {
+      console.error('결제 내역 취소 실패:', error);
+      showMessageBox('error', '결제 내역 취소에 실패했습니다. 다시 시도해 주세요.');
+    }
+  };
+
+  const handleCancelModalClose = () => {
+    setShowCancelModal(false);
+    setCancelReasonInput('');
+    setPaymentToCancelId(null);
+  };
 
   if (loading) {
     return (
@@ -142,14 +212,43 @@ const PaymentHistory = ({ userInfo }) => {
                     <li key={item.id} className="history-item">
                       <div className="item-header">
                         <span className="ticket-name">{item.ticketName}</span>
-                        <span className={`status-badge status-${item.status.toLowerCase()}`}>
-                  {item.status}
-                </span>
+                        <div className="review-actions"> {/* Reviews 컴포넌트와 클래스명 통일 */}
+                          <button
+                              className="action-menu-btn"
+                              onClick={(e) => {
+                                e.stopPropagation(); // 이벤트 버블링 방지 (외부 클릭 시 닫기 위함)
+                                toggleDropdown(item.id);
+                              }}
+                          >
+                            <MoreVertical size={18} />
+                          </button>
+
+                          {showDropdown === item.id && (
+                              <div className="action-dropdown">
+
+                                <button
+                                    className="dropdown-item delete-item"
+                                    onClick={() => handleDeletePayment(item.id)}
+                                >
+                                  <Trash2 size={16} />
+                                  <span>취소</span>
+                                </button>
+                              </div>
+                          )}
+                        </div>
                       </div>
                       <div className="item-body">
                         <p><strong>멘토:</strong> {item.mentorName}</p>
                         <p><strong>결제 금액:</strong> {item.amount.toLocaleString()}원 ({item.originalAmount.toLocaleString()} - {item.discountAmount.toLocaleString()})</p>
                         <p><strong>결제 수단:</strong> {item.paymentType}</p>
+                        <div className="item-body-bottom-row">
+                          <div className="items-status">
+                          <span className={`status-badge status-${item.status.toLowerCase()}`}>
+                            {item.status === 'PAID' ? '결제완료' :
+                             item.status === 'CANCELED' ? '결제취소' : item.status}
+                          </span>
+                          </div>
+                        </div>
                       </div>
                       <div className="item-footer">
                         <span>{new Date(item.approvedAt).toLocaleString()}</span>
@@ -242,8 +341,55 @@ const PaymentHistory = ({ userInfo }) => {
               )}
             </>
           )}
+        {/* ⭐ 1. 커스텀 취소 사유 입력 모달 */}
+        {showCancelModal && (
+            <div className="custom-modal-overlay">
+              <div className="custom-modal-content">
+                <div className="modal-header">
+                  <h3>결제 내역 취소</h3>
+                  <button className="close-button" onClick={handleCancelModalClose}>
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <p>결제 내역을 취소하시겠습니까? 취소 사유를 입력해주세요.</p>
+                  <textarea
+                      className="cancel-reason-input"
+                      rows="4"
+                      placeholder="취소 사유를 입력하세요 (필수)"
+                      value={cancelReasonInput}
+                      onChange={(e) => setCancelReasonInput(e.target.value)}
+                  ></textarea>
+                </div>
+                <div className="modal-footer">
+                  <button className="modal-cancel-btn" onClick={handleCancelModalClose}>취소</button>
+                  <button className="modal-confirm-btn" onClick={handleConfirmCancel}>확인</button>
+                </div>
+              </div>
+            </div>
+        )}
+
+        {/* ⭐ 2. 커스텀 메시지 박스 */}
+        {messageBox.show && (
+            <div className={`custom-message-box-overlay ${messageBox.type}`}>
+              <div className="custom-message-box-content">
+                <div className="message-header">
+                  <h4>{messageBox.type === 'success' ? '성공' : messageBox.type === 'error' ? '오류' : '알림'}</h4>
+                  <button className="close-button" onClick={closeMessageBox}>
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="message-body">
+                  <p>{messageBox.message}</p>
+                </div>
+                <div className="message-footer">
+                  <button className="message-ok-btn" onClick={closeMessageBox}>확인</button>
+                </div>
+              </div>
+            </div>
+        )}
       </div>
   );
 };
 
-export default PaymentHistory;
+export default PaymentsHistory;

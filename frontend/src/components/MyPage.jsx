@@ -16,7 +16,7 @@ import './MyPage.css';
 import { userInfoUtils, authUtils } from '../utils/tokenUtils.js';
 import { userAPI, authAPI } from '../services/api.js';
 import BookingHistory from './MyPage/BookingHistory.jsx';
-import PaymentHistory from './MyPage/PaymentHistory.jsx';
+import PaymentsHistory from './MyPage/PaymentsHistory.jsx';
 import Reviews from "./MyPage/Reviews.jsx";
 import Coupons from "./MyPage/Coupons.jsx";
 
@@ -309,7 +309,7 @@ const MyPage = ({ onBack, onLogout }) => {
                 } />
                 <Route path="/payments" element={
                   userInfo?.userRole === 'MENTEE' ? (
-                    <PaymentHistory userInfo={userInfo} />
+                    <PaymentsHistory userInfo={userInfo} />
                   ) : (
                     <div className="access-denied">
                       <p>접근 권한이 없습니다.</p>
