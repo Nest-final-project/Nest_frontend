@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { reservationAPI, userAPI, ticketAPI } from '../../services/api';
 import './BookingHistory.css';
 
 const BookingHistory = ({ userInfo }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,10 +20,15 @@ const BookingHistory = ({ userInfo }) => {
   const [hasPrevious, setHasPrevious] = useState(false);
 
   useEffect(() => {
-    if (!dataLoaded) {
       fetchReservations(currentPage);
-    }
   }, [currentPage]);
+
+  useEffect(() => {
+    const pageFromUrl = parseInt(searchParams.get('page') || '0', 10);
+    if (pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [searchParams]); // searchParams가 변경될 때마다 실행
 
   const fetchReservations = async (page = 0) => {
     setLoading(true);
@@ -135,8 +141,9 @@ const BookingHistory = ({ userInfo }) => {
   // 페이지 변경 핸들러
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < totalPages && newPage !== currentPage) {
-      setCurrentPage(newPage);
-      console.log(newPage);
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set('page', newPage.toString());
+      setSearchParams(newSearchParams);
     }
   };
 

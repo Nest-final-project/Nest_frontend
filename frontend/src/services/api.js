@@ -356,7 +356,7 @@ export const paymentAPI = {
       `/api/v1/payments/${paymentId}/cancel`, cancelData),
 
   // 결제 내역 조회
-  getPaymentHistory: () => api.get(`/api/v1/payments`),
+  getPaymentHistory: ({ page, size }) => api.get(`/api/v1/payments?page=${page}&size=${size}`),
 
   // 결제 상세 조회
   getPaymentDetail: (paymentId) => api.get(`/api/payments/${paymentId}`),
