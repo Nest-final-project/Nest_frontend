@@ -112,7 +112,7 @@ const Header = ({
                     </button>
                     <button className="profile-button" onClick={handleProfileClick}>
                       <img
-                          src={userInfo?.profileImage || '/default-profile.svg'}
+                          src={userInfo?.profileImage || userInfo?.imgUrl || '/default-profile.svg'}
                           alt="프로필"
                           className="profile-image"
                           onError={(e) => {
