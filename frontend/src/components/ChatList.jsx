@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import {Search, Plus, MoreVertical, User, ArrowLeft, X} from 'lucide-react';
 import './ChatList.css';
-import {chatroomAPI} from '../services/api';
+import {chatroomAPI, userAPI} from '../services/api';
 import {accessTokenUtils} from '../utils/tokenUtils';
 
 const ChatList = ({onChatSelect, currentChatId, onBack}) => {
@@ -77,6 +77,11 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
         // 현재 사용자가 멘토인지 멘티인지 판단 (JWT 토큰의 사용자 ID 기준)
         const isCurrentUserMentor = currentUserId === room.mentorId;
 
+        // const fetchPartnerProfileImage = async () => {
+        //   const userResponse = await userAPI.getUserProfileImage(partnerId);
+        //   const userData = userResponse.data;
+        //   imgUrl : userData.imgUrl;
+        // }
         // 상대방 정보 설정
         const contactInfo = isCurrentUserMentor ? {
           id: room.menteeId,
