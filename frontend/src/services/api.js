@@ -150,15 +150,15 @@ api.interceptors.response.use(
         } catch (refreshError) {
           console.error('❌ 토큰 갱신 실패:', refreshError);
 
-          // // 토큰 갱신 실패 시 로그아웃 처리
-          // accessTokenUtils.removeAccessToken();
-          // refreshTokenUtils.removeRefreshToken();
-          //
-          // // 현재 페이지가 로그인 페이지가 아닌 경우에만 리다이렉트
-          // if (!window.location.pathname.includes('/login')) {
-          //   alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-          //   window.location.reload(); // 페이지 새로고침으로 로그인 상태 초기화
-          // }
+          // 토큰 갱신 실패 시 로그아웃 처리
+          accessTokenUtils.removeAccessToken();
+          refreshTokenUtils.removeRefreshToken();
+
+          // 현재 페이지가 로그인 페이지가 아닌 경우에만 리다이렉트
+          if (!window.location.pathname.includes('/login')) {
+            alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+            window.location.reload(); // 페이지 새로고침으로 로그인 상태 초기화
+          }
         }
       }
 
@@ -600,7 +600,7 @@ export const adminAPI = {
       `/api/admin/complaints/${complaintId}`),
 
   // [관리자] 문의 답변 수정
-  updateAnswer: (answerId) => api.patch(`/answers/${answerId}`),
+  updateAnswer: (answerId, answerData) => api.patch(`/api/admin/answers/${answerId}`, answerData),
 
   // [관리자] 쿠폰 등록
   registerCoupon: (couponData) => api.post('/api/admin/coupons', couponData),
