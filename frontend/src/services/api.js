@@ -348,23 +348,11 @@ export const reservationAPI = {
 
 // Chatroom API
 export const chatroomAPI = {
-  // 채팅방 목록 조회 (기본)
-  getChatrooms: () => api.get('/api/chat_rooms'),
-
   // 채팅방 목록 조회 (페이지네이션 지원)
   getChatroomsWithPagination: (params) => api.get('/api/chat_rooms', { params }),
 
   // 채팅방 상태 확인
   getChatroomStatus: (chatroomId) => api.get(`/api/chat_rooms/${chatroomId}/status`),
-
-  // 채팅방 생성
-  //createChatroom: (chatroomData) => api.post('/api/chatrooms', chatroomData),
-
-  // 채팅방 입장
-  //joinChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/join`),
-
-  // 채팅방 나가기
-  //leaveChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/leave`),
 };
 
 // Message API
@@ -437,12 +425,6 @@ export const notificationAPI = {
   // 알림 목록 조회 (SSE 알림 내역)
   getNotifications: (params) => api.get('/sse/notifications', {params}),
 
-  // 알림 읽음 처리
-  markNotificationAsRead: (notificationId) =>
-      api.patch(`/api/notifications/${notificationId}/read`),
-
-  // 모든 알림 읽음 처리
-  markAllNotificationsAsRead: () => api.patch('/api/notifications/read-all'),
 };
 
 // Ticket API

@@ -3,18 +3,13 @@ import {
   Send,
   Paperclip,
   Smile,
-  Phone,
-  Video,
-  MoreVertical,
   User,
   Home,
   X
 } from 'lucide-react';
 import './ChatRoom.css';
-import axios from 'axios';
-import {accessTokenUtils} from '../utils/tokenUtils';
 import {useWebSocket} from '../hooks/useWebSocket';
-import {reservationAPI, reviewAPI, userAPI} from '../services/api';
+import {reservationAPI, reviewAPI, userAPI, chatroomAPI, messageAPI} from '../services/api';
 
 const ChatRoom = ({
   contact,
@@ -85,20 +80,6 @@ const ChatRoom = ({
                            !showReviewModal &&
                            !hasWrittenReview && // 아직 리뷰를 작성하지 않았어야 함
                            !isMentor; // 멘토가 아닌 경우에만
-
-    console.log('🔍 리뷰 모달 표시 조건 확인:', {
-      isChatRoomClosed,
-      reservationStatus,
-      statusLoading,
-      reservationLoading,
-      reviewCheckLoading,
-      hasClosedModal,
-      showReviewModal,
-      hasWrittenReview,
-      isMentor,
-      shouldShowModal,
-      '최종 결과': shouldShowModal ? '모달 표시' : '모달 숨김'
-    });
 
     if (shouldShowModal) {
       const reason = isChatRoomClosed ? '채팅방 종료' : '예약 완료';
@@ -215,15 +196,19 @@ const ChatRoom = ({
       console.log(`📡 API 호출 파라미터:`, { reservationId: reservationId });
 
       try {
+        // 멘토는 리뷰를 작성하지 않으므로 체크하지 않음
+        if (isMentor) {
+          console.log('🔍 멘토는 리뷰를 작성하지 않으므로 리뷰 확인을 건너뜁니다');
+          setHasWrittenReview(false);
+          return false;
+        }
+
         const response = await reviewAPI.getMyReviews({ reservationId: reservationId });
         console.log(`📡 API 응답:`, response.data);
 
         const reviews = response.data.content || response.data.data || response.data || [];
         const hasReview = reviews.length > 0;
 
-        console.log(`📡 API에서 조회된 리뷰 개수: ${reviews.length}`);
-        console.log(`📡 조회된 리뷰 목록:`, reviews);
-        console.log(`✅ API에서 예약 ${reservationId} 리뷰 존재 여부: ${hasReview ? '있음' : '없음'}`);
         setHasWrittenReview(hasReview);
 
         // API에서 리뷰가 확인되면 localStorage에도 저장
@@ -236,35 +221,17 @@ const ChatRoom = ({
       } catch (apiError) {
         console.error(`❌ API 호출 실패:`, apiError);
 
-        // API 호출 실패 시 직접 리뷰 존재 확인 API 시도
-        console.log(`🔄 대체 API 시도: 직접 예약별 리뷰 확인`);
-        try {
-          // 만약 getMyReviews가 작동하지 않으면 대체 방법 시도
-          const directResponse = await axios.get(`/api/reservations/${reservationId}/reviews`, {
-            headers: {
-              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
-            }
-          });
-
-          console.log(`📡 대체 API 응답:`, directResponse.data);
-          const hasDirectReview = directResponse.status === 200;
-          setHasWrittenReview(hasDirectReview);
-
-          if (hasDirectReview) {
-            localStorage.setItem(reviewCompletedKey, 'true');
-            console.log(`💾 대체 API로 localStorage에 저장: ${reviewCompletedKey} = true`);
-          }
-
-          return hasDirectReview;
-        } catch (directError) {
-          console.error(`❌ 대체 API도 실패:`, directError);
-          if (directError.response?.status === 404) {
-            console.log(`📡 404 에러 = 리뷰 없음으로 판단`);
-            setHasWrittenReview(false);
-            return false;
-          }
-          throw directError;
+        // 403 에러는 권한 문제이므로 리뷰가 없는 것으로 처리
+        if (apiError.response?.status === 403) {
+          console.log('📡 403 권한 에러 - 멘토는 리뷰를 조회할 수 없음. 리뷰 없음으로 처리.');
+          setHasWrittenReview(false);
+          return false;
         }
+
+        // API 호출 실패 시 대체 로직 시도하지 않음
+        console.log(`🔄 API 실패 - 리뷰 없음으로 처리`);
+        setHasWrittenReview(false);
+        return false;
       }
 
     } catch (err) {
@@ -346,17 +313,12 @@ const ChatRoom = ({
       // 방법 1: 사용자 정보 API를 통해 프로필 이미지 URL 가져오기
       const userResponse = await userAPI.getUserProfileImage(partnerId);
       const userData = userResponse.data.data || userResponse.data;
-      
-      console.log('👤 상대방 사용자 정보 (전체):', userData);
-      console.log('🔍 가능한 프로필 이미지 필드들:', {
-        imgUrl: userData.imgUrl
-      });
+
       
       // 다양한 필드명 시도
       const imageUrl = userData.imgUrl;
                       
       if (imageUrl) {
-        console.log(`✅ 상대방 프로필 이미지 찾음: ${imageUrl}`);
         setPartnerProfileImage(imageUrl);
         
         // 이미지 로드 테스트
@@ -370,12 +332,10 @@ const ChatRoom = ({
         };
         img.src = imageUrl;
       } else {
-        console.log('📷 상대방이 프로필 이미지를 설정하지 않음');
         setPartnerProfileImage(null);
       }
 
     } catch (error) {
-      console.error(`❌ 상대방 ${partnerId} 프로필 이미지 가져오기 실패:`, error);
       console.error('❌ 에러 상세:', error.response?.data || error.message);
       
       // 404 에러인 경우 (사용자가 존재하지 않음) 기본 이미지 사용
@@ -393,18 +353,11 @@ const ChatRoom = ({
 
   // 상대방 프로필 이미지 로드 (contact 정보가 변경될 때)
   useEffect(() => {
-    console.log('🔄 useEffect [contact] 트리거됨');
-    console.log('🔍 현재 contact:', contact);
-    console.log('🔍 contact.id:', contact?.id);
-    console.log('🔍 contact.profileImage:', contact?.profileImage);
-    
     if (contact?.id) {
       if (contact.profileImage) {
-        console.log('✅ Contact에서 프로필 이미지 제공됨:', contact.profileImage);
         setPartnerProfileImage(contact.profileImage);
         setProfileImageLoading(false);
       } else {
-        console.log('⚠️ Contact에 프로필 이미지 없음 - API 호출 시작');
         fetchPartnerProfileImage();
       }
     } else {
@@ -425,24 +378,15 @@ const ChatRoom = ({
       setStatusLoading(true);
       console.log(`🔍 채팅방 ${chatRoomId}의 상태 확인 중...`);
 
-      const response = await axios.get(
-          `/api/chat_rooms/${chatRoomId}/status`,
-          {
-            headers: {
-              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
-            }
-          }
-      );
+      // chatroomAPI 사용하여 상태 확인
+      const response = await chatroomAPI.getChatroomStatus(chatRoomId);
 
       console.log('📋 채팅방 상태 API 응답:', response.data);
 
       // 백엔드에서 "closed" 필드로 응답하므로 이를 사용
       const isClosed = response.data.closed;
       setIsChatRoomClosed(isClosed);
-
-      console.log(`✅ 채팅방 ${chatRoomId} 상태: ${isClosed ? '종료됨' : '활성'}`);
-      console.log(`🔧 isChatRoomClosed 상태 설정됨:`, isClosed);
-
+      
       return isClosed;
 
     } catch (err) {
@@ -451,7 +395,6 @@ const ChatRoom = ({
 
       // 상태 확인 실패 시 기본적으로 열린 상태로 가정
       setIsChatRoomClosed(false);
-      console.log('🔧 에러로 인해 isChatRoomClosed를 false로 설정');
       return false;
     } finally {
       setStatusLoading(false);
@@ -469,16 +412,8 @@ const ChatRoom = ({
       setLoading(true);
       console.log(`📥 채팅방 ${chatRoomId}의 최신 메시지 가져오는 중...`);
 
-      // 최신 메시지들 가져오기 (커서 없이)
-      const response = await axios.get(
-          `/api/chat_rooms/${chatRoomId}/messages`,
-          {
-            params: {size: 20}, // 최신 20개만
-            headers: {
-              'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`
-            }
-          }
-      );
+      // messageAPI 사용하여 메시지 가져오기
+      const response = await messageAPI.getMessages(chatRoomId, {size: 20}); // 최신 20개만
 
       const newMessages = response.data.content
       .slice()
@@ -491,10 +426,6 @@ const ChatRoom = ({
         timestamp: msg.sentAt,
         status: msg.isMine ? 'sent' : 'received'
       }));
-
-      console.log(`✅ 채팅방 ${chatRoomId}: ${newMessages.length}개 최신 메시지 로드`);
-      console.log(`📊 메시지 ID 범위: ${newMessages[0]?.id} ~ ${newMessages[newMessages.length - 1]?.id}`);
-      console.log(`📊 서버 응답 - isLast: ${response.data.last}, total: ${response.data.totalElements || 'N/A'}`);
 
       // 메시지를 완전히 새로 설정
       setMessages(newMessages);
@@ -631,45 +562,18 @@ const ChatRoom = ({
       window.testPartnerProfile = (testPartnerId) => {
         console.log('🧪 상대방 프로필 API 직접 테스트:', testPartnerId);
         
-        fetch(`/api/users/${testPartnerId}`, {
-          headers: {
-            'Authorization': `Bearer ${accessTokenUtils.getAccessToken()}`,
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(r => r.json())
-        .then(data => {
+        userAPI.getUserProfileImage(testPartnerId)
+        .then(response => {
+          const data = response.data;
           console.log('🔍 사용자 API 응답:', data);
           console.log('🔍 가능한 프로필 이미지 필드들:', {
-            profileImage: data.data?.profileImage,
-            imgUrl: data.data?.imgUrl, 
-            imageUrl: data.data?.imageUrl,
-            profileImageUrl: data.data?.profileImageUrl,
-            avatar: data.data?.avatar,
-            photo: data.data?.photo,
-            picture: data.data?.picture
+            imgUrl: data.imgUrl
           });
         })
         .catch(err => console.error('❌ API 오류:', err));
       };
       
-      window.getCurrentChatContact = () => {
-        console.log('🔍 현재 채팅방 contact 정보:', contact);
-        console.log('🔍 프로필 이미지 상태:', {
-          partnerProfileImage,
-          profileImageLoading,
-          contactProfileImage: contact?.profileImage
-        });
-      };
-      
-      window.testProfileImageLoad = () => {
-        console.log('🧪 프로필 이미지 강제 로드 테스트');
-        if (contact?.id) {
-          fetchPartnerProfileImage();
-        } else {
-          console.log('❌ contact.id가 없습니다');
-        }
-      };
+    
     }
     
     return () => {
@@ -897,15 +801,6 @@ const ChatRoom = ({
 
   // 무한스크롤
   const loadMoreMessages = async () => {
-    console.log("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 loadMoreMessages 진입");
-    console.log("🔥 현재 상태:", {
-      messages수: latestMessagesRef.current.length,
-      첫번째ID: latestMessagesRef.current[0]?.id,
-      마지막ID: latestMessagesRef.current[latestMessagesRef.current.length - 1]?.id,
-      hasMore,
-      loading,
-      loadingMoreRef: loadingMoreRef.current
-    });
     
     // 1. 기본 조건 확인
     if (loading || !hasMore || loadingMoreRef.current) {
@@ -948,24 +843,11 @@ const ChatRoom = ({
     });
 
     try {
-      const response = await axios.get(
-          `/api/chat_rooms/${chatRoomId}/messages`,
-          {
-            params: {
-              size: 20,
-              lastMessageId: oldestMessageId,  // 🔧 백엔드와 일치하도록 수정
-            },
-            headers: { Authorization: `Bearer ${accessTokenUtils.getAccessToken()}` },
-          }
-      );
-
-      console.log("📡 서버 응답 상세:", {
-        contentLength: response.data.content?.length || 0,
-        isLast: response.data.last,
-        첫번째메시지ID: response.data.content?.[0]?.messageId,
-        마지막메시지ID: response.data.content?.[response.data.content?.length - 1]?.messageId,
-        전체응답: response.data
+      const response = await messageAPI.getMessages(chatRoomId, {
+        size: 20,
+        lastMessageId: oldestMessageId,  // 🔧 백엔드와 일치
       });
+
 
       const newMessages = response.data.content
       .slice()
@@ -992,39 +874,15 @@ const ChatRoom = ({
       const currentIds = new Set(latestMessagesRef.current.map(m => m.id));
       const actuallyNewMessages = newMessages.filter(msg => !currentIds.has(msg.id));
       
-      console.log("🔍 중복 확인 결과:", {
-        요청한커서: oldestMessageId,
-        기존메시지IDs: Array.from(currentIds).sort((a,b) => a-b),
-        서버응답메시지IDs: newMessages.map(m => m.id).sort((a,b) => a-b),
-        실제새메시지IDs: actuallyNewMessages.map(m => m.id).sort((a,b) => a-b),
-        "🚨 문제": actuallyNewMessages.length === 0 ? "서버가 이미 있는 메시지들을 다시 반환함!" : "정상"
-      });
-      
+
       if (actuallyNewMessages.length === 0) {
         console.log("❌ 모든 메시지가 중복됨 - 백엔드 API 문제 의심!");
         console.log("🔍 백엔드 API 테스트 코드:");
-        console.log(`
-// 브라우저 콘솔에서 이 코드를 실행해보세요:
-fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMessageId}', {
-  headers: { 'Authorization': 'Bearer ${accessTokenUtils.getAccessToken()}' }
-})
-.then(res => res.json())
-.then(data => {
-  console.log('🔍 백엔드 응답:', data);
-  console.log('🔍 현재 클라이언트 메시지 ID들:', [${Array.from(currentIds).sort((a,b) => a-b).join(', ')}]);
-  console.log('🔍 서버가 반환한 메시지 ID들:', data.content?.map(m => m.messageId) || []);
-});
-        `);
+
         setHasMore(false);
         return;
       }
-      
-      console.log(`✅ 실제 새 메시지 ${actuallyNewMessages.length}개 추가`);
 
-      // 7. 메시지 병합 및 정렬
-      console.log("🔄 메시지 병합 시작");
-      console.log("📊 기존 메시지 수:", latestMessagesRef.current.length);
-      console.log("📊 새 메시지 수:", actuallyNewMessages.length);
       
       // 새 메시지(더 오래된 메시지)를 앞에, 기존 메시지를 뒤에 배치
       const allMessages = [...actuallyNewMessages, ...latestMessagesRef.current];
@@ -1309,8 +1167,6 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
 
 
   const handleGoToReview = () => {
-    console.log('📝 리뷰 작성 페이지로 이동합니다.');
-    console.log('✅ 리뷰 작성 시도로 hasWrittenReview = true 설정');
 
     const mentorId = contact?.id || contact?.mentorId;
     const mentorName = contact?.name || contact?.mentorName;
@@ -1407,15 +1263,6 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
         return;
       }
     }
-    
-    console.log("🔄 latestMessagesRef 업데이트:", {
-      이전: latestMessagesRef.current.length,
-      현재: messages.length,
-      메시지범위: messages.length > 0 ? {
-        첫번째: messages[0]?.id,
-        마지막: messages[messages.length - 1]?.id
-      } : null
-    });
     
     latestMessagesRef.current = messages;
   }, [messages]);
@@ -1545,16 +1392,8 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
             <div className="contact-info">
               <div className="contact-avatar">
                 {(() => {
-                  console.log('🎨 아바타 렌더링:', {
-                    partnerProfileImage,
-                    contactProfileImage: contact?.profileImage,
-                    profileImageLoading,
-                    finalImage: partnerProfileImage || contact?.profileImage
-                  });
-                  
                   if (partnerProfileImage || contact?.profileImage) {
                     const imageUrl = partnerProfileImage || contact.profileImage;
-                    console.log('🖼️ 이미지 렌더링:', imageUrl);
                     return (
                       <img 
                         src={imageUrl} 
@@ -1577,7 +1416,6 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
                       </div>
                     );
                   } else {
-                    console.log('👤 기본 아이콘 표시');
                     return <User className="avatar-icon"/>;
                   }
                 })()}
@@ -1650,20 +1488,6 @@ fetch('/api/chat_rooms/${chatRoomId}/messages?size=20&lastMessageId=${oldestMess
                     </div>
                   )}
 
-                  {/* 메시지 */}
-                  {/*<div*/}
-                  {/*    className={`message ${msg.sender === 'user' ? 'sent'*/}
-                  {/*        : 'received'} ${isConsecutiveMessage(msg, messages[index - 1]) ? 'consecutive' : ''}`}*/}
-                  {/*>*/}
-                  {/*  {msg.sender === 'other' && (*/}
-                  {/*      <div className="message-avatar">*/}
-                  {/*        {contact?.profileImage ? (*/}
-                  {/*            <img src={contact.profileImage} alt={contact.name}/>*/}
-                  {/*        ) : (*/}
-                  {/*            <User className="avatar-icon"/>*/}
-                  {/*        )}*/}
-                  {/*      </div>*/}
-                  {/*  )}*/}
                   <div
                       className={`message ${
                           msg.isMine ? 'sent' : 'received'

@@ -753,11 +753,6 @@ const AppContent = () => {
     }
   };
 
-  // SSE 데모 페이지로 이동
-  const handleSSEDemo = () => {
-    navigate('/sse-demo');
-  };
-
   // 리뷰 작성 페이지로 이동
   const handleReviewWrite = (mentorId, mentorName, chatRoomId = null, rating = 0) => {
     const params = new URLSearchParams({
@@ -893,7 +888,6 @@ const AppContent = () => {
           <Route path="/mypage/*" element={<MyPage onBack={handleBackToHome} onLogout={handleLogout} />} />
           <Route path="/inquiry" element={<InquiryPage />} />
           <Route path="/admin" element={<AdminDashboard onBack={() => { handleLogout(); }} userInfo={userInfo} />} />
-          <Route path="/sse-demo" element={<SSEDemoPage />} />
           <Route path="/oauth2/callback" element={<OAuth2CallbackPage />} />
           <Route path="/social-signup" element={<SocialSignup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
