@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { inquiryAPI } from '../services/api';
+import { inquiryAPI, reservationAPI, userAPI } from '../services/api';
 import './Inquiry.css';
 
 // 카테고리 한글 매핑 객체
@@ -180,10 +180,102 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
   const [formData, setFormData] = useState({
     title: '',
     category: '',
-    content: ''
+    content: '',
+    reservationId: ''
   });
   const [loading, setLoading] = useState(false);
   const [faqOpenIndex, setFaqOpenIndex] = useState(null); // FAQ 오픈된 항목 인덱스
+  const [reservations, setReservations] = useState([]); // 사용자 예약 목록
+
+  // 사용자 예약 목록 조회
+  const fetchReservations = async () => {
+    try {
+      console.log('🔍 예약 목록 조회 시작...');
+      const response = await reservationAPI.getReservations();
+      console.log('📋 예약 목록 원본 응답:', response);
+      
+      if (response.data) {
+        let reservationList = response.data.data?.content || response.data.data || response.data;
+        console.log('📋 파싱된 예약 목록:', reservationList);
+        
+        if (Array.isArray(reservationList) && reservationList.length > 0) {
+          console.log('📋 첫 번째 예약 데이터 구조:', reservationList[0]);
+          
+          // 각 예약에 대해 멘토 이름을 가져와서 표시용 데이터 생성
+          const enrichedReservations = await Promise.all(
+            reservationList.map(async (reservation) => {
+              try {
+                console.log(`🔍 예약 ${reservation.id} 처리 중...`, reservation);
+                
+                // 멘토 이름 가져오기
+                let mentorName = '멘토 정보 없음';
+                if (reservation.mentor && typeof reservation.mentor === 'number') {
+                  try {
+                    console.log(`👤 멘토 ID ${reservation.mentor}로 사용자 정보 조회 중...`);
+                    const mentorResponse = await userAPI.getUserById(reservation.mentor);
+                    console.log(`👤 멘토 정보 응답:`, mentorResponse);
+                    
+                    if (mentorResponse.data?.data) {
+                      const mentorData = mentorResponse.data.data;
+                      mentorName = mentorData.name || mentorData.nickName || `멘토 ${reservation.mentor}`;
+                      console.log(`✅ 멘토 이름 조회 성공: ${mentorName}`);
+                    }
+                  } catch (mentorError) {
+                    console.warn(`⚠️ 멘토 정보 조회 실패 (ID: ${reservation.mentor}):`, mentorError);
+                    mentorName = `멘토 ${reservation.mentor}`;
+                  }
+                }
+                
+                // 날짜 및 시간 파싱
+                let reservationDate = '날짜 미정';
+                let startTime = '시간 미정';
+                
+                if (reservation.reservationStartAt) {
+                  try {
+                    // "2025-06-27 09:00:00" 형식에서 날짜와 시간 추출
+                    const [datePart, timePart] = reservation.reservationStartAt.split(' ');
+                    reservationDate = datePart; // "2025-06-27"
+                    startTime = timePart ? timePart.substring(0, 5) : '시간 미정'; // "09:00"
+                    console.log(`📅 날짜 파싱 결과: ${reservationDate}, 시간: ${startTime}`);
+                  } catch (dateError) {
+                    console.warn('⚠️ 날짜 파싱 실패:', dateError);
+                  }
+                }
+                
+                const enrichedReservation = {
+                  ...reservation,
+                  mentorName,
+                  reservationDate,
+                  startTime
+                };
+                
+                console.log(`✅ 예약 ${reservation.id} 처리 완료:`, enrichedReservation);
+                return enrichedReservation;
+              } catch (error) {
+                console.error(`❌ 예약 ${reservation.id} 처리 실패:`, error);
+                // 처리 실패시 기본 데이터 사용
+                return {
+                  ...reservation,
+                  mentorName: '멘토 정보 없음',
+                  reservationDate: '날짜 미정',
+                  startTime: '시간 미정'
+                };
+              }
+            })
+          );
+          
+          console.log('✅ 최종 예약 목록 (멘토 이름 포함):', enrichedReservations);
+          setReservations(enrichedReservations);
+        } else {
+          console.log('⚠️ 예약 목록이 비어있음');
+          setReservations([]);
+        }
+      }
+    } catch (error) {
+      console.error('❌ 예약 목록 조회 실패:', error);
+      setReservations([]);
+    }
+  };
 
   // 문의 목록 조회
   const fetchInquiries = async () => {
@@ -224,7 +316,7 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
       const response = await inquiryAPI.getUserInquiryDetail(complaintId);
       if (response.data) {
         let inquiryDetail = response.data.data || response.data;
-        
+
         // 답변이 있는 경우 답변 조회
         if (inquiryDetail.status?.toLowerCase() === 'resolved' || inquiryDetail.status?.toLowerCase() === 'answered') {
           try {
@@ -239,7 +331,7 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
             // 답변 조회 실패해도 문의 상세는 표시
           }
         }
-        
+
         setSelectedInquiry(inquiryDetail);
       }
     } catch (error) {
@@ -294,6 +386,11 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
       ...prev,
       [name]: value
     }));
+    
+    // 문의 종류가 "민원"으로 변경되면 예약 목록 조회
+    if (name === 'category' && value === 'COMPLAINT') {
+      fetchReservations();
+    }
   };
 
   // 문의 등록
@@ -310,11 +407,12 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
       const requestData = {
         title: formData.title.trim(),
         type: formData.category,
-        contents: formData.content.trim()
+        contents: formData.content.trim(),
+        ...(formData.category === 'COMPLAINT' && { reservationId: formData.reservationId })
       };
       const response = await inquiryAPI.createInquiry(requestData);
       if (response.data) {
-        setFormData({ title: '', category: '', content: '' });
+        setFormData({ title: '', category: '', content: '', reservationId: '' });
         setActiveTab('myInquiries');
         alert('문의가 성공적으로 등록되었습니다.');
         fetchMyInquiries();
@@ -501,12 +599,12 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
                                   fill="none"
                                   xmlns="http://www.w3.org/2000/svg"
                               >
-                                <path 
-                                    d="M13.3334 5.33317L8.00008 10.6665L2.66675 5.33317" 
-                                    stroke="#555" 
-                                    strokeWidth="1.33333" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
+                                <path
+                                    d="M13.3334 5.33317L8.00008 10.6665L2.66675 5.33317"
+                                    stroke="#555"
+                                    strokeWidth="1.33333"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
                                 />
                               </svg>
                             </div>
@@ -677,11 +775,38 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
                           <div className="form-group">
                             <label htmlFor="category">종류 *</label>
                             <select id="category" name="category" value={formData.category} onChange={handleInputChange} required disabled={loading}>
-                              {categories.map(category => (
-                                  <option key={category.value} value={category.value} disabled={!category.value}>{category.label}</option>
-                              ))}
+                              <option value="">문의 종류를 선택해주세요</option>
+                              <option value="COMPLAINT">민원</option>
+                              <option value="INQUIRY_ACCOUNT">계정 관련 문의</option>
+                              <option value="INQUIRY_CHAT">채팅 관련 문의</option>
+                              <option value="INQUIRY_PAY">결제 관련 문의</option>
+                              <option value="INQUIRY_RESERVATION">예약 관련 문의</option>
+                              <option value="INQUIRY_TICKET">이용권 관련 문의</option>
+                              <option value="INQUIRY_PROFILE">프로필 관련 문의</option>
                             </select>
                           </div>
+                          {formData.category === 'COMPLAINT' && (
+                            <div className="form-group">
+                              <label htmlFor="reservation">관련 예약 내역 *</label>
+                              <select id="reservation" name="reservationId" value={formData.reservationId || ''} onChange={handleInputChange} required>
+                                <option value="">예약 내역을 선택해주세요</option>
+                                {reservations.map(reservation => {
+                                  const mentorName = reservation.mentorName || '멘토 정보 없음';
+                                  const reservationDate = reservation.reservationDate || '날짜 미정';
+                                  const startTime = reservation.startTime || '시간 미정';
+                                  
+                                  return (
+                                    <option key={reservation.id} value={reservation.id}>
+                                      {mentorName} - {reservationDate} {startTime}
+                                    </option>
+                                  );
+                                })}
+                                {reservations.length === 0 && (
+                                  <option value="" disabled>예약 내역이 없습니다</option>
+                                )}
+                              </select>
+                            </div>
+                          )}
                           <div className="form-group">
                             <label htmlFor="content">내용 *</label>
                             <textarea id="content" name="content" value={formData.content}
