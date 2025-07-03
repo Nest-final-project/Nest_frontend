@@ -99,6 +99,10 @@ api.interceptors.request.use(
     }
 );
 
+// 세션 만료 처리 상태 관리
+let isSessionExpired = false;
+let sessionExpireAlertShown = false;
+
 // 응답 인터셉터 - 에러 처리
 api.interceptors.response.use(
     (response) => {
@@ -121,7 +125,7 @@ api.interceptors.response.use(
           originalRequest?.method?.toLowerCase() === 'delete';
 
       if (error.response?.status === 401 && !originalRequest._retry
-          && !isDeleteUserRequest) {
+          && !isDeleteUserRequest && !isSessionExpired) {
         originalRequest._retry = true;
 
         console.log('🔄 401 에러 감지 - 토큰 갱신 시도...');
@@ -150,16 +154,31 @@ api.interceptors.response.use(
         } catch (refreshError) {
           console.error('❌ 토큰 갱신 실패:', refreshError);
 
-          // // 토큰 갱신 실패 시 로그아웃 처리
-          // accessTokenUtils.removeAccessToken();
-          // refreshTokenUtils.removeRefreshToken();
-          //
-          // // 현재 페이지가 로그인 페이지가 아닌 경우에만 리다이렉트
-          // if (!window.location.pathname.includes('/login')) {
-          //   alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-          //   window.location.reload(); // 페이지 새로고침으로 로그인 상태 초기화
-          // }
+          // 세션 만료 상태로 설정 (중복 처리 방지)
+          if (!isSessionExpired) {
+            isSessionExpired = true;
+            
+            // 토큰 갱신 실패 시 로그아웃 처리
+            accessTokenUtils.removeAccessToken();
+            refreshTokenUtils.removeRefreshToken();
+
+            // 현재 페이지가 로그인 페이지가 아닌 경우에만 처리
+            if (!window.location.pathname.includes('/login') && !sessionExpireAlertShown) {
+              sessionExpireAlertShown = true;
+              alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+              
+              // 홈페이지로 리다이렉트 (로그인 상태 초기화)
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 100);
+            }
+          }
         }
+      }
+
+      // 세션이 만료된 상태에서는 추가 에러 처리 없이 거부
+      if (isSessionExpired && error.response?.status === 401) {
+        return Promise.reject(new Error('세션이 만료되었습니다.'));
       }
 
       // CORS 에러 처리
@@ -203,7 +222,7 @@ export const authAPI = {
 
   // 인증코드 검증
   verifyEmail: (email, authCode) => api.post('/api/auth/signup/code/verify', {email, authCode}),
-  
+
 };
 
 // User API
@@ -231,6 +250,36 @@ export const userAPI = {
   deleteUser: (deleteData) => {
     return api.delete('/api/users/me', {data: deleteData});
   },
+
+  // 프로필 이미지 업로드 (최초 등록)
+  uploadProfileImage: (file) => {
+    const formData = new FormData();
+    formData.append('files', file);
+    
+    return api.post('/api/users/profile-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // 프로필 이미지 수정
+  updateProfileImage: (file) => {
+    const formData = new FormData();
+    formData.append('files', file);
+    
+    return api.patch('/api/users/profile-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // 프로필 이미지 삭제
+  deleteProfileImage: () => api.delete('/api/users/profile-image'),
+
+  // 프로필 이미지 조회
+  getUserProfileImage: (userId) => api.get(`/api/users/${userId}/profile-image`),
 };
 
 // Profile API
@@ -280,9 +329,9 @@ export const consultationAPI = {
   getConsultationDetail: (consultationId) => api.get(
       `/api/consultations/${consultationId}`),
 
-  getAvailableConsultationSlots: (mentorId, dayOfWeek) =>
+  getAvailableConsultationSlots: (mentorId, localDate) =>
       api.get(`/api/mentor/${mentorId}/availableConsultations`, {
-        params: {dayOfWeek}
+        params: { localDate }
       }),
 
   // 상담 상태 업데이트
@@ -318,17 +367,11 @@ export const reservationAPI = {
 
 // Chatroom API
 export const chatroomAPI = {
-  // 채팅방 목록 조회
-  getChatrooms: () => api.get('/api/chat_rooms'),
+  // 채팅방 목록 조회 (페이지네이션 지원)
+  getChatroomsWithPagination: (params) => api.get('/api/chat_rooms', { params }),
 
-  // 채팅방 생성
-  //createChatroom: (chatroomData) => api.post('/api/chatrooms', chatroomData),
-
-  // 채팅방 입장
-  //joinChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/join`),
-
-  // 채팅방 나가기
-  //leaveChatroom: (chatroomId) => api.post(`/api/chatrooms/${chatroomId}/leave`),
+  // 채팅방 상태 확인
+  getChatroomStatus: (chatroomId) => api.get(`/api/chat_rooms/${chatroomId}/status`),
 };
 
 // Message API
@@ -368,15 +411,22 @@ export const reviewAPI = {
   getReviews: (mentorId, params) =>
       api.get(`/api/reviews/mentors/${mentorId}`, {params}),
 
-  // 리뷰 작성
-  createReview: (reviewData) => api.post('/api/reviews', reviewData),
+  // 리뷰 작성 (예약 기반)
+  createReview: (reservationId, reviewData) => 
+      api.post(`/api/reservations/${reservationId}/reviews`, reviewData),
+
+  // 일반 리뷰 작성 (기존 API가 있는 경우)
+  createGeneralReview: (reviewData) => api.post('/api/reviews', reviewData),
 
   // 리뷰 수정
   updateReview: (reviewId, reviewData) =>
-      api.put(`/api/reviews/${reviewId}`, reviewData),
+      api.patch(`/api/reviews/${reviewId}`, reviewData),
 
   // 리뷰 삭제
   deleteReview: (reviewId) => api.delete(`/api/reviews/${reviewId}`),
+
+  // 내 리뷰 목록 조회
+  getMyReviews: (params) => api.get('/api/reviews', { params }),
 };
 
 // Category API
@@ -391,15 +441,9 @@ export const categoryAPI = {
 
 // Notification API
 export const notificationAPI = {
-  // 알림 목록 조회
-  getNotifications: (params) => api.get('/api/notifications', {params}),
+  // 알림 목록 조회 (SSE 알림 내역)
+  getNotifications: (params) => api.get('/sse/notifications', {params}),
 
-  // 알림 읽음 처리
-  markNotificationAsRead: (notificationId) =>
-      api.patch(`/api/notifications/${notificationId}/read`),
-
-  // 모든 알림 읽음 처리
-  markAllNotificationsAsRead: () => api.patch('/api/notifications/read-all'),
 };
 
 // Ticket API
@@ -456,6 +500,10 @@ export const inquiryAPI = {
   getUserInquiries: (params) => api.get('/api/complaints/myComplaints',
       {params}),
 
+  // [사용자] 문의 답변 조회
+  getUserAnswer: (complaintId) => api.get(`/api/complaints/${complaintId}/answer`),
+
+
   // [사용자] 내 문의 상세 조회 (== 일반 상세 조회)
   getUserInquiryDetail: (complaintId) => api.get(
       `/api/complaints/${complaintId}`),
@@ -488,13 +536,13 @@ export const careerAPI = {
   updateCertificate: (careerId, certificateData) => {
     const token = accessTokenUtils.getAccessToken();
     return fileApi.patch(
-      `/api/careers/${careerId}/certificates`,
-      certificateData,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      }
+        `/api/careers/${careerId}/certificates`,
+        certificateData,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
     );
   },
 
@@ -502,13 +550,13 @@ export const careerAPI = {
   createCareer: (profileId, careerData) => {
     const token = accessTokenUtils.getAccessToken();
     return fileApi.post(
-      `/api/profiles/${profileId}/careers`,
-      careerData,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-        },
-      }
+        `/api/profiles/${profileId}/careers`,
+        careerData,
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        }
     )
   },
 
@@ -545,13 +593,15 @@ export const adminAPI = {
   createInquiryAnswer: (complaintId, answerData) =>
       api.post(`/api/admin/complaints/${complaintId}/answer`, answerData),
 
+  // [관리자] 문의 답변 조회
+  getAdminAnswer: (complaintId) => api.get(`/api/admin/complaints/${complaintId}/answer`),
+
   // [관리자] 문의 삭제
   deleteInquiry: (complaintId) => api.delete(
       `/api/admin/complaints/${complaintId}`),
 
   // [관리자] 문의 답변 수정
-  updateInquiryStatus: (complaintId, status) =>
-      api.patch(`/api/admin/answers/{answerId}`, {status}),
+  updateAnswer: (answerId, answerData) => api.patch(`/api/admin/answers/${answerId}`, answerData),
 
   // [관리자] 쿠폰 등록
   registerCoupon: (couponData) => api.post('/api/admin/coupons', couponData),
@@ -595,6 +645,12 @@ export const adminAPI = {
 
   // [관리자] 카테고리 삭제
   deleteCategory: (categoryId) => api.delete(`/api/admin/categories/${categoryId}`),
+
+  // [관리자] 리뷰 목록 조회
+  getReviewList: (params) => api.get('/api/admin/reviews', {params}),
+
+  // [관리자] 리뷰 샅태 변경
+  changeReviewStatus: (reviewId) => api.patch(`/api/admin/reviews/${reviewId}`),
 
 
 };

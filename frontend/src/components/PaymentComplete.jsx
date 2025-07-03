@@ -299,7 +299,7 @@ const PaymentComplete = ({paymentData, onHome, onPaymentHistory}) => {
           <div className="payment-section">
             <h3>📋 안내사항</h3>
             <div className="payment-info">
-              <p><strong>화상회의 링크</strong>는 멘토링 시작 10분 전에 이메일과 SMS로 발송됩니다.</p>
+              <p><strong>채팅방</strong>은 멘토링 시작 시간에 자동으로 생성되며, 알림을 통해 안내드립니다.</p>
               <p><strong>예약 취소</strong>는 멘토링 시작 2시간 전까지 가능하며, 취소 시 전액 환불됩니다.</p>
               <p>멘토링 진행 중 기술적 문제가 발생하면 <strong>고객센터 1588-1234</strong>로 연락주세요.</p>
               <p>멘토링 완료 후 <strong>리뷰 작성</strong>하시면 다음 멘토링에서 사용할 수 있는 쿠폰을 드립니다.</p>
@@ -342,8 +342,8 @@ const PaymentComplete = ({paymentData, onHome, onPaymentHistory}) => {
                   fontWeight: 'bold'
                 }}>2</div>
                 <div className="summary-info">
-                  <span className="summary-label">참여하기</span>
-                  <span className="summary-value">시간에 맞춰 화상회의에 참여하세요</span>
+                  <span className="summary-label">채팅방 입장</span>
+                  <span className="summary-value">멘토링 시작 시간에 채팅방 생성 알림을 받고 입장하세요</span>
                 </div>
               </div>
               <div className="summary-item">

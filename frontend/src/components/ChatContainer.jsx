@@ -80,7 +80,7 @@ const ChatContainer = ({onBack, isLoggedIn = true}) => {
                     chatRoomId={selectedChat.id}
                     userId={getCurrentUserInfo().userId}
                     userRole={getCurrentUserInfo().userRole}
-                    reservationId={null} // 임시로 null, 나중에 백엔드에서 제공받아야 함
+                    reservationId={selectedChat.reservationId} // 채팅방 정보에서 예약 ID 전달
                     onBack={handleBackToList}
                     onBackToHome={onBack}
                 />

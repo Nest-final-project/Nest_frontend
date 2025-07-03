@@ -21,29 +21,21 @@ const NotificationContainer = ({ isLoggedIn = false }) => {
     };
 
     const handleConnection = (data) => {
-      console.log('SSE 연결 상태:', data.status);
+      console.log('=== SSE 연결 상태 변경 ===', data.status);
       
       if (data.status === 'connected') {
+        console.log('✅ SSE 연결 성공 - 실시간 알림 수신 가능');
         // 연결 성공 시 테스트 알림 생성 (개발 환경)
         notificationService.createTestNotifications();
-      } else if (data.status === 'failed') {
-        // 연결 실패 시 오프라인 알림
-        addNotification({
-          id: `offline_${Date.now()}`,
-          type: 'warning',
-          title: '연결 끊김',
-          message: '실시간 알림 서비스와의 연결이 끊어졌습니다.',
-          timestamp: new Date().toISOString(),
-          actions: [
-            {
-              label: '다시 연결',
-              type: 'primary',
-              onClick: () => {
-                notificationService.connect();
-              }
-            }
-          ]
-        });
+      } else if (data.status === 'failed' || data.status === 'error') {
+        console.error('❌ SSE 연결 실패 - 실시간 알림 불가');
+        // 연결 실패 시 오프라인 알림은 표시하지 않음 (너무 많은 알림 방지)
+      } else if (data.status === 'disabled') {
+        console.log('🔕 SSE가 비활성화됨 - 실시간 알림 없음');
+      } else if (data.status === 'endpoint_not_ready') {
+        console.warn('⚠️ SSE 엔드포인트가 준비되지 않음 - 백엔드 확인 필요');
+      } else if (data.status === 'disconnected') {
+        console.log('🔌 SSE 연결 해제됨');
       }
     };
 
@@ -78,9 +70,18 @@ const NotificationContainer = ({ isLoggedIn = false }) => {
   // 전역 알림 함수 (다른 컴포넌트에서 사용할 수 있도록, 로그인된 상태에서만)
   if (isLoggedIn) {
     window.showNotification = addNotification;
+    
+    // 채팅방으로 이동하는 전역 함수 추가
+    window.openChatRoom = (chatRoomId) => {
+      if (chatRoomId) {
+        // React Router 사용 시
+        window.location.href = `/chat/${chatRoomId}`;
+      }
+    };
   } else {
     // 로그아웃 상태에서는 전역 알림 함수 제거
     delete window.showNotification;
+    delete window.openChatRoom;
   }
 
   return (

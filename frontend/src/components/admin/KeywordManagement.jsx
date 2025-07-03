@@ -147,7 +147,7 @@ const KeywordManagement = ({ isDarkMode }) => {
   });
 
   return (
-    <div className={`admin-content-wrapper ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={isDarkMode ? 'dark-mode' : ''}>
       <div className="content-header">
         <div className="header-left">
           <h2 className="keyword-title">
@@ -158,7 +158,7 @@ const KeywordManagement = ({ isDarkMode }) => {
         </div>
         <div className="header-actions">
           <button 
-            className="btn-primary"
+            className="coffee-btn coffee-btn-primary"
             onClick={() => {
               console.log('🔘 키워드 추가 버튼 클릭됨');
               setSelectedKeyword(null);
@@ -168,14 +168,6 @@ const KeywordManagement = ({ isDarkMode }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              zIndex: 10,
-              position: 'relative',
-              visibility: 'visible',
-              opacity: 1,
-              backgroundColor: '#6366f1',
-              color: 'white',
-              border: 'none',
-              padding: '12px 20px',
               borderRadius: '12px',
               cursor: 'pointer'
             }}
@@ -186,8 +178,22 @@ const KeywordManagement = ({ isDarkMode }) => {
         </div>
       </div>
 
-      <div className="content-table keyword-table">
-        <div className="table-header">
+      <div className="content-table keyword-table" style={{
+        gridTemplateColumns: '1fr 120px',
+        maxWidth: '600px',
+        margin: '0 auto'
+      }}>
+        <div className="table-header" style={{
+          background: 'linear-gradient(135deg, #ffb300 0%, #ff8f00 100%)',
+          color: 'white',
+          fontWeight: '700',
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+          fontSize: '13px',
+          textShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
+          padding: '24px 32px',
+          boxShadow: '0 4px 20px rgba(255, 179, 0, 0.3)'
+        }}>
           <div className="table-cell">키워드</div>
           <div className="table-cell">작업</div>
         </div>
@@ -210,26 +216,100 @@ const KeywordManagement = ({ isDarkMode }) => {
             );
           } else {
             return keywords.map((keyword) => (
-            <div key={keyword.id} className="table-row">
-              <div className="table-cell">
-                <div className="cell-content">
-                  <Hash size={16} />
-                  <strong>{keyword.name || '이름 없음'}</strong>
+            <div key={keyword.id} className="table-row" style={{
+              background: 'rgb(251, 249, 239)',
+              borderBottom: '1px solid rgba(255, 179, 0, 0.2)',
+              padding: '20px 32px',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(145deg, #fff3c4, #fff8e1)';
+              e.currentTarget.style.transform = 'translateX(4px)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 179, 0, 0.15)';
+              e.currentTarget.style.borderLeft = '4px solid #ffb300';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgb(251, 249, 239)';
+              e.currentTarget.style.transform = 'translateX(0)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderLeft = 'none';
+            }}>
+              <div className="table-cell" style={{
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#6d4c41',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <div className="cell-content" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <Hash size={16} style={{ color: '#ffb300' }} />
+                  <div>
+                    <strong style={{ color: '#e65100', fontWeight: '700' }}>{keyword.name || '이름 없음'}</strong>
+                  </div>
                 </div>
               </div>
-              <div className="table-cell">
+              <div className="table-cell" style={{
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#6d4c41',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
                 <div className="table-actions">
                   <button 
-                    className="action-btn view"
+                    className="action-btn edit"
                     onClick={() => handleEdit(keyword)}
                     title="수정"
+                    style={{
+                      padding: '10px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15))',
+                      color: '#3b82f6',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      backdropFilter: 'blur(10px)',
+                      marginRight: '8px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   >
                     <Edit3 size={16} />
                   </button>
                   <button 
-                    className="action-btn reject"
+                    className="action-btn delete"
                     onClick={() => handleDelete(keyword.id)}
                     title="삭제"
+                    style={{
+                      padding: '10px',
+                      borderRadius: '12px',
+                      border: 'none',
+                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15))',
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
                   >
                     <Trash2 size={16} />
                   </button>

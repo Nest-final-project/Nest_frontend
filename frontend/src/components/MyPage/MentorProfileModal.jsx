@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import  {categoryAPI, keywordAPI} from '../../services/api';
 import './MentorProfileModal.css';
 
-
 const MentorProfileModal = ({ onClose, onSubmit }) => {
   const [title, setTitle] = useState('');
   const [introduction, setIntroduction] = useState('');
@@ -75,7 +74,9 @@ const MentorProfileModal = ({ onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({ title, introduction, imageUrl, keywordId, categoryId});
+    alert("멘토 등록이 완료되었습니다.")
     onClose();
+    window.location.reload();
   };
 
   return (

@@ -223,28 +223,16 @@ class WebSocketService {
       content: messageData.content || messageData.text,
       chatRoomId: messageData.chatRoomId,
       senderId: messageData.senderId,
-      mine: messageData.mine,
-      sentAt: messageData.sentAt || messageData.timestamp || new Date().toISOString(),
+      receiverId: messageData.receiverId, // 백엔드 MessageResponseDto의 receiverId 필드 추가
+      mine: messageData.isMine, // isMine 필드도 지원
+      sentAt: messageData.sentAt || messageData.timestamp
+          || new Date().toISOString(),
       type: messageData.type || 'MESSAGE'
     };
     
-    console.log('📨 정규화된 메시지:', normalizedMessage);
+    // 등록된 모든 메시지 핸들러에게 전달
     this.handleMessage(normalizedMessage);
   }
-
-  // 하트비트 시작 (제거됨 - STOMP 내장 하트비트 사용)
-  startHeartbeat() {
-    console.log('🚫 커스텀 하트비트 비활성화 - STOMP 내장 하트비트 사용');
-  }
-
-  // 하트비트 정지
-  stopHeartbeat() {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-  
-    }
-  }
-
   // JWT 토큰에서 사용자 ID 추출
   getCurrentUserId() {
     try {
@@ -267,9 +255,11 @@ class WebSocketService {
       this.stompClient.deactivate();
       this.stompClient = null;
     }
+    
+    // 상태 초기화
     this.isConnectedState = false;
     this.connectionPromise = null;
-    this.websocketToken = null; // 토큰 초기화
+    this.websocketToken = null;
     
     console.log('✅ WebSocket 연결 해제 완료');
   }
@@ -286,9 +276,13 @@ class WebSocketService {
       throw new Error('STOMP WebSocket이 연결되지 않았습니다');
     }
 
+    if (!chatRoomId || !content?.trim()) {
+      throw new Error('채팅방 ID와 메시지 내용이 필요합니다');
+    }
+
     try {
       const message = {
-        content: content,
+        content: content.trim(),
         timestamp: new Date().toISOString()
       };
 
@@ -308,30 +302,27 @@ class WebSocketService {
 
   // 메시지 수신 핸들러 등록
   onMessage(callbackId, callback) {
+    if (typeof callback !== 'function') {
+      console.error('❌ 콜백은 함수여야 합니다');
+      return;
+    }
     this.messageHandlers.set(callbackId, callback);
   }
 
   // 메시지 수신 핸들러 제거
   offMessage(callbackId) {
-    this.messageHandlers.delete(callbackId);
+    return this.messageHandlers.delete(callbackId);
   }
 
   // 모든 메시지 핸들러에게 메시지 전달
   handleMessage(data) {
-    this.messageHandlers.forEach(handler => {
+    this.messageHandlers.forEach((handler, callbackId) => {
       try {
         handler(data);
       } catch (error) {
-        console.error('메시지 핸들러 에러:', error);
+        console.error(`메시지 핸들러 에러 (${callbackId}):`, error);
       }
     });
-  }
-
-  // 자동 재연결 처리 (비활성화)
-  handleReconnect() {
-    console.log('🚫 자동 재연결이 비활성화되었습니다');
-    console.log('💡 채팅방 진입 시 수동으로 연결하거나 페이지를 새로고침하세요');
-    return;
   }
 
   // 디버그 정보 반환 (useWebSocket 훅 호환용)
@@ -349,58 +340,22 @@ class WebSocketService {
     };
   }
 
-  // 새로운 메서드들 추가 (useWebSocket 훅 호환용)
-  getConnectionStatus() {
-    return {
-      connected: this.isConnected(),
-      authenticationFailed: false, // 기존 서비스에서는 미구현
-      lastTokenError: null,
-      reconnectAttempts: this.reconnectAttempts,
-      isManualDisconnect: false
-    };
-  }
 
-  // 이벤트 에미터 구현 (간단 버전)
-  listeners = new Map();
-
-  on(event, callback) {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
-    }
-    this.listeners.get(event).push(callback);
-  }
-
+  // 이벤트 리스너 제거
   off(event, callback) {
-    if (this.listeners.has(event)) {
-      const callbacks = this.listeners.get(event);
-      const index = callbacks.indexOf(callback);
-      if (index > -1) {
-        callbacks.splice(index, 1);
-      }
+    if (!this.listeners.has(event)) {
+      return false;
     }
-  }
-
-  emit(event, data) {
-    if (this.listeners.has(event)) {
-      this.listeners.get(event).forEach(callback => {
-        try {
-          callback(data);
-        } catch (error) {
-          console.error(`Error in event listener for ${event}:`, error);
-        }
-      });
+    
+    const callbacks = this.listeners.get(event);
+    const index = callbacks.indexOf(callback);
+    if (index > -1) {
+      callbacks.splice(index, 1);
+      return true;
     }
+    return false;
   }
 
-  // 호환성을 위한 빈 메서드들
-  reconnectWithNewToken() {
-    console.error('🚫 reconnectWithNewToken 기능이 비활성화되었습니다');
-    return Promise.reject(new Error('Feature disabled'));
-  }
-
-  resetAuthenticationState() {
-    console.log('🔓 인증 상태 리셋 (기존 서비스에서는 미구현)');
-  }
 }
 
 // 싱글톤 인스턴스
