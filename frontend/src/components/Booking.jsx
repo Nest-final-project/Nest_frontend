@@ -1,54 +1,3 @@
-/*
- * 🔥 실제 운영용 handleBooking 함수 (임시 코드 제거된 버전)
- *
- * const handleBooking = async () => {
- *   if (selectedDate && selectedStartTime && selectedEndTime && selectedService) {
- *     try {
- *       const selectedTicket = serviceOptions.find(option => option.id === selectedService);
- *
- *       if (!selectedTicket) {
- *         alert('선택된 서비스 정보를 찾을 수 없습니다.');
- *         return;
- *       }
- *
- *       const startDateTime = `${selectedDate} ${selectedStartTime}:00`;
- *       const endDateTime = `${selectedDate} ${selectedEndTime}:00`;
- *
- *       const reservationData = {
- *         mentor: mentor?.userId || mentor?.id,
- *         ticket: selectedService,
- *         reservationStatus: "REQUESTED",
- *         reservationStartAt: startDateTime,
- *         reservationEndAt: endDateTime
- *       };
- *
- *       const reservationResponse = await reservationAPI.createReservation(reservationData);
- *       const createdReservationId = reservationResponse.data.data.id || reservationResponse.data.id;
- *
- *       const bookingData = {
- *         mentor: mentor,
- *         date: selectedDate,
- *         startTime: selectedStartTime,
- *         endTime: selectedEndTime,
- *         ticketId: selectedService,
- *         reservationId: createdReservationId,
- *         ticket: { id: selectedTicket.id, name: selectedTicket.name, duration: selectedTicket.duration, price: selectedTicket.price },
- *         serviceName: selectedTicket.duration || selectedTicket.name?.replace(" 이용권", "") || "선택된 서비스",
- *         servicePrice: selectedTicket.price || 0
- *       };
- *
- *       if (onBooking) onBooking(bookingData);
- *
- *     } catch (error) {
- *       console.error('❌ 예약 생성 중 오류:', error);
- *       alert('예약 생성에 실패했습니다. 다시 시도해주세요.');
- *     }
- *   } else {
- *     alert('모든 항목을 선택해주세요.');
- *   }
- * };
- */
-
 import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft,
@@ -76,7 +25,7 @@ const Booking = ({ mentor, onBack, onBooking }) => {
   const [availableEndTimes, setAvailableEndTimes] = useState([]);
   const [selectedStartTime, setSelectedStartTime] = useState('');
   const [selectedEndTime, setSelectedEndTime] = useState('');
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 5));
+  const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
