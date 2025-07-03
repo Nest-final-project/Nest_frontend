@@ -444,9 +444,9 @@
 .login-button {
   padding: 0.75rem 1.5rem;
   border-radius: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   color: black;
-  background: #49c6a0;
+  background: #ffc815;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);

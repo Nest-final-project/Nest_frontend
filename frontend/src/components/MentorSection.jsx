@@ -277,7 +277,7 @@ const MentorSection = ({onCategorySelect, onMentorSelect}) => {
                                 {mentor.tags && Array.isArray(mentor.tags)
                                     && mentor.tags.map((tag, tagIndex) => (
                                         <span key={tagIndex}
-                                              className="mentor-tag">
+                                              className="mentor-section-tag">
                             {tag}
                           </span>
                                     ))}
