@@ -77,26 +77,9 @@
   border-width: 2px;
 }
 
-.online-indicator {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 12px;
-  height: 12px;
-  background: #10b981;
-  border: 2px solid white;
-  border-radius: 50%;
-  transition: background 0.3s ease;
-}
 
-.online-indicator.connected {
-  background: #10b981;
-  animation: pulse 2s infinite;
-}
 
-.online-indicator.disconnected {
-  background: #ef4444;
-}
+
 
 @keyframes pulse {
   0% {
