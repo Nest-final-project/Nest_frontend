@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Briefcase, Edit3, Trash2, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Briefcase, Edit3, Trash2, Plus, ChevronLeft, ChevronRight, BadgeCheck } from 'lucide-react';
 import { careerAPI, profileAPI } from '../../services/api';
 import CareerDetailModal from './CareerDetailModal';
 import CareerEditModal from './CareerEditModal';
@@ -11,7 +11,17 @@ const CareerItem = ({ career, onEdit, onDelete }) => (
   <div className="careers-info-card">
     <div className="careers-info-card-icon"><Briefcase /></div>
     <div className="careers-info-card-content">
-      <span className="careers-info-card-label">{career.company}</span>
+      <span className="careers-info-card-label">
+        {career.company}
+        {career.careerStatus === 'AUTHORIZED' && (
+            <BadgeCheck
+                size={16}
+                color="black"
+                fill="gold"
+                style={{ marginLeft: '8px', verticalAlign: 'middle' }}
+            />
+        )}
+      </span>
       <p className="careers-info-card-value">
         {career.startAt?.slice(0, 10)} ~ {career.endAt ? career.endAt.slice(0, 10) : '재직중'}
       </p>

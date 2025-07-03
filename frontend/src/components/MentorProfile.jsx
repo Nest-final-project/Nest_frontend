@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Star } from 'lucide-react';
+import { ArrowLeft, Check, Star, BadgeCheck } from 'lucide-react';
 import './MentorProfile.css';
 import { profileAPI } from '../services/api';
 
@@ -128,19 +128,25 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
             <h2 className="section-title">멘토 경력</h2>
             {Array.isArray(careerList) && (
                 <div className="career-content">
-                  <div className="career-table">
+                  <div className="mentor-career-table">
                     <div className="career-header">
+                      <div className="career-col">인증여부</div>
                       <div className="career-col">회사명</div>
-                      <div className="career-col">직무</div>
                       <div className="career-col">근무기간</div>
-                      <div className="career-col">설명</div>
                     </div>
                     {careerList.map((item, idx) => (
                         <div key={idx} className="career-row">
+                          <div className="career-col">
+                            {item.careerStatus === 'AUTHORIZED' ? (
+                                // AUTHORIZED: 노란색 채워진 별
+                                <BadgeCheck size={20} color="black" fill="gold" />
+                            ) : item.careerStatus === 'UNAUTHORIZED' ? (
+                                // UNAUTHORIZED: 하얀색 (테두리만) 별
+                                <p>미인증</p>
+                            ) : ('')}
+                          </div>
                           <div className="career-col">{item.company}</div>
-                          <div className="career-col">{item.position}</div>
                           <div className="career-col">{formatPeriod(item.startAt, item.endAt)}</div>
-                          <div className="career-col">{item.description}</div>
                         </div>
                     ))}
                   </div>
