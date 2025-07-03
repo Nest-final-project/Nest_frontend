@@ -84,7 +84,6 @@
 }
 
 .category-tab::after {
-  content: '더보기 →';
   position: absolute;
   right: 1rem;
   opacity: 0;
@@ -101,7 +100,6 @@
   transform: translateY(-3px);
   box-shadow: var(--shadow-medium);
   border-color: var(--primary-amber);
-  padding-right: 4rem;
 }
 
 .category-tab:hover::after {
@@ -331,27 +329,26 @@
   margin-bottom: 1.5rem;
 }
 
-.mentor-tag {
+.mentor-section-tag {
   display: inline-block;
-  background: var(--gradient-growth);
+  background: #FFAB40;
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 50px;
   font-size: 0.75rem;
-  font-weight: 600;
-  border: 1px solid rgba(129, 199, 132, 0.3);
+  font-weight: 800;
+  align-content: center;
+  border: 1px solid #FFAB40;
   backdrop-filter: blur(2px);
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(129, 199, 132, 0.2);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
 .mentor-tag:hover {
-  background: linear-gradient(135deg, #66bb6a, #43a047);
-  color: white;
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(129, 199, 132, 0.3);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
 .mentor-footer {
@@ -405,6 +402,10 @@
   letter-spacing: 0.5px;
   box-shadow: 0 6px 20px rgba(129, 199, 132, 0.3);
   min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .reservation-button:hover {
