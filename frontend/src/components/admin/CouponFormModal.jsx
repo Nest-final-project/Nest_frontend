@@ -8,7 +8,7 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving, isDarkMode }) => {
     discountAmount: '',
     discountType: 'FIXED_AMOUNT', // 할인 타입 (기본값: 금액 할인)
     totalQuantity: '', //총 쿠폰 수
-    issuedQuantity: '', // 발급된 쿠폰 수
+    issuedQuantity: 0, // 발급된 쿠폰 수
     validFrom: '', // 유효 시작일
     validTo: '',  // 유효 종료일
     minGrade: '',
@@ -164,22 +164,7 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving, isDarkMode }) => {
                     </div>
                   </div>
                   <div className="info-item">
-                    <label>발급된 쿠폰 수</label>
-                    <div className="info-value">
-                      <Users size={16} />
-                      <input
-                        name="issuedQuantity"
-                        type="number"
-                        min="0"
-                        value={form.issuedQuantity}
-                        onChange={handleChange}
-                        placeholder="0"
-                        className="coffee-form-input"
-                      />
-                    </div>
-                  </div>
-                  <div className="info-item">
-                    <label>유횤 시작일</label>
+                    <label>유효 시작일</label>
                     <div className="info-value">
                       <Calendar size={16} />
                       <input
@@ -193,7 +178,7 @@ const CouponFormModal = ({ coupon, onSave, onClose, saving, isDarkMode }) => {
                     </div>
                   </div>
                   <div className="info-item">
-                    <label>유횤 종료일</label>
+                    <label>유효 종료일</label>
                     <div className="info-value">
                       <Calendar size={16} />
                       <input
