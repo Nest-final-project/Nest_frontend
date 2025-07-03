@@ -295,6 +295,9 @@ export const profileAPI = {
 
   // 티켓 조회
   getTicketList: () => api.get('/api/ticket'),
+
+  // 프로필 삭제
+  deleteProfile: (profileId) => api.delete(`/api/profiles/${profileId}`),
 };
 
 // Consultation API

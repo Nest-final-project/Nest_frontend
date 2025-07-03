@@ -10,7 +10,11 @@ import {
   AlertTriangle,
   Briefcase,
   MessageSquare,
-  CreditCard
+  CreditCard,
+  Trash2,
+  UserX,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { profileAPI, categoryAPI, keywordAPI } from '../../services/api';
 import { authUtils } from '../../utils/tokenUtils';
@@ -37,6 +41,11 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
   const [previewLoading, setPreviewLoading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
+
+  // 프로필 삭제 관련 state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const hasProfile = profiles.length > 0;
 
@@ -164,6 +173,77 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
     );
   };
 
+  // 프로필 삭제 모달 열기
+  const handleDeleteProfile = (profile) => {
+    setProfileToDelete(profile);
+    setShowDeleteModal(true);
+  };
+
+  // 프로필 삭제 모달 닫기
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setProfileToDelete(null);
+  };
+
+  // 프로필 삭제 실행
+  const confirmDeleteProfile = async () => {
+    if (!profileToDelete) return;
+
+    try {
+      setDeleteLoading(true);
+      await profileAPI.deleteProfile(profileToDelete.id);
+      
+      // 프로필 목록에서 삭제된 프로필 제거
+      setProfiles(prevProfiles => 
+        prevProfiles.filter(profile => profile.id !== profileToDelete.id)
+      );
+      
+      closeDeleteModal();
+
+    } catch (error) {
+      console.error('프로필 삭제 실패:', error);
+      alert('프로필 삭제에 실패했습니다');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // 프로필 생성 핸들러
+  const handleCreateProfile = async (formData) => {
+    try {
+      console.log('📤 프로필 생성 요청:', formData);
+      
+      // 프로필 생성 (중복 체크는 모달에서 이미 처리됨)
+      await profileAPI.createProfile(formData);
+      
+      console.log('✅ 프로필 생성 성공');
+      setModalOpen(false);
+      await fetchMentorProfile();
+
+    } catch (error) {
+      console.error('❌ 프로필 생성 실패:', error);
+      
+      if (error.response?.status === 400) {
+        const errorData = error.response?.data;
+        
+        if (errorData?.message && errorData.message.includes('이미')) {
+          // 중복 에러는 모달을 닫지 않고 에러만 표시
+          console.log('백엔드에서 중복 에러 감지, 모달 유지');
+          // 모달은 열린 상태로 유지하고, 에러는 console에만 표시
+          return;
+        } else {
+          alert(`입력 오류: ${errorData?.message || '입력 정보를 확인해주세요'}`);
+        }
+      } else if (error.response?.status === 401) {
+        alert('로그인이 만료되었습니다');
+        authUtils.clearAllAuthData();
+        onLogout();
+      } else {
+        alert('프로필 처리 중 오류가 발생했습니다');
+      }
+    }
+  };
+
   // 멘토가 아닌 경우 렌더링하지 않음
   if (userInfo?.userRole !== 'MENTOR') {
     return null;
@@ -265,6 +345,14 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
                     <Edit3 size={16} />
                     수정하기
                   </button>
+                  <button
+                    className="profile-action-btn danger"
+                    onClick={() => handleDeleteProfile(profile)}
+                    title="프로필 삭제"
+                  >
+                    <Trash2 size={16} />
+                    삭제
+                  </button>
                 </div>
 
                 {/* 호버 이펙트를 위한 장식 요소 */}
@@ -292,9 +380,12 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
         <MentorProfileModal
           onClose={() => setModalOpen(false)}
           onSubmit={async (formData) => {
-            await profileAPI.createProfile(formData);
-            setModalOpen(false);
-            // 등록 후 목록 새로고침 등 추가 가능
+            await handleCreateProfile(formData);
+          }}
+          existingProfiles={profiles}
+          onBackendError={(errorMessage) => {
+            // 백엔드 에러를 모달에서 처리할 수 있도록 콜백 추가
+            console.log('백엔드 에러:', errorMessage);
           }}
         />
       )}
@@ -327,6 +418,63 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
             }
           }}
         />
+      )}
+
+      {/* 프로필 삭제 확인 모달 */}
+      {showDeleteModal && profileToDelete && (
+        <div className="modal-overlay" onClick={closeDeleteModal}>
+          <div className="delete-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="delete-modal-header">
+              <div className="delete-modal-icon">
+                <UserX size={48} />
+              </div>
+              <h3>프로필 삭제</h3>
+              <button className="modal-close-btn" onClick={closeDeleteModal}>
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="delete-modal-body">
+              <div className="profile-delete-info">
+                <h4>"{profileToDelete.title}" 프로필을 삭제하시겠습니까?</h4>
+                <p className="delete-warning">
+                  이 작업은 되돌릴 수 없으며, 다음 데이터들이 영구적으로 삭제됩니다:
+                </p>
+                <ul className="delete-warning-list">
+                  <li>프로필 정보 및 소개</li>
+                  <li>관련된 경력 정보</li>
+                  <li>상담 가능 시간</li>
+                  <li>해당 프로필로 받은 예약</li>
+                  <li>리뷰 및 평점 데이터</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="delete-modal-footer">
+              <button
+                className="modal-btn cancel-btn"
+                onClick={closeDeleteModal}
+                disabled={deleteLoading}
+              >
+                취소
+              </button>
+              <button
+                className="modal-btn delete-btn"
+                onClick={confirmDeleteProfile}
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? (
+                  <div className="delete-spinner"></div>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    삭제하기
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
