@@ -17,6 +17,7 @@ import CategoriesTab from './CategoriesTab';
 import KeywordsTab from './KeywordsTab';
 import TicketsTab from './TicketsTab';
 import CouponsTab from './CouponsTab';
+import ReviewsTab from './ReviewsTab';
 
 
 const AdminDashboard = ({ onBack, userInfo }) => {
@@ -94,7 +95,8 @@ const AdminDashboard = ({ onBack, userInfo }) => {
     { id: 'categories', label: '카테고리 관리', icon: Tag, badge: null },
     { id: 'keywords', label: '키워드 관리', icon: Hash, badge: null },
     { id: 'tickets', label: '이용권 관리', icon: Ticket, badge: null },
-    { id: 'coupons', label: '쿠폰 관리', icon: Gift, badge: null }
+    { id: 'coupons', label: '쿠폰 관리', icon: Gift, badge: null },
+    { id: 'reviews', label: '리뷰 관리', icon: Star, badge: null }
   ];
 
 
@@ -127,6 +129,8 @@ const AdminDashboard = ({ onBack, userInfo }) => {
         return <TicketsTab isDarkMode={isDarkMode} />;
       case 'coupons':
         return <CouponsTab isDarkMode={isDarkMode} />;
+      case 'reviews':
+        return <ReviewsTab isDarkMode={isDarkMode} />;
       default:
         return (
           <div className={`rounded-2xl border p-8 text-center ${

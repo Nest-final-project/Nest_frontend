@@ -523,6 +523,34 @@
   border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
+/* 프로필 버튼 및 이미지 스타일 */
+.profile-button {
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.profile-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.header .profile-image {
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  max-width: 80px;
+  max-height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .inquiry-sidebar {
