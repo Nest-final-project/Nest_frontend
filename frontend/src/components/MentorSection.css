@@ -304,14 +304,6 @@
   color: #a855f7;
 }
 
-.online-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #10b981;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
 
 .online-status::before {
   content: '';
