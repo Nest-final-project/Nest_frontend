@@ -16,7 +16,7 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
-import { profileAPI, categoryAPI, keywordAPI } from '../../services/api';
+import { profileAPI, categoryAPI, keywordAPI, userAPI } from '../../services/api';
 import { authUtils } from '../../utils/tokenUtils';
 import ProfileEditModal from './ProfileEditModal.jsx';
 import ProfilePreviewModal from './ProfilePreviewModal.jsx';
@@ -28,6 +28,7 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [profileImages, setProfileImages] = useState({}); // 프로필 이미지 캐시
 
   // 프로필 수정 관련 state
   const [editingProfile, setEditingProfile] = useState(null);
@@ -56,31 +57,55 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
   }, [userInfo, dataLoaded]);
 
   const fetchMentorProfile = async () => {
-    console.log('🔍 멘토 프로필 로딩 시작...');
     setLoading(true);
     setError(null);
 
     try {
       const response = await profileAPI.getMyProfile();
-      console.log('📥 API 응답:', response);
       const rawProfiles = response.data.data.content;
-      console.log('📋 프로필 데이터:', rawProfiles);
 
       if (rawProfiles && rawProfiles.length > 0) {
         setProfiles(rawProfiles);
+        // 각 프로필의 사용자 ID에 대한 프로필 이미지 가져오기
+        await fetchProfileImages(rawProfiles);
         setDataLoaded(true);
       } else {
         setProfiles([]);
         setDataLoaded(true);
       }
-      console.log('✅ 프로필 설정 완료:', rawProfiles?.length || 0, '개');
     } catch (err) {
-      console.error('❌ 프로필 로딩 실패:', err);
       setError("오류가 발생했습니다. 다시 시도해 주세요.");
       setProfiles([]);
       setDataLoaded(true);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 프로필 이미지들을 가져오는 함수
+  const fetchProfileImages = async (profileList) => {
+    const imagePromises = profileList.map(async (profile) => {
+      try {
+        // 현재 로그인한 사용자의 ID를 사용 (자신의 멘토 프로필이므로)
+        const imageResponse = await userAPI.getUserProfileImage(userInfo.id);
+        const imageUrl = imageResponse.data.data.imgUrl;
+        return { userId: userInfo.id, imageUrl };
+      } catch (error) {
+        // 프로필 이미지가 없거나 오류가 발생한 경우 기본 이미지 사용
+        return { userId: userInfo.id, imageUrl: '/default-profile.svg' };
+      }
+    });
+
+    try {
+      const images = await Promise.all(imagePromises);
+      const imageMap = {};
+      images.forEach(({ userId, imageUrl }) => {
+        imageMap[userId] = imageUrl;
+      });
+      setProfileImages(imageMap);
+    } catch (error) {
+      // 프로필 이미지 로딩에 실패해도 프로필 목록은 표시
+      console.warn('프로필 이미지 로딩 실패:', error);
     }
   };
 
@@ -165,12 +190,14 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
   };
 
   // 프로필 업데이트 후 콜백
-  const handleProfileUpdated = (updatedProfile) => {
+  const handleProfileUpdated = async (updatedProfile) => {
     setProfiles(prevProfiles =>
       prevProfiles.map(profile =>
         profile.id === updatedProfile.id ? updatedProfile : profile
       )
     );
+    // 프로필 이미지도 다시 로딩
+    await fetchProfileImages([updatedProfile]);
   };
 
   // 프로필 삭제 모달 열기
@@ -211,25 +238,19 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
   // 프로필 생성 핸들러
   const handleCreateProfile = async (formData) => {
     try {
-      console.log('📤 프로필 생성 요청:', formData);
-      
       // 프로필 생성 (중복 체크는 모달에서 이미 처리됨)
       await profileAPI.createProfile(formData);
       
-      console.log('✅ 프로필 생성 성공');
       setModalOpen(false);
-      await fetchMentorProfile();
+      await fetchMentorProfile(); // 프로필 목록과 이미지를 다시 로딩
 
     } catch (error) {
-      console.error('❌ 프로필 생성 실패:', error);
       
       if (error.response?.status === 400) {
         const errorData = error.response?.data;
         
         if (errorData?.message && errorData.message.includes('이미')) {
           // 중복 에러는 모달을 닫지 않고 에러만 표시
-          console.log('백엔드에서 중복 에러 감지, 모달 유지');
-          // 모달은 열린 상태로 유지하고, 에러는 console에만 표시
           return;
         } else {
           alert(`입력 오류: ${errorData?.message || '입력 정보를 확인해주세요'}`);
@@ -299,7 +320,22 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
                 {/* 프로필 헤더 */}
                 <div className="profile-card-header">
                   <div className="profile-avatar">
-                    <div className="avatar-initials">
+                    {profileImages[userInfo.id] ? (
+                      <img 
+                        src={profileImages[userInfo.id]} 
+                        alt={`${profile.name || '멘토'}님의 프로필`}
+                        className="avatar-image"
+                        onError={(e) => {
+                          // 이미지 로딩 실패 시 기본 이니셜로 대체
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className="avatar-initials"
+                      style={{ display: profileImages[userInfo.id] ? 'none' : 'flex' }}
+                    >
                       {profile.name ? profile.name.charAt(0) : 'M'}
                     </div>
                     <div className="status-dot"></div>
