@@ -99,6 +99,10 @@ api.interceptors.request.use(
     }
 );
 
+// 세션 만료 처리 상태 관리
+let isSessionExpired = false;
+let sessionExpireAlertShown = false;
+
 // 응답 인터셉터 - 에러 처리
 api.interceptors.response.use(
     (response) => {
@@ -121,7 +125,7 @@ api.interceptors.response.use(
           originalRequest?.method?.toLowerCase() === 'delete';
 
       if (error.response?.status === 401 && !originalRequest._retry
-          && !isDeleteUserRequest) {
+          && !isDeleteUserRequest && !isSessionExpired) {
         originalRequest._retry = true;
 
         console.log('🔄 401 에러 감지 - 토큰 갱신 시도...');
@@ -150,16 +154,31 @@ api.interceptors.response.use(
         } catch (refreshError) {
           console.error('❌ 토큰 갱신 실패:', refreshError);
 
-          // 토큰 갱신 실패 시 로그아웃 처리
-          accessTokenUtils.removeAccessToken();
-          refreshTokenUtils.removeRefreshToken();
+          // 세션 만료 상태로 설정 (중복 처리 방지)
+          if (!isSessionExpired) {
+            isSessionExpired = true;
+            
+            // 토큰 갱신 실패 시 로그아웃 처리
+            accessTokenUtils.removeAccessToken();
+            refreshTokenUtils.removeRefreshToken();
 
-          // 현재 페이지가 로그인 페이지가 아닌 경우에만 리다이렉트
-          if (!window.location.pathname.includes('/login')) {
-            alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-            window.location.reload(); // 페이지 새로고침으로 로그인 상태 초기화
+            // 현재 페이지가 로그인 페이지가 아닌 경우에만 처리
+            if (!window.location.pathname.includes('/login') && !sessionExpireAlertShown) {
+              sessionExpireAlertShown = true;
+              alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+              
+              // 홈페이지로 리다이렉트 (로그인 상태 초기화)
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 100);
+            }
           }
         }
+      }
+
+      // 세션이 만료된 상태에서는 추가 에러 처리 없이 거부
+      if (isSessionExpired && error.response?.status === 401) {
+        return Promise.reject(new Error('세션이 만료되었습니다.'));
       }
 
       // CORS 에러 처리
@@ -629,6 +648,12 @@ export const adminAPI = {
 
   // [관리자] 카테고리 삭제
   deleteCategory: (categoryId) => api.delete(`/api/admin/categories/${categoryId}`),
+
+  // [관리자] 리뷰 목록 조회
+  getReviewList: (params) => api.get('/api/admin/reviews', {params}),
+
+  // [관리자] 리뷰 샅태 변경
+  changeReviewStatus: (reviewId) => api.patch(`/api/admin/reviews/${reviewId}`),
 
 
 };
