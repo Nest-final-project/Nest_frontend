@@ -1,5 +1,9 @@
 import axios from 'axios';
-import {accessTokenUtils, refreshTokenUtils} from '../utils/tokenUtils';
+import {
+  accessTokenUtils,
+  refreshTokenUtils,
+  userInfoUtils
+} from '../utils/tokenUtils';
 
 // API 베이스 URL 설정
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -52,6 +56,7 @@ api.interceptors.request.use(
         '/api/mentors/profiles', // 멘토 목록 조회 (로그인 없이도 볼 수 있음)
         '/api/oauth2/login',
         '/api/oauth2/callback',
+        '/api/auth/token/refresh',
       ];
 
       // 현재 요청 URL이 공개 엔드포인트인지 확인
@@ -142,7 +147,7 @@ api.interceptors.response.use(
                 refreshToken: refreshToken
               });
 
-          const newAccessToken = refreshResponse.data.accessToken;
+          const newAccessToken = refreshResponse.data.data.accessToken;
           accessTokenUtils.setAccessToken(newAccessToken);
 
           // 원래 요청에 새 토큰으로 재시도
@@ -314,6 +319,9 @@ export const profileAPI = {
 
   // 티켓 조회
   getTicketList: () => api.get('/api/ticket'),
+
+  // 프로필 삭제
+  deleteProfile: (profileId) => api.delete(`/api/profiles/${profileId}`),
 };
 
 // Consultation API

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Eye,
   Edit3,
+  Delete
 } from 'lucide-react';
 import { profileAPI, categoryAPI, keywordAPI } from '../../services/api';
 import ProfileEditModal from './ProfileEditModal.jsx';
 import ProfilePreviewModal from './ProfilePreviewModal.jsx';
 import MentorProfileModal from './MentorProfileModal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 import './MentorRegistration.css';
 
 const MentorRegistration = ({ userInfo, onLogout }) => {
@@ -24,6 +26,11 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewProfileData, setPreviewProfileData] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+
+  // 프로필 삭제 관련 state
+  const [deleteProfileId, setDeleteProfileId] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -100,6 +107,33 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
     // 카테고리와 키워드 목록 로딩
     await fetchCategories();
     await fetchKeywords();
+  };
+
+  // 프로필 삭제 모달 열기
+  const handleDeleteProfile = async (profileId) => {
+    console.log('❌ 프로필 삭제 모달 열기 시작')
+
+    setDeleteProfileId(profileId);
+    setDeleteModalOpen(true);
+  };
+
+  // 프로필 삭제 확인 및 api 호출
+  const handleConfirmDelete = async () => {
+    if (!deleteProfileId) return;
+
+    setDeleteLoading(true);
+
+    try {
+      await profileAPI.deleteProfile(deleteProfileId);
+      alert('프로필이 성공적으로 삭제되었습니다.');
+      setDeleteModalOpen(false);
+      setDeleteProfileId(null);
+      fetchMentorProfile();
+    } catch (error) {
+      alert('프로필 삭제에 실패했습니다.')
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   // 카테고리 목록 가져오기
@@ -251,6 +285,13 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
                     <Edit3 size={16} />
                     수정하기
                   </button>
+                  <button
+                      className="profile-action-btn btn-danger"
+                      onClick={() => handleDeleteProfile(profile.id)}
+                  >
+                    <Delete size={16} />
+                    삭제하기
+                  </button>
                 </div>
 
                 {/* 호버 이펙트를 위한 장식 요소 */}
@@ -316,6 +357,24 @@ const MentorRegistration = ({ userInfo, onLogout }) => {
           }}
         />
       )}
+      <DeleteConfirmationModal
+          isOpen={deleteModalOpen} // 모달 열림 상태
+          onClose={() => {
+            setDeleteModalOpen(false); // 닫기 버튼 클릭 시
+            setDeleteProfileId(null);
+          }}
+          onConfirm={handleConfirmDelete} // 확인 버튼 클릭 시
+          isLoading={deleteLoading} // 로딩 상태 전달
+          title="프로필 삭제 확인"
+          message={
+            <>
+              정말로 이 프로필을 삭제하시겠습니까? <br/>
+              이 작업은 되돌릴 수 없습니다.
+            </>
+          }
+          confirmText="확인"
+          cancelText="취소"
+      />
     </div>
   );
 };

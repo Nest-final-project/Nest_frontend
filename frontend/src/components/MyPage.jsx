@@ -409,7 +409,6 @@ const MyPage = ({ onBack, onLogout }) => {
               <div className="profile-modal-header">
                 <h3>프로필 이미지</h3>
                 <button className="modal-close-btn" onClick={closeProfileModal}>
-                  <X size={24} />
                 </button>
               </div>
 

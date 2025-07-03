@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Check, Star, BadgeCheck } from 'lucide-react';
 import './MentorProfile.css';
 import { profileAPI } from '../services/api';
+import {authUtils, userInfoUtils} from "../utils/tokenUtils.js";
 
 const convertTime = (enumVal) => {
   switch (enumVal) {
@@ -67,6 +68,8 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
     price: `${ticket.price.toLocaleString()}원`,
     popular: false
   }));
+
+  const userRole = userInfoUtils.getUserInfo().userRole;
 
   if (loading) return <div>로딩 중...</div>;
   if (!mentorDetails) return <div>멘토 정보를 불러오지 못했습니다.</div>;
@@ -224,7 +227,7 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
         </div>
 
         <div className="fixed-bottom">
-          <button
+          {userRole === 'MENTEE' && (<button
               className={`contact-button ${selectedService ? 'with-selection' : ''}`}
               onClick={handleBookingClick}
           >
@@ -232,6 +235,7 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
                 ? `${selectedService.name} 신청하기 (${selectedService.price})`
                 : '상담 신청하기'}
           </button>
+          )}
         </div>
       </div>
   );
