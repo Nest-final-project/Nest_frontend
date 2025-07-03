@@ -223,7 +223,24 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
       setLoading(true);
       const response = await inquiryAPI.getUserInquiryDetail(complaintId);
       if (response.data) {
-        setSelectedInquiry(response.data.data || response.data);
+        let inquiryDetail = response.data.data || response.data;
+        
+        // 답변이 있는 경우 답변 조회
+        if (inquiryDetail.status?.toLowerCase() === 'resolved' || inquiryDetail.status?.toLowerCase() === 'answered') {
+          try {
+            const answerResponse = await inquiryAPI.getUserAnswer(complaintId);
+            if (answerResponse.data) {
+              const answerData = answerResponse.data.data || answerResponse.data;
+              inquiryDetail.answer = answerData.contents || answerData.answer;
+              inquiryDetail.answeredAt = answerData.createdAt;
+            }
+          } catch (answerError) {
+            console.error('답변 조회 실패:', answerError);
+            // 답변 조회 실패해도 문의 상세는 표시
+          }
+        }
+        
+        setSelectedInquiry(inquiryDetail);
       }
     } catch (error) {
       alert('문의 상세 정보를 불러오는데 오류가 발생했습니다.');
@@ -311,15 +328,21 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
 
   // 상태 텍스트/클래스
   const getStatusText = (status) => {
-    switch (status) {
-      case 'ANSWERED': case 'answered': return '답변완료';
-      case 'PENDING': case 'pending': default: return '답변대기';
+    switch (status?.toLowerCase()) {
+      case 'resolved': return '답변완료';
+      case 'answered': return '답변완료';
+      case 'pending': return '답변대기';
+      case 'closed': return '종료';
+      default: return status || '답변대기';
     }
   };
   const getStatusClass = (status) => {
-    switch (status) {
-      case 'ANSWERED': case 'answered': return 'status-answered';
-      case 'PENDING': case 'pending': default: return 'status-pending';
+    switch (status?.toLowerCase()) {
+      case 'resolved': return 'status-answered';
+      case 'answered': return 'status-answered';
+      case 'pending': return 'status-pending';
+      case 'closed': return 'status-closed';
+      default: return 'status-pending';
     }
   };
   const formatDate = (dateString) => {
@@ -370,20 +393,7 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
         {/* 메인 컨텐츠 */}
         <div className="inquiry-main">
           <div className="inquiry-header">
-            <button className="back-button" onClick={onBack}>← 돌아가기</button>
-            <h1>
-              {activeTab === 'faq'
-                  ? '자주 묻는 질문'
-                  : activeTab === 'notice'
-                      ? (selectedNotice ? '공지사항 상세' : '공지사항')
-                      : selectedInquiry
-                          ? '문의 상세'
-                          : activeTab === 'myInquiries'
-                              ? '내 문의 내역'
-                              : activeTab === 'inquiries'
-                                  ? '문의 사항'
-                                  : '문의하기'}
-            </h1>
+            <button className="inquiry-back-button" onClick={onBack}>← 돌아가기</button>
           </div>
 
           <div className="tab-content">
@@ -394,7 +404,7 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
                       // 공지사항 상세
                       <div className="notice-detail">
                         <div className="detail-header">
-                          <button className="back-button" onClick={handleBackToNoticeList}>
+                          <button className="inquiry-back-button" onClick={handleBackToNoticeList}>
                             <i className="arrow-icon">←</i> 목록으로
                           </button>
                         </div>
@@ -521,7 +531,7 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
                       <div className="inquiry-detail">
                         {/* ...문의 상세 기존 코드 붙이기... */}
                         <div className="detail-header">
-                          <button className="back-button" onClick={handleBackToList}>
+                          <button className="inquiry-back-button" onClick={handleBackToList}>
                             <i className="arrow-icon">←</i> 목록으로
                           </button>
                           <div className="detail-actions">
@@ -569,7 +579,6 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
                             <div className="content-section">
                               <div className="content-header">
                                 <h3>문의 내용</h3>
-                                <div className="content-icon">💬</div>
                               </div>
                               <div className="content-body">
                                 <p>{selectedInquiry.contents || selectedInquiry.content}</p>
@@ -580,11 +589,15 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
                                 <div className="answer-section">
                                   <div className="answer-header">
                                     <h3>답변</h3>
-                                    <div className="answer-icon">✅</div>
                                   </div>
                                   <div className="answer-content">
-                                    <p>{selectedInquiry.answer}</p>
+                                    <pre className="answer-text">{selectedInquiry.answer}</pre>
                                   </div>
+                                </div>
+                            ) : (selectedInquiry.status?.toLowerCase() === 'resolved' || selectedInquiry.status?.toLowerCase() === 'answered') ? (
+                                <div className="loading-answer-section">
+                                  <div className="loading-answer-icon">🔄</div>
+                                  <p>답변을 불러오는 중입니다...</p>
                                 </div>
                             ) : (
                                 <div className="no-answer-section">
@@ -610,29 +623,29 @@ const Inquiry = ({ onBack, initialTab = 'inquiries' }) => {
                             </div>
                         ) : (
                             <div className="inquiries-table">
-                              <div className={`table-header ${activeTab === 'myInquiries' ? 'with-actions' : ''}`}>
-                                <div className="header-cell category">종류</div>
-                                <div className="header-cell title">제목</div>
-                                <div className="header-cell date">작성일</div>
-                                <div className="header-cell status">상태</div>
-                                {activeTab === 'myInquiries' && <div className="header-cell actions">관리</div>}
+                              <div className={`inquiry-table-header ${activeTab === 'myInquiries' ? 'with-actions' : ''}`}>
+                                <div className="inquiry-header-cell category">종류</div>
+                                <div className="inquiry-header-cell title">제목</div>
+                                <div className="inquiry-header-cell date">작성일</div>
+                                <div className="inquiry-header-cell status">상태</div>
+                                {activeTab === 'myInquiries' && <div className="inquiry-header-cell actions">삭제</div>}
                               </div>
                               {inquiries.map(inquiry => (
-                                  <div key={inquiry.id} className={`table-row ${activeTab === 'myInquiries' ? 'with-actions' : ''}`}>
-                                    <div className="table-cell category">
+                                  <div key={inquiry.id} className={`inquiry-table-row ${activeTab === 'myInquiries' ? 'with-actions' : ''}`}>
+                                    <div className="inquiry-table-cell category">
                                       <span className="category-badge">{getCategoryLabel(inquiry.category || inquiry.type)}</span>
                                     </div>
-                                    <div className="table-cell title clickable" onClick={() => handleInquiryClick(inquiry)}>
+                                    <div className="inquiry-table-cell title clickable" onClick={() => handleInquiryClick(inquiry)}>
                                       {inquiry.title}
                                     </div>
-                                    <div className="table-cell date">
+                                    <div className="inquiry-table-cell date">
                                       {formatDate(inquiry.createdAt || inquiry.created_at || inquiry.date)}
                                     </div>
-                                    <div className="table-cell status">
+                                    <div className="inquiry-table-cell status">
                                       <span className={`status-badge ${getStatusClass(inquiry.status)}`}>{getStatusText(inquiry.status)}</span>
                                     </div>
                                     {activeTab === 'myInquiries' && (
-                                        <div className="table-cell actions">
+                                        <div className="inquiry-table-cell actions">
                                           <button
                                               className="action-button delete-action"
                                               onClick={(e) => {

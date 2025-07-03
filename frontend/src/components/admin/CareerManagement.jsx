@@ -452,12 +452,13 @@ const CareerManagement = ({isDarkMode}) => {
                         fontWeight: '500',
                         color: '#6d4c41',
                         display: 'flex',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}>
                         <div className="cell-content" style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '8px'
+                          gap: '0'
                         }}>
                           <User size={16} style={{ color: '#ffb300' }}/>
                           <strong style={{ color: '#e65100', fontWeight: '700' }}>{career.mentorName}</strong>
@@ -468,35 +469,48 @@ const CareerManagement = ({isDarkMode}) => {
                         fontWeight: '500',
                         color: '#6d4c41',
                         display: 'flex',
-                        alignItems: 'center'
-                      }}>{career.mentorEmail}</div>
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>{career.mentorEmail}</div>
+                      </div>
                       <div className="table-cell" style={{
                         fontSize: '14px',
                         fontWeight: '500',
                         color: '#6d4c41',
                         display: 'flex',
-                        alignItems: 'center'
-                      }}>{career.company}</div>
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>{career.company}</div>
+                      </div>
                       <div className="table-cell" style={{
                         fontSize: '14px',
                         fontWeight: '500',
                         color: '#6d4c41',
                         display: 'flex',
-                        alignItems: 'center'
-                      }}>{formatDate(career.startAt)}</div>
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>{formatDate(career.startAt)}</div>
+                      </div>
                       <div className="table-cell" style={{
                         fontSize: '14px',
                         fontWeight: '500',
                         color: '#6d4c41',
                         display: 'flex',
-                        alignItems: 'center'
-                      }}>{formatDate(career.endAt)}</div>
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <div style={{ textAlign: 'center' }}>{formatDate(career.endAt)}</div>
+                      </div>
                       <div className="table-cell" style={{
                         fontSize: '14px',
                         fontWeight: '500',
                         color: '#6d4c41',
                         display: 'flex',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}>
                         <span
                             className={`status-badge ${statusBadge.className}`}>
@@ -508,7 +522,8 @@ const CareerManagement = ({isDarkMode}) => {
                         fontWeight: '500',
                         color: '#6d4c41',
                         display: 'flex',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}>
                         <div className="table-actions">
                           <button
