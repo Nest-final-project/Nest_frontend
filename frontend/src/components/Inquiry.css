@@ -78,20 +78,21 @@
   gap: 1rem;
 }
 
-.back-button {
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
+.inquiry-back-button {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  border: 1px solid rgba(255, 179, 0, 0.3);
   border-radius: 8px;
   padding: 0.5rem 1rem;
-  color: #4a5568;
+  color: white;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
 }
 
-.back-button:hover {
-  background: #edf2f7;
-  color: #2d3748;
+.back-button:hover, .inquiry-back-button:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(107, 114, 128, 0.2);
 }
 
 .inquiry-header h1 {
@@ -129,7 +130,7 @@
 }
 
 .create-inquiry-btn {
-  background: linear-gradient(135deg, #319795 0%, #2c7a7b 100%);
+  background: linear-gradient(135deg, #ffb300, #ff8f00);
   color: white;
   border: none;
   border-radius: 8px;
@@ -142,7 +143,7 @@
 
 .create-inquiry-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(49, 151, 149, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 179, 0, 0.3);
 }
 
 /* 테이블 스타일 */
@@ -151,45 +152,62 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(145deg, #fff8e1, #fff3c4) !important;
+  max-width: 850px; /* 테이블 최대 너비 줄임 */
+  width: 100%; /* 기본적으로 부모 너비 100% 차지 */
+  margin: 0 auto; /* 중앙 정렬 */
 }
 
 .table-header {
   display: grid;
-  grid-template-columns: 120px 1fr 120px 100px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  grid-template-columns: 160px 1fr 130px 90px; /* 작성일 컬럼 너비 10px 증가 */
+  background: linear-gradient(135deg, #ffb300, #ff8f00) !important;
   border-bottom: 2px solid #e2e8f0;
 }
 
 .table-header.with-actions {
-  grid-template-columns: 120px 1fr 120px 100px 80px;
+  grid-template-columns: 160px 1fr 130px 90px 70px; /* 작성일 컬럼 너비 10px 증가 */
 }
 
 .header-cell {
   padding: 1.2rem 1rem;
   font-weight: 600;
-  color: #475569;
+  color: white !important;
   font-size: 0.9rem;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.inquiry-header-cell {
+  padding: 1.2rem 1rem;
+  font-weight: 600;
+  color: white !important;
+  font-size: 0.9rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .table-row {
   display: grid;
-  grid-template-columns: 120px 1fr 120px 100px;
+  grid-template-columns: 160px 1fr 130px 90px; /* 작성일 컬럼 너비 10px 증가 */
   border-bottom: 1px solid #f1f5f9;
   transition: all 0.2s ease;
 }
 
 .table-row.with-actions {
-  grid-template-columns: 120px 1fr 120px 100px 80px;
+  grid-template-columns: 160px 1fr 130px 90px 70px; /* 작성일 컬럼 너비 10px 증가 */
 }
 
 .table-row:hover {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(145deg, #fff3c4, #fff8e1) !important;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(255, 179, 0, 0.15);
 }
 
 .table-row:last-child {
@@ -198,22 +216,25 @@
 
 .table-cell {
   padding: 1.2rem 1rem;
-  color: #334155;
+  color: #6d4c41 !important;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  font-weight: 500;
+  white-space: nowrap; /* 한 줄로 유지 */
 }
 
 .table-cell.title {
   font-weight: 500;
   cursor: pointer;
-  text-align: left;
-  justify-content: flex-start;
+  text-align: center;
+  justify-content: center;
+  color: #6d4c41 !important;
 }
 
 .table-cell.title:hover {
-  color: #0ea5e9;
+  color: #ffb300 !important;
 }
 
 .table-cell.clickable {
@@ -221,13 +242,17 @@
 }
 
 .category-badge {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  color: #0c4a6e;
-  padding: 0.4rem 0.8rem;
-  border-radius: 16px;
-  font-size: 0.75rem;
+  background: linear-gradient(135deg, #fff8e1, #fff3c4);
+  color: #6d4c41;
+  padding: 0.5rem 1.2rem; /* 원래대로 복원 */
+  border-radius: 18px; /* 원래대로 복원 */
+  font-size: 0.8rem; /* 원래대로 복원 */
   font-weight: 600;
-  border: 1px solid #e0f2fe;
+  border: 1px solid rgba(255, 179, 0, 0.3);
+  white-space: nowrap;
+  display: inline-block;
+  min-width: 100px; /* 원래대로 복원 */
+  text-align: center;
 }
 
 .status-badge {
@@ -236,6 +261,11 @@
   font-size: 0.75rem;
   font-weight: 600;
   border: 1px solid;
+  text-align: center; /* 텍스트 가운데 정렬 추가 */
+  display: inline-flex; /* flex로 변경하여 정렬 개선 */
+  align-items: center; /* 수직 가운데 정렬 */
+  justify-content: center; /* 수평 가운데 정렬 */
+  white-space: nowrap; /* 한 줄로 유지 */
 }
 
 .status-answered {
@@ -311,8 +341,8 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #319795;
-  box-shadow: 0 0 0 3px rgba(49, 151, 149, 0.1);
+  border-color: #ffb300;
+  box-shadow: 0 0 0 3px rgba(255, 179, 0, 0.1);
 }
 
 .form-group select {
@@ -345,24 +375,25 @@
 }
 
 .cancel-btn {
-  background: #f7fafc;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+  border: 1px solid rgba(255, 179, 0, 0.3);
 }
 
 .cancel-btn:hover {
-  background: #edf2f7;
-  color: #2d3748;
+  background: linear-gradient(135deg, #4b5563, #374151);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(107, 114, 128, 0.2);
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #319795 0%, #2c7a7b 100%);
+  background: linear-gradient(135deg, #ffb300, #ff8f00);
   color: white;
 }
 
 .submit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(49, 151, 149, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 179, 0, 0.3);
 }
 
 /* === 여기에 추가! === */
@@ -636,6 +667,88 @@
   line-height: 1.5;
 }
 
+/* Inquiry specific table styling */
+.inquiry-table-header {
+  display: grid;
+  grid-template-columns: 160px 1fr 130px 90px; /* 작성일 컬럼 너비 10px 증가 */
+  background: linear-gradient(135deg, #ffb300, #ff8f00) !important;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.inquiry-table-header.with-actions {
+  grid-template-columns: 160px 1fr 130px 90px 70px; /* 작성일 컬럼 너비 10px 증가 */
+}
+
+.inquiry-header-cell {
+  padding: 1.2rem 1rem;
+  font-weight: 600;
+  color: white !important;
+  font-size: 0.9rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Inquiry table rows - ensure proper alignment */
+.inquiry-table-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 130px 90px; /* 작성일 컬럼 너비 10px 증가 */
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+  background: #FBF9EF !important;
+}
+
+.inquiry-table-row.with-actions {
+  grid-template-columns: 160px 1fr 130px 90px 70px; /* 작성일 컬럼 너비 10px 증가 */
+}
+
+.inquiry-table-row:hover {
+  background: linear-gradient(145deg, #fff3c4, #fff8e1) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 179, 0, 0.15);
+}
+
+.inquiry-table-cell {
+  padding: 1.2rem 1rem;
+  color: #6d4c41 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 500;
+  white-space: nowrap; /* 한 줄로 유지 */
+}
+
+.inquiry-table-cell.title {
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  justify-content: center;
+  color: #6d4c41 !important;
+}
+
+.inquiry-table-cell.title:hover {
+  color: #ffb300 !important;
+}
+
+.inquiry-table-cell.clickable {
+  cursor: pointer;
+}
+
+.inquiries-table .table-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 130px 90px; /* 작성일 컬럼 너비 10px 증가 */
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+  background: #FBF9EF !important;
+}
+
+.inquiries-table .table-row.with-actions {
+  grid-template-columns: 160px 1fr 130px 90px 70px; /* 작성일 컬럼 너비 10px 증가 */
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .inquiry-sidebar {
@@ -656,18 +769,19 @@
 
   .table-header,
   .table-row {
-    grid-template-columns: 100px 1fr 100px 80px;
+    grid-template-columns: 120px 1.5fr 100px 80px; /* 모바일에서 더 compact하게 */
   }
 
   .table-header.with-actions,
   .table-row.with-actions {
-    grid-template-columns: 100px 1fr 100px 80px 60px;
+    grid-template-columns: 120px 1.5fr 100px 80px 50px; /* 액션 컬럼도 줄임 */
   }
 
-  .header-cell,
+  .inquiry-header-cell,
   .table-cell {
     padding: 0.75rem 0.5rem;
     font-size: 0.8rem;
+    background: #FF8F00;
   }
 
   /* 상세 페이지 반응형 */
