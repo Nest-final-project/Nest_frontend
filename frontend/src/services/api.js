@@ -1,5 +1,9 @@
 import axios from 'axios';
-import {accessTokenUtils, refreshTokenUtils} from '../utils/tokenUtils';
+import {
+  accessTokenUtils,
+  refreshTokenUtils,
+  userInfoUtils
+} from '../utils/tokenUtils';
 
 // API 베이스 URL 설정
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -52,6 +56,7 @@ api.interceptors.request.use(
         '/api/mentors/profiles', // 멘토 목록 조회 (로그인 없이도 볼 수 있음)
         '/api/oauth2/login',
         '/api/oauth2/callback',
+        '/api/auth/token/refresh',
       ];
 
       // 현재 요청 URL이 공개 엔드포인트인지 확인
@@ -142,7 +147,7 @@ api.interceptors.response.use(
                 refreshToken: refreshToken
               });
 
-          const newAccessToken = refreshResponse.data.accessToken;
+          const newAccessToken = refreshResponse.data.data.accessToken;
           accessTokenUtils.setAccessToken(newAccessToken);
 
           // 원래 요청에 새 토큰으로 재시도
@@ -349,7 +354,7 @@ export const consultationAPI = {
 // Reservation API
 export const reservationAPI = {
   // 예약 목록 조회
-  getReservations: () => api.get('/api/reservations'),
+  getReservations: ({ page, size }) => api.get(`/api/reservations?page=${page}&size=${size}`),
 
   // 예약 단건 조회
   getReservation: (reservationId) => api.get(
@@ -402,7 +407,7 @@ export const paymentAPI = {
       `/api/v1/payments/${paymentId}/cancel`, cancelData),
 
   // 결제 내역 조회
-  getPaymentHistory: () => api.get(`/api/v1/payments`),
+  getPaymentHistory: ({ page, size }) => api.get(`/api/v1/payments?page=${page}&size=${size}`),
 
   // 결제 상세 조회
   getPaymentDetail: (paymentId) => api.get(`/api/payments/${paymentId}`),
@@ -526,7 +531,7 @@ const fileApi = axios.create({
 // Career API
 export const careerAPI = {
   // 경력 전체 목록 조회
-  getAllCareers: () => api.get('/api/careers'),
+  getAllCareers: ({page, size}) => api.get(`/api/careers?page=${page}&size=${size}`),
 
   // 경력 상세 조회
   getCareerDetail: (profileId, careerId) => api.get(

@@ -80,10 +80,10 @@ const MentorProfileModal = ({ onClose, onSubmit, existingProfiles = [] }) => {
       if (selectedCategoryName) {
         // 기존 프로필에서 같은 카테고리 이름을 가진 것이 있는지 확인
         const existingProfile = existingProfiles.find(profile => {
-          const profileCategoryName = typeof profile.category === 'string' 
-            ? profile.category 
+          const profileCategoryName = typeof profile.category === 'string'
+            ? profile.category
             : profile.category?.name;
-          
+
           return profileCategoryName === selectedCategoryName;
         });
 
@@ -99,44 +99,43 @@ const MentorProfileModal = ({ onClose, onSubmit, existingProfiles = [] }) => {
     
     // 기존 에러 초기화
     setSubmitError('');
-    
+
     // 입력 데이터 유효성 검사
     if (!title.trim()) {
       alert('프로필 제목을 입력해주세요.');
       return;
     }
-    
+
     if (!introduction.trim()) {
       alert('프로필 소개를 입력해주세요.');
       return;
     }
-    
+
     if (!categoryId) {
       alert('카테고리를 선택해주세요.');
       return;
     }
-    
+
     // 프론트엔드 중복 카테고리 체크
     if (categoryError) {
       return; // 이미 에러가 표시되어 있으면 제출하지 않음
     }
 
     // 요청 데이터 준비
-    const submitData = { 
-      title: title.trim(), 
-      introduction: introduction.trim(), 
-      imageUrl: imageUrl.trim(), 
-      keywordId, 
+    const submitData = {
+      title: title.trim(),
+      introduction: introduction.trim(),
+      imageUrl: imageUrl.trim(),
+      keywordId,
       categoryId: parseInt(categoryId)
     };
-    
+
     try {
       setIsSubmitting(true);
-      await onSubmit(submitData);
-      // 성공 시 모달이 닫히므로 여기까지 오지 않음
+      await onSubmit(submitData); // ✅ 한 번만 호출
+      onClose(); // ✅ 성공 시에만 모달 닫기
     } catch (error) {
       // 백엔드에서 에러가 발생한 경우 모달 내부에서 처리
-      
       if (error?.response?.status === 400) {
         const errorData = error.response?.data;
         if (errorData?.message && errorData.message.includes('이미')) {
@@ -165,10 +164,6 @@ const MentorProfileModal = ({ onClose, onSubmit, existingProfiles = [] }) => {
               소개
               <textarea value={introduction} onChange={e => setIntroduction(e.target.value)} required />
             </label>
-            <label>
-              이미지 URL
-              <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
-            </label>
             {/* ⭐️ 계좌 번호 입력 필드 제거 */}
             <label>
               키워드
@@ -192,9 +187,9 @@ const MentorProfileModal = ({ onClose, onSubmit, existingProfiles = [] }) => {
             </label>
             <label>
               카테고리
-              <select 
-                value={categoryId} 
-                onChange={handleCategoryChange} 
+              <select
+                value={categoryId}
+                onChange={handleCategoryChange}
                 required
                 className={categoryError ? 'error' : ''}
               >
@@ -222,8 +217,8 @@ const MentorProfileModal = ({ onClose, onSubmit, existingProfiles = [] }) => {
               <button type="button" onClick={onClose} disabled={isSubmitting}>
                 취소
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={!!categoryError || isSubmitting}
                 className={categoryError || isSubmitting ? 'disabled' : ''}
               >

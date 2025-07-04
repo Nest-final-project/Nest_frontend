@@ -180,6 +180,15 @@ const MentorList = ({category, onBack, onMentorSelect}) => {
                           mentor.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
+                  <div className="mentorProfile-tags">
+                    {mentor.keywords && Array.isArray(mentor.keywords)
+                        && mentor.keywords.map((keyword) => (
+                            <span key={keyword.id}
+                                  className="mentorProfile-tag">
+                            {'#'}{keyword.name}
+                          </span>
+                        ))}
+                  </div>
                 </div>
               </div>
           ))}
