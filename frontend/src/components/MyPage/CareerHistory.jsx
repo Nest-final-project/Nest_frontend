@@ -9,7 +9,7 @@ import './CareerHistory.css';
 // 경력 아이템 표시 컴포넌트
 const CareerItem = ({ career, onEdit, onDelete }) => (
   <div className="careers-info-card">
-    <div className="careers-info-card-icon"><Briefcase /></div>
+    <div className="careers-info-card-icon"><Briefcase color="white" /></div>
     <div className="careers-info-card-content">
       <span className="careers-info-card-label">
         {career.company}

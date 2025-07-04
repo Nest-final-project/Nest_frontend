@@ -3,7 +3,7 @@
 /* 기본 컨테이너 스타일 */
 .career-history-container {
   padding: 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #fff8e1, #fff3c4);
   border-radius: 20px;
   box-shadow: 0 25px 50px rgba(102, 126, 234, 0.15);
   position: relative;
@@ -47,7 +47,7 @@
   font-size: 2.25rem;
   font-weight: 800;
   margin-bottom: 32px;
-  color: #ffffff;
+  color: #6D4C41;
   text-shadow: 0 4px 8px rgba(0,0,0,0.1);
   letter-spacing: -0.02em;
   position: relative;
@@ -148,7 +148,7 @@
 .careers-info-card-icon {
   margin-right: 20px;
   color: #667eea;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(45deg, #ffa000, #ff6f00);
   padding: 12px;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
@@ -290,8 +290,8 @@
   width: 100%;
   padding: 20px;
   border: 2px dashed rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.3);
+  color: black;
   border-radius: 16px;
   cursor: pointer;
   display: flex;
@@ -309,7 +309,7 @@
 
 .add-career-btn:hover {
   border-color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(45deg, #ffa000, #ff6f00);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
