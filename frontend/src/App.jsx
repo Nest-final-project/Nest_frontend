@@ -23,6 +23,7 @@ import ChatContainer from './components/ChatContainer.jsx';
 import NotificationContainer from './components/NotificationContainer.jsx';
 import Inquiry from './components/Inquiry.jsx';
 import AdminDashboard from './components/admin/AdminDashboard.jsx';
+import AboutPage from './components/About/AboutPage.jsx';
 import {authUtils, userInfoUtils} from './utils/tokenUtils';
 import {registerDebugFunctions} from './utils/websocketDebug';
 import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 'react-router-dom';
@@ -892,6 +893,7 @@ const AppContent = () => {
           <Route path="/social-signup" element={<SocialSignup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/about" element={<AboutPage />} />
         </Routes>
         <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
