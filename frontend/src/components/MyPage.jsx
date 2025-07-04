@@ -327,7 +327,7 @@ const MyPage = ({ onBack, onLogout }) => {
         <div className="mypage-loading error">
           <p>{error}</p>
           <div className="error-actions">
-            <button className="back-button" onClick={onBack}>뒤로 가기</button>
+            <button className="my-back-button" onClick={onBack}>뒤로 가기</button>
           </div>
         </div>
       </div>
@@ -339,7 +339,7 @@ const MyPage = ({ onBack, onLogout }) => {
       <div className="mypage-container">
         <div className="mypage-loading">
           <p>사용자 정보를 찾을 수 없습니다.</p>
-          <button className="back-button" onClick={onBack}>뒤로 가기</button>
+          <button className="my-back-button" onClick={onBack}>뒤로 가기</button>
         </div>
       </div>
     );
@@ -348,7 +348,7 @@ const MyPage = ({ onBack, onLogout }) => {
   return (
     <div className="mypage-container">
       <div className="mypage-header">
-        <button className="back-button" onClick={onBack}>
+        <button className="my-back-button" onClick={onBack}>
           <ArrowLeft className="icon" />
         </button>
         <h1>마이페이지</h1>
@@ -408,7 +408,8 @@ const MyPage = ({ onBack, onLogout }) => {
             <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
               <div className="profile-modal-header">
                 <h3>프로필 이미지</h3>
-                <button className="modal-close-btn" onClick={closeProfileModal}>
+                <button className="image-modal-close-btn" onClick={closeProfileModal}>
+                  닫기
                 </button>
               </div>
 
