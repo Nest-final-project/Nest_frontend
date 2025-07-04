@@ -72,15 +72,6 @@
   display: block;
 }
 
-.user-level {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  display: inline-block;
-}
 
 /* ===== 프로필 정보 카드 ===== */
 .my-info-card {
@@ -393,13 +384,13 @@
 }
 
 .password-change-btn {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(45deg, #ffa000, #ff6f00);
   color: white;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .password-change-btn:hover {
-  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+  background: linear-gradient(45deg, #ffa000, #ff6f00);
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
@@ -540,7 +531,7 @@
 }
 
 .my-modal-btn.confirm, .my-modal-btn.delete {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(45deg, #ffa000, #ff6f00);
   color: #fff;
 }
 
@@ -667,10 +658,10 @@
 }
 
 .profile-info {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 0.4rem !important;
-  flex: 1 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
 }
 
 .profile-title {
