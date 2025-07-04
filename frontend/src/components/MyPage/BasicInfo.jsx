@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useRef, useState} from 'react';
 import { 
   User, 
   Edit3, 
@@ -18,7 +18,13 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
   const [tempValue, setTempValue] = useState('');
   const [tempBankInfo, setTempBankInfo] = useState({ bank: '', accountNumber: '' });
   const [isUpdating, setIsUpdating] = useState(false);
-  
+
+  const [phone1, setPhone1] = useState('');
+  const [phone2, setPhone2] = useState('');
+  const [phone3, setPhone3] = useState('');
+  const phone2Ref = useRef(null);
+  const phone3Ref = useRef(null);
+
   // 비밀번호 변경 모달 관련 state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -79,7 +85,21 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
           bank: tempBankInfo.bank,
           accountNumber: tempBankInfo.accountNumber
         };
-      } else {
+      } else if (field === 'phoneNumber') { // <-- 이 부분 추가
+        // phone1, phone2, phone3의 현재 상태 값을 조합합니다.
+        const combinedPhoneNumber = `${phone1}-${phone2}-${phone3}`;
+
+        // 유효성 검사 (선택 사항): 모든 전화번호 부분이 채워져 있는지 확인
+        if (phone1.length !== 3 || phone2.length !== 4 || phone3.length !== 4) {
+          alert('전화번호를 정확히 입력해주세요.');
+          setIsUpdating(false);
+          return;
+        }
+
+        updateData = { [field]: combinedPhoneNumber };
+        updatedUserInfo = { ...userInfo, [field]: combinedPhoneNumber };
+
+      } else { // 다른 일반 필드
         updateData = { [field]: tempValue };
         updatedUserInfo = { ...userInfo, [field]: tempValue };
       }
@@ -263,21 +283,29 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
     }));
   };
 
+  // 전화번호 입력 시 자동 포커스 이동
+  const handlePhoneInput = (value, setter, nextRef, maxLength) => {
+    setter(value);
+    if (value.length === maxLength && nextRef) {
+      nextRef.current?.focus();
+    }
+  };
+
   return (
     <div className="profile-tab">
-      <div className="info-card">
-        <div className="info-card-header">
+      <div className="my-info-card">
+        <div className="my-info-card-header">
           <h3>✨ 기본 정보</h3>
         </div>
-        <div className="info-card-body">
+        <div className="my-info-card-body">
           {/* 이름 - 읽기 전용 */}
-          <div className="info-item">
+          <div className="my-info-item">
             <label>👤 이름</label>
             <span>{userInfo.name}</span>
           </div>
 
           {/* 닉네임 - 편집 가능 */}
-          <div className="info-item editable">
+          <div className="my-info-item editable">
             <label>🏷️ 닉네임</label>
             {editingField === 'nickName' ? (
               <div className="edit-field">
@@ -298,7 +326,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     {isUpdating && editingField === 'nickName' ? (
                       <div className="spinner-small"></div>
                     ) : (
-                      <Check size={16} />
+                      '확인'
                     )}
                   </button>
                   <button
@@ -306,7 +334,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     onClick={handleCancelEdit}
                     disabled={isUpdating}
                   >
-                    <X size={16} />
+                    취소
                   </button>
                 </div>
               </div>
@@ -314,7 +342,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               <div className="field-display">
                 <span>{userInfo.nickName}</span>
                 <button
-                  className="edit-btn"
+                  className="my-edit-btn"
                   onClick={() => handleEditField('nickName')}
                 >
                   <Edit3 size={16} />
@@ -324,23 +352,55 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
           </div>
 
           {/* 이메일 - 읽기 전용 */}
-          <div className="info-item">
+          <div className="my-info-item">
             <label>📧 이메일</label>
             <span>{userInfo.email}</span>
           </div>
 
           {/* 전화번호 - 편집 가능 */}
-          <div className="info-item editable">
+          <div className="my-info-item editable">
             <label>📱 전화번호</label>
             {editingField === 'phoneNumber' ? (
               <div className="edit-field">
                 <input
-                  type="tel"
-                  value={tempValue}
-                  onChange={(e) => setTempValue(e.target.value)}
-                  className="edit-input"
-                  autoFocus
-                  placeholder="전화번호를 입력하세요"
+                    type="tel"
+                    placeholder="010"
+                    value={phone1}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 3);
+                      handlePhoneInput(value, setPhone1, phone2Ref, 3);
+                    }}
+                    className="phone-field"
+                    maxLength="3"
+                    required
+                />
+                <span className="phone-separator">-</span>
+                <input
+                    ref={phone2Ref}
+                    type="tel"
+                    placeholder="0000"
+                    value={phone2}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      handlePhoneInput(value, setPhone2, phone3Ref, 4);
+                    }}
+                    className="phone-field"
+                    maxLength="4"
+                    required
+                />
+                <span className="phone-separator">-</span>
+                <input
+                    ref={phone3Ref}
+                    type="tel"
+                    placeholder="0000"
+                    value={phone3}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      setPhone3(value);
+                    }}
+                    className="phone-field"
+                    maxLength="4"
+                    required
                 />
                 <div className="edit-buttons">
                   <button
@@ -351,7 +411,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     {isUpdating && editingField === 'phoneNumber' ? (
                       <div className="spinner-small"></div>
                     ) : (
-                      <Check size={16} />
+                      '확인'
                     )}
                   </button>
                   <button
@@ -359,7 +419,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     onClick={handleCancelEdit}
                     disabled={isUpdating}
                   >
-                    <X size={16} />
+                    취소
                   </button>
                 </div>
               </div>
@@ -367,7 +427,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               <div className="field-display">
                 <span>{userInfo.phoneNumber}</span>
                 <button
-                  className="edit-btn"
+                  className="my-edit-btn"
                   onClick={() => handleEditField('phoneNumber')}
                 >
                   <Edit3 size={16} />
@@ -378,7 +438,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
 
           {/* 멘토인 경우에만 은행 정보 표시 */}
           {userInfo.userRole === 'MENTOR' && (
-            <div className="info-item editable">
+            <div className="my-info-item editable">
               <label>🏦 은행 정보</label>
               {editingField === 'bankInfo' ? (
                 <div className="edit-field bank-edit">
@@ -414,7 +474,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                       {isUpdating && editingField === 'bankInfo' ? (
                         <div className="spinner-small"></div>
                       ) : (
-                        <Check size={16} />
+                        '확인'
                       )}
                     </button>
                     <button
@@ -422,7 +482,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                       onClick={handleCancelEdit}
                       disabled={isUpdating}
                     >
-                      <X size={16} />
+                      취소
                     </button>
                   </div>
                 </div>
@@ -435,7 +495,7 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                     }
                   </span>
                   <button
-                    className="edit-btn"
+                    className="my-edit-btn"
                     onClick={() => handleEditField('bankInfo')}
                   >
                     <Edit3 size={16} />
@@ -446,11 +506,11 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
           )}
 
           {/* 읽기 전용 필드들 */}
-          <div className="info-item">
+          <div className="my-info-item">
             <label>📅 가입일</label>
             <span>{userInfo.createdAt}</span>
           </div>
-          <div className="info-item">
+          <div className="my-info-item">
             <label>🎯 사용자 유형</label>
             <span>{userInfo.userRole === 'MENTOR' ? '🎓 멘토' : '👨‍🎓 멘티'}</span>
           </div>
@@ -480,16 +540,16 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
 
       {/* 비밀번호 변경 모달 */}
       {showPasswordModal && userData?.socialType === 'LOCAL' && (
-        <div className="modal-overlay" onClick={closePasswordModal}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="my-modal-overlay" onClick={closePasswordModal}>
+          <div className="my-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="my-modal-header">
               <h3>비밀번호 변경</h3>
-              <button className="modal-close" onClick={closePasswordModal}>
+              <button className="my-modal-close" onClick={closePasswordModal}>
                 <X size={24} />
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="my-modal-body">
               <div className="password-field"> {/* 현재 비밀번호 */}
                 <label>현재 비밀번호</label>
                 <div className="custom-password-input-container">
@@ -537,16 +597,16 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               </div>
             </div>
 
-            <div className="modal-footer">
+            <div className="my-modal-footer">
               <button
-                className="modal-btn cancel"
+                className="my-modal-btn cancel"
                 onClick={closePasswordModal}
                 disabled={modalLoading}
               >
                 취소
               </button>
               <button
-                className="modal-btn confirm"
+                className="my-modal-btn confirm"
                 onClick={handlePasswordChange}
                 disabled={modalLoading || !passwordData.currentPassword || !passwordData.newPassword}
               >
@@ -563,16 +623,16 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
 
       {/* 회원탈퇴 모달 */}
       {showDeleteModal && (
-        <div className="modal-overlay" onClick={closeDeleteModal}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="my-modal-overlay" onClick={closeDeleteModal}>
+          <div className="my-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="my-modal-header">
               <h3>회원탈퇴</h3>
-              <button className="modal-close" onClick={closeDeleteModal}>
+              <button className="my-modal-close" onClick={closeDeleteModal}>
                 <X size={24} />
               </button>
             </div>
 
-            <div className="modal-body">
+            <div className="my-modal-body">
               <div className="warning-message">
                 <div className="warning-icon">
                   <UserX size={48} />
@@ -610,16 +670,16 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
               )}
             </div>
 
-            <div className="modal-footer">
+            <div className="my-modal-footer">
               <button
-                className="modal-btn cancel"
+                className="my-modal-btn cancel"
                 onClick={closeDeleteModal}
                 disabled={modalLoading}
               >
                 취소
               </button>
               <button
-                className="modal-btn delete"
+                className="my-modal-btn delete"
                 onClick={handleAccountDelete}
                 disabled={modalLoading || (userData?.socialType === 'LOCAL' && !deletePassword)}
               >

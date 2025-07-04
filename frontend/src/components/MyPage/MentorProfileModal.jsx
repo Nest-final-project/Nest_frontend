@@ -74,9 +74,7 @@ const MentorProfileModal = ({ onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({ title, introduction, imageUrl, keywordId, categoryId});
-    alert("멘토 등록이 완료되었습니다.")
     onClose();
-    window.location.reload();
   };
 
   return (
@@ -91,10 +89,6 @@ const MentorProfileModal = ({ onClose, onSubmit }) => {
             <label>
               소개
               <textarea value={introduction} onChange={e => setIntroduction(e.target.value)} required />
-            </label>
-            <label>
-              이미지 URL
-              <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
             </label>
             {/* ⭐️ 계좌 번호 입력 필드 제거 */}
             <label>

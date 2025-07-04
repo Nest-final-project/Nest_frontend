@@ -20,9 +20,13 @@
 
 /* 모달 컨테이너 */
 .mentor-profile-registration-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0;
   background: white;
   border-radius: 24px;
-  width: 100%;
+  width: 400px;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
@@ -60,7 +64,8 @@
   -webkit-text-fill-color: transparent;
   margin: 0 0 32px 0;
   text-align: center;
-  padding: 32px 32px 0 32px;
+  padding-left: 32px;
+  padding-right: 32px;
   position: relative;
 }
 
@@ -99,25 +104,25 @@
 .mentor-profile-registration-modal input[type="url"],
 .mentor-profile-registration-modal textarea,
 .mentor-profile-registration-modal select {
-  padding: 16px !important;
-  border: 2px solid #6b7280 !important;
-  border-radius: 12px !important;
-  font-size: 16px !important;
-  transition: all 0.3s ease !important;
-  background: white !important;
-  color: #374151 !important;
-  outline: none !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  padding: 16px;
+  border: 2px solid #6b7280;
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: white;
+  color: #374151;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .mentor-profile-registration-modal input[type="text"]:focus,
 .mentor-profile-registration-modal input[type="url"]:focus,
 .mentor-profile-registration-modal textarea:focus,
 .mentor-profile-registration-modal select:focus {
-  border-color: #3b82f6 !important;
-  background: white !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-  transform: translateY(-1px) !important;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
 }
 
 /* 텍스트에어리어 특별 스타일 */
@@ -281,15 +286,15 @@
 .mentor-profile-registration-modal input:invalid,
 .mentor-profile-registration-modal textarea:invalid,
 .mentor-profile-registration-modal select:invalid {
-  border-color: #6b7280 !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  border-color: #6b7280;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .mentor-profile-registration-modal input:invalid:focus,
 .mentor-profile-registration-modal textarea:invalid:focus,
 .mentor-profile-registration-modal select:invalid:focus {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* 애니메이션 */
