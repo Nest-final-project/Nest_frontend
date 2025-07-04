@@ -338,17 +338,15 @@
   font-size: 0.75rem;
   font-weight: 800;
   align-content: center;
-  border: 1px solid #FFAB40;
   backdrop-filter: blur(2px);
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 2px 8px rgb(255, 221, 93);
 }
 
 .mentor-tag:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
 .mentor-footer {
@@ -362,7 +360,7 @@
 
 .mentor-price {
   font-weight: 700;
-  color: var(--primary-orange);
+  color: var(--gradient-growth);
   font-size: 1.1rem;
 }
 
@@ -390,7 +388,7 @@
 /* 예약하기 버튼 스타일 */
 .reservation-button {
   padding: 1rem 2.5rem;
-  background: var(--gradient-growth);
+  background: #FFCC02;
   color: white;
   border: none;
   border-radius: 50px;
@@ -410,8 +408,7 @@
 
 .reservation-button:hover {
   transform: translateY(-3px) scale(1.08);
-  box-shadow: 0 12px 30px rgba(129, 199, 132, 0.5);
-  background: linear-gradient(135deg, #66bb6a, #43a047);
+  background: var(--gradient-energy);
 }
 
 /* 슬라이드 인디케이터 */

@@ -248,15 +248,8 @@
   }
 }
 
-.mentor-career-table {
+.career-table {
   width: 100%;
-  background: linear-gradient(145deg, #fff8e1, #fff3c4);
-  border: 1px solid rgba(255, 179, 0, 0.3);
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(255, 143, 0, 0.1);
-  overflow: hidden;
-  backdrop-filter: blur(20px);
-  position: relative;
 }
 
 .career-header,
@@ -660,24 +653,24 @@
   .mentor-profile-container {
     padding: 0 0.75rem 100px 0.75rem;
   }
-  
+
   .profile-hero,
   .content-section {
     padding: 1.5rem;
     margin-bottom: 1rem;
   }
-  
+
   .career-header,
   .career-row {
     grid-template-columns: 1fr;
     gap: 0.75rem;
     text-align: left;
   }
-  
+
   .career-header {
     display: none;
   }
-  
+
   .career-row {
     background: white;
     border-radius: 12px;
@@ -685,7 +678,7 @@
     margin-bottom: 1rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
-  
+
   .career-col::before {
     content: attr(data-label);
     font-weight: 600;
@@ -694,35 +687,35 @@
     margin-bottom: 0.5rem;
     font-size: 0.85rem;
   }
-  
+
   .service-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
-  
+
   .service-duration {
     margin-left: 0;
   }
-  
+
   .services-grid {
     gap: 1rem;
   }
-  
+
   .service-card {
     padding: 1.5rem;
   }
-  
+
   .selection-summary {
     padding: 1rem;
   }
-  
+
   .summary-service {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }
-  
+
   .fixed-bottom {
     padding: 1rem;
   }
@@ -732,37 +725,37 @@
   .mentor-profile-container {
     padding: 0 0.5rem 100px 0.5rem;
   }
-  
+
   .profile-hero,
   .content-section {
     padding: 1.25rem;
     border-radius: 16px;
   }
-  
+
   .service-card {
     padding: 1.25rem;
   }
-  
+
   .contact-button {
     font-size: 1rem;
     padding: 1rem;
     border-radius: 12px;
   }
-  
+
   .service-name {
     font-size: 1.1rem;
   }
-  
+
   .service-price {
     font-size: 1.2rem;
   }
-  
+
   .profile-avatar {
     width: 80px;
     height: 80px;
     font-size: 2rem;
   }
-  
+
   .section-title {
     font-size: 1.2rem;
   }
