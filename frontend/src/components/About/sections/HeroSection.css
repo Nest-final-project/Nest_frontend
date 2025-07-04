@@ -5,6 +5,7 @@
   background: linear-gradient(135deg, #fff9e6 0%, #fff3d6 100%);
   position: relative;
   overflow: hidden;
+  padding-top: 80px; /* Header 높이만큼 패딩 추가 */
 }
 
 .about-hero-section::before {

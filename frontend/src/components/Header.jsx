@@ -197,9 +197,15 @@ const Header = ({
             </button>
           </div>
           <nav className="sidebar-content">
-            <a href="#home" className="sidebar-link" onClick={toggleSidebar}>
+            <button 
+              className="sidebar-link" 
+              onClick={() => {
+                setIsNavOpen(false);
+                window.location.href = '/';
+              }}
+            >
               <span className="sidebar-link-icon">🏠</span>홈
-            </a>
+            </button>
             <button 
               className="sidebar-link" 
               onClick={() => {
