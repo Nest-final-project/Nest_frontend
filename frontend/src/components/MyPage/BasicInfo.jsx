@@ -9,7 +9,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { userAPI } from '../../services/api';
+import { userAPI, profileAPI } from '../../services/api';
 import { userInfoUtils, authUtils } from '../../utils/tokenUtils';
 import './BasicInfo.css';
 
@@ -42,6 +42,12 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
 
+  // 프로필 삭제 모달 관련 state
+  const [showProfileDeleteModal, setShowProfileDeleteModal] = useState(false);
+  const [profileDeletePassword, setProfileDeletePassword] = useState('');
+  const [profiles, setProfiles] = useState([]);
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
+
   // 한국 주요 은행 목록
   const banks = [
     '국민은행', '신한은행', '우리은행', '하나은행', 'KEB하나은행',
@@ -50,6 +56,25 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
     '경남은행', '광주은행', '대구은행', '부산은행', '전북은행',
     '제주은행', 'SC제일은행', '한국씨티은행', 'HSBC은행'
   ];
+
+  // 컴포넌트 마운트 시 프로필 목록 조회
+  React.useEffect(() => {
+    if (userInfo?.userRole === 'MENTOR') {
+      fetchProfiles();
+    }
+  }, [userInfo]);
+
+  // 프로필 목록 조회 함수
+  const fetchProfiles = async () => {
+    try {
+      const response = await profileAPI.getMyProfile();
+      if (response.data && response.data.data) {
+        setProfiles(response.data.data);
+      }
+    } catch (error) {
+      console.error('프로필 목록 조회 실패:', error);
+    }
+  };
 
   // mappedUserInfo에서 socialType 확인
   const userDataStr = sessionStorage.getItem('mappedUserInfo');
@@ -291,6 +316,78 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
     }
   };
 
+  // 프로필 삭제 모달 관련 함수들
+  const openProfileDeleteModal = (profileId) => {
+    setSelectedProfileId(profileId);
+    setShowProfileDeleteModal(true);
+    setProfileDeletePassword('');
+    setShowPasswords(prev => ({
+      ...prev,
+      profileDelete: false
+    }));
+  };
+
+  const closeProfileDeleteModal = () => {
+    setShowProfileDeleteModal(false);
+    setSelectedProfileId(null);
+    setProfileDeletePassword('');
+    setShowPasswords(prev => ({
+      ...prev,
+      profileDelete: false
+    }));
+  };
+
+  const handleProfileDelete = async () => {
+    if (!selectedProfileId) return;
+
+    // LOCAL: 비밀번호 입력 필요
+    if (userData?.socialType === 'LOCAL') {
+      if (!profileDeletePassword.trim()) {
+        alert('현재 비밀번호를 입력해주세요.');
+        return;
+      }
+    }
+
+    const confirmDelete = window.confirm(
+      '정말로 이 프로필을 삭제하시겠습니까?\n삭제된 프로필은 복구할 수 없습니다.'
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      setModalLoading(true);
+
+      await profileAPI.deleteProfile(selectedProfileId);
+
+      alert('프로필이 성공적으로 삭제되었습니다.');
+
+      // 프로필 목록 새로고침
+      await fetchProfiles();
+
+      closeProfileDeleteModal();
+
+    } catch (error) {
+      console.error('프로필 삭제 실패:', error);
+
+      if (error.response?.status === 401) {
+        alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+        authUtils.clearAllAuthData();
+        onLogout();
+      } else if (error.response?.status === 404) {
+        alert('삭제할 프로필을 찾을 수 없습니다.');
+      } else if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.message || '프로필 삭제 요청을 처리할 수 없습니다.';
+        alert(`오류: ${errorMessage}`);
+      } else {
+        alert('프로필 삭제 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   return (
     <div className="profile-tab">
       <div className="my-info-card">
@@ -505,6 +602,31 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
             </div>
           )}
 
+          {/* 멘토인 경우에만 프로필 목록 표시 */}
+          {userInfo.userRole === 'MENTOR' && profiles.length > 0 && (
+            <div className="info-item">
+              <label>📝 내 프로필 목록</label>
+              <div className="profile-list">
+                {profiles.map((profile) => (
+                  <div key={profile.id} className="profile-item">
+                    <div className="profile-info">
+                      <span className="profile-title">{profile.title}</span>
+                      <span className="profile-category">{profile.categoryName}</span>
+                    </div>
+                    <button
+                      className="profile-delete-btn"
+                      onClick={() => openProfileDeleteModal(profile.id)}
+                      title="프로필 삭제"
+                    >
+                      <UserX size={16} />
+                      삭제
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 읽기 전용 필드들 */}
           <div className="my-info-item">
             <label>📅 가입일</label>
@@ -687,6 +809,80 @@ const BasicInfo = ({ userInfo, setUserInfo, onLogout }) => {
                   <div className="spinner-small"></div>
                 ) : (
                   '회원탈퇴'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 프로필 삭제 모달 */}
+      {showProfileDeleteModal && (
+        <div className="modal-overlay" onClick={closeProfileDeleteModal}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>프로필 삭제</h3>
+              <button className="modal-close" onClick={closeProfileDeleteModal}>
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <div className="warning-message">
+                <div className="warning-icon">
+                  <UserX size={48} />
+                </div>
+                <h4>정말로 이 프로필을 삭제하시겠습니까?</h4>
+                <p>프로필 삭제 시 관련된 모든 데이터가 영구적으로 삭제되며, 복구할 수 없습니다.</p>
+                <ul className="warning-list">
+                  <li>프로필 정보</li>
+                  <li>경력 정보</li>
+                  <li>상담 가능 시간</li>
+                  <li>해당 프로필로 받은 예약</li>
+                  <li>리뷰 및 평점</li>
+                </ul>
+              </div>
+
+              {userData?.socialType === 'LOCAL' && (
+                <div className="password-field">
+                  <label>현재 비밀번호를 입력하여 본인임을 확인해주세요</label>
+                  <div className="custom-password-input-container">
+                    <input
+                      type={showPasswords.profileDelete ? "text" : "password"}
+                      value={profileDeletePassword}
+                      onChange={(e) => setProfileDeletePassword(e.target.value)}
+                      placeholder="현재 비밀번호를 입력하세요"
+                      className="custom-password-input"
+                    />
+                    <button
+                      type="button"
+                      className="custom-password-toggle"
+                      onClick={() => togglePasswordVisibility('profileDelete')}
+                    >
+                      {showPasswords.profileDelete ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="modal-btn cancel"
+                onClick={closeProfileDeleteModal}
+                disabled={modalLoading}
+              >
+                취소
+              </button>
+              <button
+                className="modal-btn delete"
+                onClick={handleProfileDelete}
+                disabled={modalLoading || (userData?.socialType === 'LOCAL' && !profileDeletePassword)}
+              >
+                {modalLoading ? (
+                  <div className="spinner-small"></div>
+                ) : (
+                  '프로필 삭제'
                 )}
               </button>
             </div>
