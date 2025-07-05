@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Star } from 'lucide-react';
+import { ArrowLeft, Check, Star, BadgeCheck } from 'lucide-react';
 import './MentorProfile.css';
 import { profileAPI } from '../services/api';
 import {authUtils, userInfoUtils} from "../utils/tokenUtils.js";
