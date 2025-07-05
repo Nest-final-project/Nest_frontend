@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Check, Star, BadgeCheck } from 'lucide-react';
+import { ArrowLeft, Check, Star } from 'lucide-react';
 import './MentorProfile.css';
 import { profileAPI } from '../services/api';
 import {authUtils, userInfoUtils} from "../utils/tokenUtils.js";
+import ReviewSection from './ReviewSection';
 
 const convertTime = (enumVal) => {
   switch (enumVal) {
@@ -222,6 +223,10 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
                   </div>
               )}
             </div>
+          </div>
+
+          <div className="content-section">
+            <ReviewSection mentorId={mentorDetails.userId || mentorDetails.id} />
           </div>
 
         </div>
