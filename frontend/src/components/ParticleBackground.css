@@ -229,7 +229,7 @@
 }
 
 /* High contrast mode */
-@media (prefers-contrast: high) {
+@media (prefers-contrast: more) {
   .dynamic-background {
     background: var(--bg-cream);
   }
