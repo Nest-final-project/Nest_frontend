@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import './Payment.css';
 import './TossPayment.css';
+import { paymentAPI } from '../services/api';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -82,23 +83,14 @@ function TossPaymentSuccess({paymentData, onHome, onBack, onTossSuccess}) {
     setConfirmResult(null);
 
     try {
-      const response = await fetch(`${BASE_URL}/api/v1/payments/confirm`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${jwtToken}`,
-        },
-        body: JSON.stringify({
-          paymentKey: paymentInfo.paymentKey,
-          orderId: paymentInfo.orderId,
-          amount: Number(paymentInfo.amount),
-          reservationId: Number(paymentInfo.reservationId),
-        }),
+      const data = await paymentAPI.confirmPayment({
+        paymentKey: paymentInfo.paymentKey,
+        orderId: paymentInfo.orderId,
+        amount: Number(paymentInfo.amount),
+        reservationId: Number(paymentInfo.reservationId),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data) {
         setConfirmResult({success: true, data});
 
         // 🔥 sessionStorage에서 원본 예약 데이터 백업
@@ -194,11 +186,14 @@ function TossPaymentSuccess({paymentData, onHome, onBack, onTossSuccess}) {
           }
         }, 1500); // 1.5초 후 이동 (사용자가 완료 메시지를 볼 수 있도록)
       } else {
-        throw new Error(data.message || "결제 승인 실패");
+        throw new Error("결제 승인 실패");
       }
     } catch (error) {
-      setConfirmResult({success: false, error: error.message});
-      if (error.message.includes("인증")) {
+      console.error('결제 승인 실패:', error);
+      const errorMessage = error.response?.data?.message || error.message || "결제 승인 실패";
+      setConfirmResult({success: false, error: errorMessage});
+      
+      if (errorMessage.includes("인증") || error.response?.status === 401) {
         localStorage?.removeItem("accessToken");
         sessionStorage?.removeItem("accessToken");
         setJwtToken("");
