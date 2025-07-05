@@ -140,7 +140,7 @@ const Login = ({ onLoginSuccess }) => {
           </div>
           <button type="submit" className="login-submit" disabled={isLoading}>
             {isLoading ? (
-              <span className="loading-spinner">
+              <span className="login-loading-spinner">
                 <span className="spinner"></span>
                 로그인 중...
               </span>

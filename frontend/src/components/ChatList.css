@@ -696,7 +696,7 @@
   text-align: center;
 }
 
-.loading-spinner {
+.chat-loading-spinner {
   width: 2rem;
   height: 2rem;
   border: 3px solid rgba(255, 179, 0, 0.2);
