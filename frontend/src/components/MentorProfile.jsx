@@ -89,19 +89,19 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
           <div className="profile-hero">
             <div className={`profile-avatar gradient-bg-${mentorDetails.id}`}>
               {mentorDetails.imgUrl ? (
-                <img 
-                  src={mentorDetails.imgUrl} 
-                  alt={mentorDetails.name}
-                  className="profile-avatar-image"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
-                  }}
-                />
+                  <img
+                      src={mentorDetails.imgUrl}
+                      alt={mentorDetails.name}
+                      className="profile-avatar-image"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                  />
               ) : null}
-              <div 
-                className="profile-avatar-text"
-                style={{ display: mentorDetails.imgUrl ? 'none' : 'flex' }}
+              <div
+                  className="profile-avatar-text"
+                  style={{ display: mentorDetails.imgUrl ? 'none' : 'flex' }}
               >
                 {mentorDetails.avatar || mentorDetails.name?.[0] || 'M'}
               </div>
@@ -228,13 +228,13 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
 
         <div className="fixed-bottom">
           {userRole === 'MENTEE' && (<button
-              className={`contact-button ${selectedService ? 'with-selection' : ''}`}
-              onClick={handleBookingClick}
-          >
-            {selectedService
-                ? `${selectedService.name} 신청하기 (${selectedService.price})`
-                : '상담 신청하기'}
-          </button>
+                  className={`contact-button ${selectedService ? 'with-selection' : ''}`}
+                  onClick={handleBookingClick}
+              >
+                {selectedService
+                    ? `${selectedService.name} 신청하기 (${selectedService.price})`
+                    : '상담 신청하기'}
+              </button>
           )}
         </div>
       </div>

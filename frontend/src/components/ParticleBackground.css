@@ -28,6 +28,8 @@
     radial-gradient(circle at 80% 70%, rgba(255, 171, 64, 0.06) 0%, transparent 50%),
     radial-gradient(circle at 50% 50%, rgba(255, 193, 7, 0.04) 0%, transparent 70%);
   animation: pulse 6s ease-in-out infinite;
+  z-index: 1; /* z-index 추가로 레이어 순서 명확히 */
+  pointer-events: none; /* 클릭 이벤트 차단하지 않도록 */
 }
 
 @keyframes pulse {
@@ -227,7 +229,7 @@
 }
 
 /* High contrast mode */
-@media (prefers-contrast: high) {
+@media (min-width: 1px) {
   .dynamic-background {
     background: #FFF8E1;
   }
