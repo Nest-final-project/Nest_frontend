@@ -62,6 +62,16 @@ const AppContent = () => {
           setUserInfo(userData);
           console.log('세션에서 로그인 상태 복원됨:', userData);
 
+          if (userData.userRole === 'GUEST') {
+            console.warn('⚠️ App.js: GUEST 사용자 감지! 추가 정보 미입력 상태로 다른 페이지 접근 시도. 강제 로그아웃.');
+            authUtils.clearAllAuthData(); // 모든 인증 정보 삭제
+            setIsLoggedIn(false);
+            setUserInfo(null);
+            navigate('/login', { replace: true }); // 로그인 페이지로 리다이렉트
+            setIsInitializing(false); // 초기화 중단
+            return;
+          }
+
           // 🔍 [2단계] 앱 시작 시 최신 사용자 정보 API 재조회 (프로필 이미지 동기화)
           try {
             const { userAPI } = await import('./services/api');
