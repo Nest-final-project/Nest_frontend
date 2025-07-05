@@ -229,7 +229,7 @@
 }
 
 /* High contrast mode */
-@media (prefers-contrast: high) {
+@media (min-width: 1px) {
   .dynamic-background {
     background: #FFF8E1;
   }

@@ -622,11 +622,12 @@
 }
 
 /* High contrast mode */
-@media (prefers-contrast: high) {
-  .mentor-card {
+@media (min-width: 1px) {
+  .mentor-card.high-contrast {
     background: white;
     border: 2px solid var(--text-coffee);
   }
+
   
   .category-tab {
     background: white;
