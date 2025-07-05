@@ -791,6 +791,19 @@ const AppContent = () => {
     return (
         <div className="app">
           <ParticleBackground />
+          <Header
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onLoginClick={() => setIsLoginOpen(true)}
+              onCategorySelect={handleCategorySelect}
+              onProfileClick={handleProfileClick}
+              onInquiry={handleInquiry}
+              isLoggedIn={isLoggedIn}
+              userInfo={userInfo}
+              onChatRoom={handleChatRoom}
+              onLogout={handleLogout}
+              onAdminDashboard={handleAdminDashboard}
+          />
           <MentorList
               category={category}
               onBack={handleBackToHome}
@@ -814,10 +827,34 @@ const AppContent = () => {
     const tab = searchParams.get('tab') || 'inquiries';
 
     return (
-        <Inquiry
-            onBack={handleBackToHome}
-            initialTab={tab}
-        />
+        <div className="app">
+          <ParticleBackground />
+          <Header
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
+              onLoginClick={() => setIsLoginOpen(true)}
+              onCategorySelect={handleCategorySelect}
+              onProfileClick={handleProfileClick}
+              onInquiry={handleInquiry}
+              isLoggedIn={isLoggedIn}
+              userInfo={userInfo}
+              onChatRoom={handleChatRoom}
+              onLogout={handleLogout}
+              onAdminDashboard={handleAdminDashboard}
+          />
+          <Inquiry
+              onBack={handleBackToHome}
+              initialTab={tab}
+          />
+          {isLoginOpen && (
+            <Login
+                isOpen={isLoginOpen}
+                onClose={() => setIsLoginOpen(false)}
+                onLoginSuccess={handleLoginSuccess}
+            />
+          )}
+          <NotificationContainer isLoggedIn={isLoggedIn} />
+        </div>
     );
   };
 

@@ -24,10 +24,11 @@
   
   /* Gradients */
   --gradient-primary: linear-gradient(135deg, #FFB300, #FF8F00);
-  --gradient-growth: linear-gradient(135deg, #81C784, #4CAF50);
-  --gradient-energy: linear-gradient(135deg, #FFAB40, #FFC107);
+  --gradient-bright-yellow: linear-gradient(135deg, #FFCC02, #FFB300);
+  --gradient-growth: linear-gradient(135deg, #FF9800, #F57C00);
+  --gradient-warm-sunset: linear-gradient(135deg, #FFB74D, #FF8A65);
+  --gradient-energy: linear-gradient(135deg, #FFAB40, #FF9800);
   --gradient-bg: linear-gradient(135deg, #FFF8E1, #FFF3C4);
-  --gradient-warm: linear-gradient(145deg, #fff3c4, #fff8e1);
   
   /* Shadows */
   --shadow-soft: 0 4px 20px rgba(255, 179, 0, 0.1);

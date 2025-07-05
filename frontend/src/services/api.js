@@ -392,8 +392,8 @@ export const messageAPI = {
 
 // Payment API
 export const paymentAPI = {
-  // 결제 요청
-  createPayment: (paymentData) => api.post('/api/v1/payments', paymentData),
+  // 결제 준비
+  preparePayment: (paymentData) => api.post('/api/v1/payments/prepare', paymentData),
 
   // 토스페이먼츠 결제 승인
   confirmPayment: (confirmData) => api.post('/api/v1/payments/confirm',
@@ -409,15 +409,15 @@ export const paymentAPI = {
   // 결제 내역 조회
   getPaymentHistory: ({ page, size }) => api.get(`/api/v1/payments?page=${page}&size=${size}`),
 
-  // 결제 상세 조회
-  getPaymentDetail: (paymentId) => api.get(`/api/payments/${paymentId}`),
+  // 결제 상세 조회 (URL 패턴 통일)
+  getPaymentDetail: (paymentId) => api.get(`/api/v1/payments/${paymentId}`),
 };
 
 // Review API
 export const reviewAPI = {
   // 리뷰 목록 조회
   getReviews: (mentorId, params) =>
-      api.get(`/api/reviews/mentors/${mentorId}`, {params}),
+      api.get(`/api/mentors/${mentorId}/reviews`, {params}),
 
   // 리뷰 작성 (예약 기반)
   createReview: (reservationId, reviewData) => 
@@ -615,19 +615,6 @@ export const adminAPI = {
   registerCoupon: (couponData) => api.post('/api/admin/coupons', couponData),
 
   // [관리자] 쿠폰 목록 조회
-  /*findCoupons: (params = {}) => {
-    console.log('🔍 [adminAPI.findCoupons] 요청 시작, params:', params);
-    return api.get('/api/admin/coupons', {params})
-      .then(response => {
-        console.log('✅ [adminAPI.findCoupons] 성공:', response);
-        return response;
-      })
-      .catch(error => {
-        console.error('❌ [adminAPI.findCoupons] 실패:', error);
-        throw error;
-      });
-  },
-*/
   findCoupons: () => api.get('/api/admin/coupons'),
 
   // [관리자] 쿠폰 수정
