@@ -360,7 +360,7 @@
 .sidebar-logout-button {
   width: 100%;
   padding: 0.875rem;
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: #FFB74D;
   color: white;
   border: none;
   border-radius: 0.75rem;
@@ -372,7 +372,7 @@
 
 .sidebar-logout-button:hover {
   transform: scale(1.02);
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
 }
 
 /* 반응형 디자인 */
