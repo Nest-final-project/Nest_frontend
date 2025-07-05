@@ -5,6 +5,7 @@ import HeroSection from './components/HeroSection.jsx';
 import StatsSection from './components/StatsSection.jsx';
 import MentorSection from './components/MentorSection.jsx';
 import CTASection from './components/CTASection.jsx';
+import Footer from './components/Footer.jsx';
 import ParticleBackground from './components/ParticleBackground.jsx';
 import Login from './components/Login.jsx';
 import SocialSignup from './components/SocialSignup.jsx';
@@ -913,8 +914,7 @@ const AppContent = () => {
                   <StatsSection />
                   <MentorSection onMentorSelect={handleMentorSelect} />
                   <CTASection />
-                  
-
+                  <Footer />
                 </main>
               }
           />

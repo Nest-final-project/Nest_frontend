@@ -7,7 +7,6 @@ import ServiceFeatures from './sections/ServiceFeatures';
 import HowItWorks from './sections/HowItWorks';
 import StatisticsSection from './sections/StatisticsSection';
 import SuccessStories from './sections/SuccessStories';
-import CallToAction from './sections/CallToAction';
 import { authUtils, userInfoUtils } from '../../utils/tokenUtils';
 import './AboutPage.css';
 
@@ -95,7 +94,6 @@ const AboutPage = () => {
       <HowItWorks />
       <StatisticsSection />
       <SuccessStories />
-      <CallToAction />
     </div>
   );
 };
