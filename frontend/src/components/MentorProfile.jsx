@@ -55,6 +55,10 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
   const handleServiceSelect = (service) => setSelectedService(service);
 
   const handleBookingClick = () => {
+    if (userRole === null || userRole === undefined) {
+      window.location.href = '/login';
+      return;
+    }
     if (onBooking) {
       onBooking({ mentor: mentorDetails});
     }
@@ -70,7 +74,7 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
     popular: false
   }));
 
-  const userRole = userInfoUtils.getUserInfo().userRole;
+  const userRole = userInfoUtils.getUserInfo()?.userRole;
 
   if (loading) return <div>로딩 중...</div>;
   if (!mentorDetails) return <div>멘토 정보를 불러오지 못했습니다.</div>;
@@ -78,11 +82,25 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
   return (
       <div className="mentor-profile-container">
         <div className="profile-header">
-          <button className="back-button" onClick={onBack}>
-            <ArrowLeft className="icon" />
-          </button>
-          <div className="header-category">
-            {mentorDetails.category || '카테고리'}
+          <div className="header-left">
+            <button className="mentor-profile-back-button" onClick={onBack}>
+              <ArrowLeft className="icon" />
+            </button>
+          </div>
+          <div className="header-right">
+            {userRole ? (
+              <div className="header-profile"
+                   onClick={() => window.location.href = '/mypage'}>
+                <img src="/default-profile.svg" alt="프로필"
+                     className="profile-image"/>
+              </div>
+            ) : (
+              <button
+                className="login-button"
+                onClick={() => window.location.href = '/login'}>
+                로그인
+              </button>
+            )}
           </div>
         </div>
 
@@ -232,7 +250,8 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
         </div>
 
         <div className="fixed-bottom">
-          {userRole === 'MENTEE' && (<button
+          {(userRole === 'MENTEE' || userRole === null || userRole === undefined)
+              && (<button
                   className={`contact-button ${selectedService ? 'with-selection' : ''}`}
                   onClick={handleBookingClick}
               >

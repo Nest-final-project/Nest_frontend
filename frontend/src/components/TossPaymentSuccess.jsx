@@ -26,19 +26,22 @@ function TossPaymentSuccess({paymentData, onHome, onBack, onTossSuccess}) {
     // sessionStorage에서 결제 데이터 복원
     const savedPaymentData = sessionStorage.getItem('tossPaymentData');
     let reservationId = "";
+    let finalAmount = amount; // URL 파라미터의 amount (할인 전 원가)
 
     if (savedPaymentData) {
       try {
         const parsedData = JSON.parse(savedPaymentData);
         reservationId = parsedData.reservationId || "";
 
-        // URL에서 orderId나 amount가 없으면 저장된 데이터 사용
+        // ✅ 중요: sessionStorage에 저장된 할인된 금액을 우선 사용
+        if (parsedData.amount) {
+          finalAmount = parsedData.amount.toString();
+          console.log('🔍 금액 우선순위 - sessionStorage:', parsedData.amount, 'URL 파라미터:', amount);
+        }
+        
+        // URL에서 orderId가 없으면 저장된 데이터 사용
         if (!orderId && parsedData.orderId) {
           setPaymentInfo(prev => ({...prev, orderId: parsedData.orderId}));
-        }
-        if (!amount && parsedData.amount) {
-          setPaymentInfo(
-              prev => ({...prev, amount: parsedData.amount.toString()}));
         }
       } catch (e) {
         console.error('저장된 결제 데이터 파싱 실패:', e);
@@ -49,7 +52,18 @@ function TossPaymentSuccess({paymentData, onHome, onBack, onTossSuccess}) {
         || sessionStorage?.getItem("accessToken");
 
     setJwtToken(tokenFromStorage || "");
-    setPaymentInfo({paymentKey, orderId, amount, reservationId});
+    
+    // ✅ finalAmount 사용 (할인된 금액)
+    setPaymentInfo({paymentKey, orderId, amount: finalAmount, reservationId});
+    
+    console.log('📋 최종 결제 정보 설정:', {
+      paymentKey,
+      orderId, 
+      amount: finalAmount,
+      reservationId,
+      urlAmount: amount,
+      savedAmount: savedPaymentData ? JSON.parse(savedPaymentData).amount : 'none'
+    });
   }, []);
 
   // 🚀 자동 승인 처리 - 결제 정보가 준비되면 즉시 실행

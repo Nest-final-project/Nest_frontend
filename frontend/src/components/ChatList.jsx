@@ -444,7 +444,7 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
     return (
         <div className="chat-list-container">
           <div className="loading-container">
-            <div className="loading-spinner"></div>
+            <div className="chat-loading-spinner"></div>
             <p>채팅방 목록을 불러오는 중...</p>
           </div>
         </div>
