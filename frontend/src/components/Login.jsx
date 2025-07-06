@@ -65,7 +65,7 @@ const Login = ({ onLoginSuccess }) => {
         navigate('/');
       }
     } catch (err) {
-      setError('로그인 중 오류가 발생했습니다.');
+      setError('이메일 또는 비밀번호를 다시 확인하세요!');
     } finally {
       setIsLoading(false);
     }

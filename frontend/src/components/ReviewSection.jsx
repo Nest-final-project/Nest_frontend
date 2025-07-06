@@ -59,10 +59,7 @@ const ReviewSection = ({ mentorId }) => {
               // 다른 API 엔드포인트들 시도
               let userData = null;
               const endpointsToTry = [
-                () => userAPI.getUserById(menteeId),
-                () => api.get(`/api/users/${menteeId}/profile`),
-                () => api.get(`/api/profiles/user/${menteeId}`),
-                () => api.get(`/api/users/${menteeId}/info`)
+                () => userAPI.getUserById(menteeId)
               ];
 
               for (const apiCall of endpointsToTry) {
@@ -70,7 +67,7 @@ const ReviewSection = ({ mentorId }) => {
                   const response = await apiCall();
                   console.log('🔍 API 응답:', response);
                   userData = response.data.data || response.data;
-                  if (userData && (userData.nickName || userData.nickname)) {
+                  if (userData && userData.nickName) {
                     break; // nickName을 찾으면 중단
                   }
                 } catch (err) {
@@ -80,7 +77,7 @@ const ReviewSection = ({ mentorId }) => {
               }
 
               if (userData) {
-                const nickname = userData.nickName || userData.nickname || userData.name || '익명';
+                const nickname = userData.nickName;
                 console.log('✅ 닉네임 조회 성공:', nickname);
 
                 return {

@@ -55,6 +55,10 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
   const handleServiceSelect = (service) => setSelectedService(service);
 
   const handleBookingClick = () => {
+    if (userRole === null || userRole === undefined) {
+      window.location.href = '/login';
+      return;
+    }
     if (onBooking) {
       onBooking({ mentor: mentorDetails});
     }
@@ -70,12 +74,10 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
     popular: false
   }));
 
-  const userRole = userInfoUtils.getUserInfo().userRole;
+  const userRole = userInfoUtils.getUserInfo()?.userRole;
 
   if (loading) return <div>로딩 중...</div>;
   if (!mentorDetails) return <div>멘토 정보를 불러오지 못했습니다.</div>;
-
-  const currentUserInfo = userInfoUtils.getUserInfo();
 
   return (
       <div className="mentor-profile-container">
@@ -238,7 +240,8 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
         </div>
 
         <div className="fixed-bottom">
-          {userRole === 'MENTEE' && (<button
+          {(userRole === 'MENTEE' || userRole === null || userRole === undefined)
+              && (<button
                   className={`contact-button ${selectedService ? 'with-selection' : ''}`}
                   onClick={handleBookingClick}
               >
