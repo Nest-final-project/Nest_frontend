@@ -508,16 +508,6 @@
     gap: 1.5rem;
   }
 
-  .mentor-section,
-  .session-section,
-  .reservation-section,
-  .booking-section,
-  .rating-section,
-  .review-text-section {
-    padding: 1.5rem;
-    border-radius: 16px;
-  }
-
   .mentor-card {
     gap: 1rem;
   }
