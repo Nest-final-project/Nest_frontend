@@ -9,6 +9,7 @@ const PaymentsHistory = ({ userInfo }) => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

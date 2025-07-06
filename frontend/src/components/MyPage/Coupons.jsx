@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { userCouponAPI } from "../../services/api.js";
 import { useSearchParams } from 'react-router-dom';
-import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import {Star, ChevronLeft, ChevronRight, Gift} from 'lucide-react';
 import './Coupons.css';
 
 const Coupons = () => {
@@ -151,7 +151,7 @@ const Coupons = () => {
                 <div key={coupon.couponId} className={`coupon-card ${!isUsable ? 'coupon-card-disabled' : ''}`}>
                   <div className="coupon-card-top">
                     <div className="coupon-icon">
-                      <Star size={36} />
+                      <Gift size={36} color="black"/>
                     </div>
                     <div className="coupon-details">
                       <h4 className="coupon-name">{coupon.couponName}</h4>
