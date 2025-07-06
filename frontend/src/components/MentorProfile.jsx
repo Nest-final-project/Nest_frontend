@@ -206,7 +206,7 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
                           </div>
                       )}
                       <div className="service-header">
-                        <h3 className="service-name">{service.name}</h3>
+                        <h3 className="mp-service-name">{service.name}</h3>
                         <div className="service-duration">
                           {service.duration.map((dur, idx) => (
                               <span key={idx} className="duration-tag">{dur}</span>

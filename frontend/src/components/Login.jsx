@@ -161,8 +161,8 @@ const Login = ({ onLoginSuccess }) => {
             </button>
             <button onClick={handleNaverLogin}
                 className="social-button naver">
-              <div className="naver-logo">N</div>
-              <span>네이버로 시작하기</span>
+              <img className="naver-logo" src={"src/image/naver.png"} alt={"네이버로 시작하기"}/>
+              <span style={{ color: 'white' }}>네이버로 시작하기</span>
             </button>
           </div>
         </div>

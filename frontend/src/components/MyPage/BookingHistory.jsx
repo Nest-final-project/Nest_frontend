@@ -239,10 +239,9 @@ const BookingHistory = ({ userInfo }) => {
                       <span
                         className={`status-badge ${reservation.status.toLowerCase()}`}
                       >
-                        {reservation.status === 'CONFIRMED' ? '확정' :
-                         reservation.status === 'PENDING' ? '대기중' :
-                         reservation.status === 'COMPLETED' ? '완료' :
-                         reservation.status === 'CANCELLED' ? '취소됨' :
+                        {reservation.status === 'PAID' ? '예약 확정' :
+                         reservation.status === 'COMPLETED' ? '예약 완료' :
+                         reservation.status === 'CANCELED' ? '예약 취소' :
                          reservation.status}
                       </span>
                     </div>

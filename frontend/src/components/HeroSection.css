@@ -197,7 +197,7 @@ primary-button:active {
   transform: translateX(100%);
 }
 
-.secondary-button {
+.hero-secondary-button {
   padding: 1.25rem 2.5rem;
   font-weight: 700;
   font-size: 1.125rem;
@@ -213,12 +213,12 @@ primary-button:active {
   outline: none;
 }
 
-.secondary-button:focus {
+.hero-secondary-button:focus {
   outline: none;
   box-shadow: 0 4px 20px rgba(255, 179, 0, 0.2);
 }
 
-.secondary-button:hover {
+.hero-secondary-button:hover {
   background: var(--gradient-primary);
   color: white;
   border-color: var(--primary-orange);

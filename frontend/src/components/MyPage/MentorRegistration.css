@@ -208,7 +208,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+  background: linear-gradient(45deg, #ffa000, #ff6f00);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -239,7 +239,7 @@
 .content-area .avatar-initials {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background: rgba(255, 255, 255, 0);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -247,7 +247,7 @@
   font-size: 20px;
   font-weight: 700;
   color: white;
-  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0);
 }
 
 /* 아바타 이미지 스타일 */
@@ -651,7 +651,7 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+  background: white;
   border-radius: 20px;
   opacity: 0;
   z-index: -1;

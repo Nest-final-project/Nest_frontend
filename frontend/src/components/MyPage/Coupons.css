@@ -203,7 +203,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+  background: linear-gradient(135deg, #FFB300, #FF8F00);
   background-size: 300% 100%;
   animation: gradient-shift 3s ease infinite;
 }
@@ -224,7 +224,7 @@
 .coupon-icon {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ffb74d;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -268,7 +268,7 @@
 .coupon-discount {
   font-size: 1.8rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #6D4C41;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -307,9 +307,9 @@
 }
 
 .status-usable {
-  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  background: linear-gradient(45deg, #ffb74d, #ff9800);
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+  box-shadow: 0 4px 15px rgba(246, 91, 0, 0.53);
 }
 
 .status-used {
