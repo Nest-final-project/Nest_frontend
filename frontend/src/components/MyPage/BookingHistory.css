@@ -177,7 +177,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+  background: linear-gradient(135deg, #FFB300, #FF8F00);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -665,7 +665,7 @@
 
 /* 호버 시 글로우 효과 */
 .content-area .reservation-card:hover .reservation-title h4 {
-  color: #6366f1;
+  color: #6D4C41;
   transition: color 0.3s ease;
 }
 

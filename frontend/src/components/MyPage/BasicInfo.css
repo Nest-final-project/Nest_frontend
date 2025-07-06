@@ -134,7 +134,7 @@
   left: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #FFB300, #FF8F00);
   transform: scaleY(0);
   transition: transform 0.3s ease;
 }
@@ -150,7 +150,7 @@
 }
 
 .my-info-item label {
-  color: #667eea;
+  color: #6D4C41;
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;

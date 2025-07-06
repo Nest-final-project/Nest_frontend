@@ -9,6 +9,7 @@ const PaymentsHistory = ({ userInfo }) => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -158,13 +159,19 @@ const PaymentsHistory = ({ userInfo }) => {
     }
 
     try {
-      await paymentAPI.cancelPayment(paymentToCancelId, { cancelReason: cancelReasonInput });
+      const response = await paymentAPI.cancelPayment(paymentToCancelId, { cancelReason: cancelReasonInput });
       fetchPayments(currentPage, userInfo);
       showMessageBox('success', '결제 내역이 성공적으로 취소되었습니다.');
       handleCancelModalClose();
     } catch (error) {
-      console.error('결제 내역 취소 실패:', error);
-      showMessageBox('error', '결제 내역 취소에 실패했습니다. 다시 시도해 주세요.');
+      const errorMessage = error.response?.data?.message;
+
+      if (errorMessage === '예약 날짜가 지나 결제를 취소할 수 없습니다.') {
+        showMessageBox('error', errorMessage);
+      }  else {
+        console.error('결제 내역 취소 실패:', error);
+        showMessageBox('error', '결제 내역 취소에 실패했습니다. 다시 시도해 주세요.');
+      }
     }
   };
 
