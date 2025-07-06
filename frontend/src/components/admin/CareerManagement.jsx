@@ -435,18 +435,18 @@ const CareerManagement = ({isDarkMode}) => {
                       padding: '20px 32px',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'linear-gradient(145deg, #fff3c4, #fff8e1)';
-                      e.currentTarget.style.transform = 'translateX(4px)';
-                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 179, 0, 0.15)';
-                      e.currentTarget.style.borderLeft = '4px solid #ffb300';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgb(251, 249, 239)';
-                      e.currentTarget.style.transform = 'translateX(0)';
-                      e.currentTarget.style.boxShadow = 'none';
-                      e.currentTarget.style.borderLeft = 'none';
-                    }}>
+                         onMouseEnter={(e) => {
+                           e.currentTarget.style.background = 'linear-gradient(145deg, #fff3c4, #fff8e1)';
+                           e.currentTarget.style.transform = 'translateX(4px)';
+                           e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 179, 0, 0.15)';
+                           e.currentTarget.style.borderLeft = '4px solid #ffb300';
+                         }}
+                         onMouseLeave={(e) => {
+                           e.currentTarget.style.background = 'rgb(251, 249, 239)';
+                           e.currentTarget.style.transform = 'translateX(0)';
+                           e.currentTarget.style.boxShadow = 'none';
+                           e.currentTarget.style.borderLeft = 'none';
+                         }}>
                       <div className="table-cell" style={{
                         fontSize: '14px',
                         fontWeight: '500',

@@ -75,19 +75,25 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
   if (loading) return <div>로딩 중...</div>;
   if (!mentorDetails) return <div>멘토 정보를 불러오지 못했습니다.</div>;
 
+  const currentUserInfo = userInfoUtils.getUserInfo();
+
   return (
       <div className="mentor-profile-container">
         <div className="profile-header">
-          <button className="back-button" onClick={onBack}>
-            <ArrowLeft className="icon" />
-          </button>
-          <div className="header-category">
-            {mentorDetails.category || '카테고리'}
+          <div className="header-left">
+            <button className="mentor-profile-back-button" onClick={onBack}>
+              <ArrowLeft className="icon" />
+            </button>
+          </div>
+          <div className="header-profile"
+               onClick={() => window.location.href = '/mypage'}>
+            <img src="/default-profile.svg" alt="프로필"
+                 className="profile-image"/>
           </div>
         </div>
 
         <div className="profile-content">
-          <div className="profile-hero">
+        <div className="profile-hero">
             <div className={`profile-avatar gradient-bg-${mentorDetails.id}`}>
               {mentorDetails.imgUrl ? (
                   <img

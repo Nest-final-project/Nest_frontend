@@ -1,7 +1,7 @@
 .dynamic-background {
   position: fixed;
   inset: 0;
-  background: var(--gradient-bg);
+  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
   background-attachment: fixed;
   background-size: 400% 400%;
   animation: gradientShift 20s ease infinite;
@@ -23,21 +23,21 @@
 .gradient-overlay {
   position: absolute;
   inset: 0;
-  background: 
-    radial-gradient(circle at 20% 30%, rgba(255, 179, 0, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(255, 171, 64, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(255, 193, 7, 0.04) 0%, transparent 70%);
+  background:
+      radial-gradient(circle at 20% 30%, rgba(255, 179, 0, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(255, 171, 64, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(255, 193, 7, 0.04) 0%, transparent 70%);
   animation: pulse 6s ease-in-out infinite;
   z-index: 1; /* z-index 추가로 레이어 순서 명확히 */
   pointer-events: none; /* 클릭 이벤트 차단하지 않도록 */
 }
 
 @keyframes pulse {
-  0%, 100% { 
+  0%, 100% {
     opacity: 1;
     transform: scale(1);
   }
-  50% { 
+  50% {
     opacity: 0.8;
     transform: scale(1.05);
   }
@@ -88,7 +88,7 @@
     transform: translateY(100vh) translateX(0px) rotate(0deg) scale(0.5);
     opacity: 0;
   }
-  10% { 
+  10% {
     opacity: 0.7;
     transform: translateY(90vh) translateX(10px) rotate(45deg) scale(1);
   }
@@ -96,7 +96,7 @@
     opacity: 0.8;
     transform: translateY(50vh) translateX(50px) rotate(180deg) scale(1.2);
   }
-  90% { 
+  90% {
     opacity: 0.5;
     transform: translateY(10vh) translateX(80px) rotate(315deg) scale(0.8);
   }
@@ -171,10 +171,10 @@
     transform: translateY(100vh) translateX(0px) rotate(0deg);
     opacity: 0;
   }
-  5% { 
+  5% {
     opacity: 0.3;
   }
-  95% { 
+  95% {
     opacity: 0.1;
   }
   100% {
@@ -188,23 +188,23 @@
   .particle {
     animation-duration: 15s;
   }
-  
+
   .floating-circle {
     width: 120px;
     height: 120px;
   }
-  
+
   .floating-triangle {
     border-left-width: 40px;
     border-right-width: 40px;
     border-bottom-width: 60px;
   }
-  
+
   .floating-square {
     width: 50px;
     height: 50px;
   }
-  
+
   .chick-particle {
     font-size: 1rem;
   }
@@ -216,7 +216,7 @@
     animation: none;
     background: var(--bg-cream);
   }
-  
+
   .gradient-overlay,
   .particle,
   .floating-circle,
@@ -229,11 +229,11 @@
 }
 
 /* High contrast mode */
-@media (min-width: 1px) {
+@media (prefers-contrast: more) {
   .dynamic-background {
-    background: #FFF8E1;
+    background: var(--bg-cream);
   }
-  
+
   .gradient-overlay,
   .particle,
   .floating-circle,
@@ -242,4 +242,48 @@
   .chick-particle {
     display: none;
   }
+}
+
+/* 라이트모드 배경 */
+.dynamic-background:not(.dark-mode) {
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFFDE7 100%) !important;
+}
+
+/* 다크모드 지원 - 우선순위 높임 */
+body.dark-mode .dynamic-background,
+.dark-mode .dynamic-background,
+[data-theme="dark"] .dynamic-background,
+.dynamic-background.dark-mode {
+  background: linear-gradient(135deg, #111827 0%, #1f2937 100%) !important;
+}
+
+body.dark-mode .gradient-overlay,
+.dark-mode .gradient-overlay,
+[data-theme="dark"] .gradient-overlay {
+  background:
+      radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 70%) !important;
+}
+
+/* 다크모드에서 파티클 색상 조정 */
+body.dark-mode .particle:nth-child(3n+1),
+.dark-mode .particle:nth-child(3n+1),
+[data-theme="dark"] .particle:nth-child(3n+1) {
+  background: #3b82f6 !important;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5) !important;
+}
+
+body.dark-mode .particle:nth-child(3n+2),
+.dark-mode .particle:nth-child(3n+2),
+[data-theme="dark"] .particle:nth-child(3n+2) {
+  background: #8b5cf6 !important;
+  box-shadow: 0 0 4px rgba(139, 92, 246, 0.5) !important;
+}
+
+body.dark-mode .particle:nth-child(3n+3),
+.dark-mode .particle:nth-child(3n+3),
+[data-theme="dark"] .particle:nth-child(3n+3) {
+  background: #6366f1 !important;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.5) !important;
 }

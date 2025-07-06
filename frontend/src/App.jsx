@@ -789,7 +789,8 @@ const AppContent = () => {
 
     return (
         <div className="app">
-          <ParticleBackground />
+          {/* 관리자 페이지에서는 ParticleBackground 제외 */}
+          {!location.pathname.startsWith('/admin') && <ParticleBackground />}
           <Header
               isMenuOpen={isMenuOpen}
               setIsMenuOpen={setIsMenuOpen}
@@ -827,7 +828,8 @@ const AppContent = () => {
 
     return (
         <div className="app">
-          <ParticleBackground />
+          {/* 관리자 페이지에서는 ParticleBackground 제외 */}
+          {!location.pathname.startsWith('/admin') && <ParticleBackground />}
           <Header
               isMenuOpen={isMenuOpen}
               setIsMenuOpen={setIsMenuOpen}
@@ -886,7 +888,8 @@ const AppContent = () => {
   // 메인 페이지 렌더링
   return (
       <div className="app">
-        <ParticleBackground />
+        {/* 관리자 페이지에서는 ParticleBackground 제외 */}
+        {!location.pathname.startsWith('/admin') && <ParticleBackground />}
         {/* Header는 메인 페이지에서만 표시 */}
         {location.pathname === '/' && (
           <Header
