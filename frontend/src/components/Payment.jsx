@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import { ArrowLeft, CreditCard, Calendar, Clock, User, Shield, CheckCircle, Gift, X } from 'lucide-react';
 import './Payment.css';
-import { ticketAPI, userCouponAPI, userAPI } from "../services/api";
+import { ticketAPI, userCouponAPI, userAPI, reservationAPI } from "../services/api";
 
 const Payment = ({ bookingData, onBack, onTossPayment }) => {
   const [paymentMethod, setPaymentMethod] = useState('tosspay');
@@ -146,6 +146,28 @@ const Payment = ({ bookingData, onBack, onTossPayment }) => {
     setSelectedCoupon(null);
   };
 
+  const handleBack = async () => {
+    try {
+      // 확인 다이얼로그 표시
+      const confirmed = window.confirm('결제를 취소하고 예약 선택으로 돌아가시겠습니까? 현재 예약이 취소됩니다.');
+      
+      if (confirmed) {
+        // 예약 삭제 API 호출
+        if (bookingData?.reservationId) {
+          console.log('🗑️ 예약 삭제 시작:', bookingData.reservationId);
+          await reservationAPI.cancelReservation(bookingData.reservationId);
+          console.log('✅ 예약 삭제 완료');
+        }
+        
+        // 부모 컴포넌트의 onBack 호출
+        onBack();
+      }
+    } catch (error) {
+      console.error('❌ 예약 삭제 실패:', error);
+      alert('예약 취소 중 오류가 발생했습니다.');
+    }
+  };
+
   const handleTossPayment = () => {
     console.log('🚀 토스 결제 버튼 클릭됨');
     
@@ -237,7 +259,7 @@ const Payment = ({ bookingData, onBack, onTossPayment }) => {
   return (
     <div className="payment-container">
       <div className="payment-header">
-        <button className="payment-back-button" onClick={onBack}>
+        <button className="payment-back-button" onClick={handleBack}>
           <ArrowLeft className="icon" />
         </button>
         <h1>결제하기</h1>
