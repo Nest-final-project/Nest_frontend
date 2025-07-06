@@ -5,7 +5,6 @@ import HeroSection from './components/HeroSection.jsx';
 import StatsSection from './components/StatsSection.jsx';
 import MentorSection from './components/MentorSection.jsx';
 import CTASection from './components/CTASection.jsx';
-import ParticleBackground from './components/ParticleBackground.jsx';
 import Login from './components/Login.jsx';
 import SocialSignup from './components/SocialSignup.jsx';
 import MentorList from './components/MentorList.jsx';
@@ -789,8 +788,6 @@ const AppContent = () => {
 
     return (
         <div className="app">
-          {/* 관리자 페이지에서는 ParticleBackground 제외 */}
-          {!location.pathname.startsWith('/admin') && <ParticleBackground />}
           <Header
               isMenuOpen={isMenuOpen}
               setIsMenuOpen={setIsMenuOpen}
@@ -828,8 +825,6 @@ const AppContent = () => {
 
     return (
         <div className="app">
-          {/* 관리자 페이지에서는 ParticleBackground 제외 */}
-          {!location.pathname.startsWith('/admin') && <ParticleBackground />}
           <Header
               isMenuOpen={isMenuOpen}
               setIsMenuOpen={setIsMenuOpen}
@@ -888,8 +883,6 @@ const AppContent = () => {
   // 메인 페이지 렌더링
   return (
       <div className="app">
-        {/* 관리자 페이지에서는 ParticleBackground 제외 */}
-        {!location.pathname.startsWith('/admin') && <ParticleBackground />}
         {/* Header는 메인 페이지에서만 표시 */}
         {location.pathname === '/' && (
           <Header

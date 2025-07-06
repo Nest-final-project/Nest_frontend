@@ -170,7 +170,7 @@ api.interceptors.response.use(
             // 현재 페이지가 로그인 페이지가 아닌 경우에만 처리
             if (!window.location.pathname.includes('/login') && !sessionExpireAlertShown) {
               sessionExpireAlertShown = true;
-              alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+              alert('로그인이 필요합니다!');
               
               // 홈페이지로 리다이렉트 (로그인 상태 초기화)
               setTimeout(() => {

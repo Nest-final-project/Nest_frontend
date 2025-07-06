@@ -317,7 +317,7 @@ const Inquiry = ({onBack, initialTab = 'inquiries'}) => {
         setInquiries(list);
       }
     } catch (error) {
-      alert('내 문의 내역을 불러오는데 오류가 발생했습니다.');
+
     } finally {
       setLoading(false);
     }
