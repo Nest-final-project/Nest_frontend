@@ -202,7 +202,7 @@ const ReviewWrite = () => {
 
           <section className="reservation-section">
             <div className="reservation-card">
-              <h3 className="section-title">
+              <h3 className="review-section-title">
                 <Calendar className="section-icon" />
                 예약 정보
               </h3>
@@ -326,7 +326,7 @@ const ReviewWrite = () => {
           )}
 
           <section className="review-text-section">
-            <h3 className="section-title">상세 후기</h3>
+            <h3 className="review-section-title">상세 후기</h3>
             <div className="textarea-container">
               <textarea
                   className="review-textarea"
