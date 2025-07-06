@@ -87,15 +87,25 @@ const MentorProfile = ({ mentor, onBack, onBooking }) => {
               <ArrowLeft className="icon" />
             </button>
           </div>
-          <div className="header-profile"
-               onClick={() => window.location.href = '/mypage'}>
-            <img src="/default-profile.svg" alt="프로필"
-                 className="profile-image"/>
+          <div className="header-right">
+            {userRole ? (
+              <div className="header-profile"
+                   onClick={() => window.location.href = '/mypage'}>
+                <img src="/default-profile.svg" alt="프로필"
+                     className="profile-image"/>
+              </div>
+            ) : (
+              <button
+                className="login-button"
+                onClick={() => window.location.href = '/login'}>
+                로그인
+              </button>
+            )}
           </div>
         </div>
 
         <div className="profile-content">
-        <div className="profile-hero">
+          <div className="profile-hero">
             <div className={`profile-avatar gradient-bg-${mentorDetails.id}`}>
               {mentorDetails.imgUrl ? (
                   <img

@@ -50,51 +50,51 @@ const ReviewSection = ({ mentorId }) => {
 
       // 각 리뷰에 대해 mentee 닉네임 조회
       const reviewsWithNicknames = await Promise.all(
-        reviewList.map(async (review) => {
-          try {
-            const menteeId = review.mentee;
-            console.log('👤 menteeId:', menteeId, 'for review:', review.id);
+          reviewList.map(async (review) => {
+            try {
+              const menteeId = review.mentee;
+              console.log('👤 menteeId:', menteeId, 'for review:', review.id);
 
-            if (menteeId) {
-              // 다른 API 엔드포인트들 시도
-              let userData = null;
-              const endpointsToTry = [
-                () => userAPI.getUserById(menteeId)
-              ];
+              if (menteeId) {
+                // 다른 API 엔드포인트들 시도
+                let userData = null;
+                const endpointsToTry = [
+                  () => userAPI.getUserById(menteeId)
+                ];
 
-              for (const apiCall of endpointsToTry) {
-                try {
-                  const response = await apiCall();
-                  console.log('🔍 API 응답:', response);
-                  userData = response.data.data || response.data;
-                  if (userData && userData.nickName) {
-                    break; // nickName을 찾으면 중단
+                for (const apiCall of endpointsToTry) {
+                  try {
+                    const response = await apiCall();
+                    console.log('🔍 API 응답:', response);
+                    userData = response.data.data || response.data;
+                    if (userData && (userData.nickName || userData.nickname)) {
+                      break; // nickName을 찾으면 중단
+                    }
+                  } catch (err) {
+                    console.log('API 시도 실패:', err.response?.status);
+                    continue;
                   }
-                } catch (err) {
-                  console.log('API 시도 실패:', err.response?.status);
-                  continue;
+                }
+
+                if (userData) {
+                  const nickname = userData.nickName || userData.nickname || userData.name || '익명';
+                  console.log('✅ 닉네임 조회 성공:', nickname);
+
+                  return {
+                    ...review,
+                    reviewerName: nickname
+                  };
                 }
               }
-
-              if (userData) {
-                const nickname = userData.nickName;
-                console.log('✅ 닉네임 조회 성공:', nickname);
-
-                return {
-                  ...review,
-                  reviewerName: nickname
-                };
-              }
+            } catch (error) {
+              console.error('❌ 사용자 정보 조회 실패:', error);
             }
-          } catch (error) {
-            console.error('❌ 사용자 정보 조회 실패:', error);
-          }
 
-          return {
-            ...review,
-            reviewerName: '익명'
-          };
-        })
+            return {
+              ...review,
+              reviewerName: '익명'
+            };
+          })
       );
 
       setReviews(reviewsWithNicknames);
@@ -118,76 +118,76 @@ const ReviewSection = ({ mentorId }) => {
 
   if (loading) {
     return (
-      <div className="review-section">
-        <div className="review-loading">리뷰를 불러오는 중...</div>
-      </div>
+        <div className="review-section">
+          <div className="review-loading">리뷰를 불러오는 중...</div>
+        </div>
     );
   }
 
   return (
-    <div className="review-section">
-      <div className="review-header">
-        <h2 className="section-title">멘토 리뷰</h2>
-        {totalReviews > 0 && (
-          <div className="review-summary">
-            <span className="review-count">{totalReviews}개의 리뷰</span>
-          </div>
-        )}
-      </div>
-
-      {reviews.length === 0 ? (
-        <div className="no-reviews">
-          <p>아직 작성된 리뷰가 없습니다.</p>
+      <div className="review-section">
+        <div className="review-header">
+          <h2 className="section-title">멘토 리뷰</h2>
+          {totalReviews > 0 && (
+              <div className="review-summary">
+                <span className="review-count">{totalReviews}개의 리뷰</span>
+              </div>
+          )}
         </div>
-      ) : (
-        <div className="reviews-content">
-          <div className="reviews-list">
-            {reviews.map((review) => {
-              console.log('📝 개별 리뷰 데이터:', review);
-              return (
-              <div key={review.id} className="review-item">
-                <div className="review-header-info">
-                  <div className="reviewer-info">
+
+        {reviews.length === 0 ? (
+            <div className="no-reviews">
+              <p>아직 작성된 리뷰가 없습니다.</p>
+            </div>
+        ) : (
+            <div className="reviews-content">
+              <div className="reviews-list">
+                {reviews.map((review) => {
+                  console.log('📝 개별 리뷰 데이터:', review);
+                  return (
+                      <div key={review.id} className="review-item">
+                        <div className="review-header-info">
+                          <div className="reviewer-info">
                     <span className="reviewer-name">
                       {review.reviewerName || review.writerName || review.userName || review.nickname || review.name || '익명'}
                     </span>
-                  </div>
-                  <span className="review-date">
+                          </div>
+                          <span className="review-date">
                     {formatDate(review.created_At || review.createdAt)}
                   </span>
-                </div>
-                <div className="review-content">
-                  <p>{review.content}</p>
-                </div>
+                        </div>
+                        <div className="review-content">
+                          <p>{review.content}</p>
+                        </div>
+                      </div>
+                  );
+                })}
               </div>
-              );
-            })}
-          </div>
 
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button
-                className="page-btn"
-                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
-                disabled={currentPage === 0}
-              >
-                이전
-              </button>
-              <span className="page-info">
+              {totalPages > 1 && (
+                  <div className="pagination">
+                    <button
+                        className="page-btn"
+                        onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                        disabled={currentPage === 0}
+                    >
+                      이전
+                    </button>
+                    <span className="page-info">
                 {currentPage + 1} / {totalPages}
               </span>
-              <button
-                className="page-btn"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
-                disabled={currentPage === totalPages - 1}
-              >
-                다음
-              </button>
+                    <button
+                        className="page-btn"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                        disabled={currentPage === totalPages - 1}
+                    >
+                      다음
+                    </button>
+                  </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
-    </div>
+        )}
+      </div>
   );
 };
 
