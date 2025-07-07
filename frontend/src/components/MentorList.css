@@ -352,7 +352,7 @@
 .mentorProfile-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.5rem; /* 키워드가 없어도 동일한 카드크기 유지*/
 }
 
 .mentorProfile-tag {

@@ -5,6 +5,7 @@ import HeroSection from './components/HeroSection.jsx';
 import StatsSection from './components/StatsSection.jsx';
 import MentorSection from './components/MentorSection.jsx';
 import CTASection from './components/CTASection.jsx';
+import Footer from './components/Footer.jsx';
 import Login from './components/Login.jsx';
 import SocialSignup from './components/SocialSignup.jsx';
 import MentorList from './components/MentorList.jsx';
@@ -22,6 +23,7 @@ import ChatContainer from './components/ChatContainer.jsx';
 import NotificationContainer from './components/NotificationContainer.jsx';
 import Inquiry from './components/Inquiry.jsx';
 import AdminDashboard from './components/admin/AdminDashboard.jsx';
+import AboutPage from './components/About/AboutPage.jsx';
 import {authUtils, userInfoUtils} from './utils/tokenUtils';
 import {registerDebugFunctions} from './utils/websocketDebug';
 import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 'react-router-dom';
@@ -908,8 +910,7 @@ const AppContent = () => {
                   <StatsSection />
                   <MentorSection onMentorSelect={handleMentorSelect} />
                   <CTASection />
-                  
-
+                  <Footer />
                 </main>
               }
           />
@@ -935,6 +936,7 @@ const AppContent = () => {
           <Route path="/social-signup" element={<SocialSignup />} />
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/about" element={<AboutPage />} />
         </Routes>
         <NotificationContainer isLoggedIn={isLoggedIn} />
       </div>
