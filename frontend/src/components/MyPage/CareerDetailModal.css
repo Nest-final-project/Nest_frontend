@@ -1,0 +1,619 @@
+/* CareerDetailModal.css - Ultra Modern & Sophisticated Design */
+
+/* 모달 백드롭 */
+.career-detail-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: backdropFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* 메인 모달 컨테이너 */
+.career-detail-modal {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%);
+  border-radius: 24px;
+  box-shadow: 
+    0 32px 64px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 0;
+  min-width: 480px;
+  max-width: 600px;
+  width: 90vw;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: default;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: scale(0.8) translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 모달 헤더 */
+.career-detail-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, 
+    #667eea 0%, 
+    #764ba2 25%, 
+    #f093fb 50%, 
+    #f5576c 75%, 
+    #4facfe 100%);
+  background-size: 200% 100%;
+  animation: gradientShift 3s ease-in-out infinite;
+  border-radius: 24px 24px 0 0;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* 모달 콘텐츠 영역 */
+.career-detail-modal-content {
+  padding: 36px 32px 24px 32px;
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
+}
+
+.career-detail-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.career-detail-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.career-detail-modal-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #667eea, #764ba2);
+  border-radius: 3px;
+}
+
+.career-detail-modal-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #5a67d8, #553c9a);
+}
+
+/* 제목 스타일 */
+.career-detail-modal h2 {
+  margin: 0 0 24px 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1a202c;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.career-detail-modal h2::before {
+  content: '🏢';
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+/* 정보 섹션 스타일 */
+.career-detail-modal p {
+  margin: 0 0 16px 0;
+  color: #4a5568;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.6;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.career-detail-modal p:last-of-type {
+  border-bottom: none;
+}
+
+.career-detail-modal p:hover {
+  background: rgba(102, 126, 234, 0.02);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 -12px 16px -12px;
+}
+
+.career-detail-modal p b {
+  color: #2d3748;
+  font-weight: 700;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+/* 아이콘 추가 */
+.career-detail-modal p b::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: block;
+  box-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
+}
+
+/* 스킬 태그 컨테이너 */
+.career-detail-modal .skills-container {
+  margin: 20px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+  border-radius: 16px;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.career-detail-modal .skills-container b {
+  display: block;
+  margin-bottom: 12px;
+  color: #2d3748;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill-tag {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.skill-tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.skill-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.skill-tag:hover::before {
+  left: 100%;
+}
+
+/* 자격증 섹션 */
+.certificates-container {
+  margin: 20px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.05), rgba(56, 217, 169, 0.05));
+  border-radius: 16px;
+  border: 1px solid rgba(78, 205, 196, 0.1);
+}
+
+.certificates-container b {
+  display: block;
+  margin-bottom: 16px;
+  color: #2d3748;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.certificates-container b::before {
+  content: '🏆';
+  font-size: 1.2rem;
+}
+
+.certificates-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.certificate-item {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(78, 205, 196, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.certificate-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #4ecdc4, #38d9a9);
+}
+
+.certificate-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 16px rgba(78, 205, 196, 0.2);
+  background: rgba(255, 255, 255, 1);
+}
+
+/* 액션 버튼 영역 */
+.modal-actions {
+  padding: 20px 32px 28px 32px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.8), rgba(255, 255, 255, 0.9));
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  backdrop-filter: blur(10px);
+}
+
+/* 버튼 기본 스타일 */
+.modal-actions button {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  min-width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* 버튼 호버 이펙트 */
+.modal-actions button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.4s ease;
+  z-index: 0;
+}
+
+.modal-actions button:hover::before {
+  width: 200%;
+  height: 200%;
+}
+
+.modal-actions button span {
+  position: relative;
+  z-index: 1;
+}
+
+/* 개별 버튼 스타일 */
+.career-detail-modal-close-btn {
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+  color: #4a5568;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.career-detail-modal-close-btn:hover {
+  background: linear-gradient(135deg, #cbd5e0, #a0aec0);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  color: #2d3748;
+}
+
+.modal-edit-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.modal-edit-btn:hover {
+  background: linear-gradient(135deg, #5a67d8, #553c9a);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.modal-delete-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.modal-delete-btn:hover {
+  background: linear-gradient(135deg, #ff5252, #e53e3e);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.modal-edit-cert-btn {
+  background: linear-gradient(135deg, #4ecdc4, #38d9a9);
+  color: white;
+  box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+}
+
+.modal-edit-cert-btn:hover {
+  background: linear-gradient(135deg, #38d9a9, #20c997);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+}
+
+/* 버튼 아이콘 추가 */
+.modal-edit-btn::after {
+  content: '✏️';
+  margin-left: 4px;
+}
+
+.modal-delete-btn::after {
+  content: '🗑️';
+  margin-left: 4px;
+}
+
+.modal-edit-cert-btn::after {
+  content: '📜';
+  margin-left: 4px;
+}
+
+.modal-close-btn::after {
+  content: '✕';
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+/* 로딩 상태 */
+.modal-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.modal-actions button:disabled::before {
+  display: none;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .career-detail-modal {
+    min-width: 320px;
+    width: 95vw;
+    max-height: 90vh;
+    border-radius: 20px;
+    margin: 10px;
+  }
+
+  .career-detail-modal-content {
+    padding: 28px 24px 20px 24px;
+  }
+
+  .career-detail-modal h2 {
+    font-size: 1.75rem;
+    margin-bottom: 20px;
+  }
+
+  .career-detail-modal p {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .career-detail-modal p b {
+    min-width: auto;
+  }
+
+  .modal-actions {
+    padding: 16px 24px 20px 24px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+  }
+
+  .skills-tags {
+    gap: 6px;
+  }
+
+  .skill-tag {
+    font-size: 0.8rem;
+    padding: 5px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .career-detail-modal {
+    border-radius: 16px;
+  }
+
+  .career-detail-modal-content {
+    padding: 24px 20px 16px 20px;
+  }
+
+  .career-detail-modal h2 {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  .modal-actions {
+    padding: 12px 20px 16px 20px;
+  }
+}
+
+/* 고해상도 디스플레이 최적화 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .career-detail-modal {
+    box-shadow: 
+      0 32px 64px rgba(0, 0, 0, 0.15),
+      0 0 0 0.5px rgba(255, 255, 255, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* 프린트 최적화 */
+@media print {
+  .career-detail-modal-backdrop {
+    position: static;
+    background: none;
+    backdrop-filter: none;
+  }
+
+  .career-detail-modal {
+    box-shadow: none;
+    border: 1px solid #000;
+    background: white;
+    border-radius: 0;
+    max-height: none;
+    width: 100%;
+    min-width: auto;
+  }
+
+  .career-detail-modal::before {
+    display: none;
+  }
+
+  .modal-actions {
+    display: none;
+  }
+
+  .career-detail-modal h2 {
+    color: #000;
+  }
+
+  .career-detail-modal p,
+  .career-detail-modal p b {
+    color: #000;
+  }
+
+  .skill-tag {
+    background: #000 !important;
+    color: white;
+    border: 1px solid #000;
+  }
+
+  .skills-container,
+  .certificates-container {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+  }
+}
+
+/* 애니메이션 비활성화 옵션 */
+@media (prefers-reduced-motion: reduce) {
+  .career-detail-modal-backdrop,
+  .career-detail-modal,
+  .modal-actions button,
+  .skill-tag,
+  .certificate-item {
+    animation: none;
+    transition: none;
+  }
+
+  .career-detail-modal::before {
+    animation: none;
+  }
+}
+
+/* 포커스 접근성 */
+.career-detail-modal:focus-within {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.modal-actions button:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* 스크롤바 스타일 향상 */
+.career-detail-modal-content {
+  scrollbar-gutter: stable;
+}
+
+/* 텍스트 선택 스타일 */
+.career-detail-modal ::selection {
+  background: rgba(102, 126, 234, 0.2);
+  color: inherit;
+}
+
+.career-detail-modal ::-moz-selection {
+  background: rgba(102, 126, 234, 0.2);
+  color: inherit;
+}

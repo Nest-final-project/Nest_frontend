@@ -1,0 +1,737 @@
+/* MentorRegistration.css - 모던하고 트렌디한 스타일 */
+
+/* MyPage 컨테이너 내부에서의 우선순위 확보 */
+.content-area .mentor-registration-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0;
+  margin: -2.5rem;
+  margin-top: -1rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 16px;
+}
+
+/* 섹션 헤더 */
+.content-area .section-header {
+  background: white;
+  border-radius: 16px 16px 0 0;
+  padding: 32px;
+  border-bottom: 1px solid #e2e8f0;
+  margin: 0;
+}
+
+.content-area .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.content-area .header-text h3 {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e293b 0%, #64748b 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 8px 0;
+  color: transparent;
+}
+
+.content-area .header-text p {
+  color: #64748b;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.content-area .header-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.content-area .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e0f2fe 100%);
+  padding: 16px 24px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  min-width: 100px;
+}
+
+.content-area .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3b82f6;
+  line-height: 1;
+}
+
+.content-area .stat-label {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* 로딩 상태 */
+.content-area .loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e0f2fe 100%);
+  border-radius: 16px;
+  margin: 24px;
+}
+
+.content-area .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e0f2fe;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: mentorSpin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+.content-area .loading-state p {
+  color: #64748b;
+  font-weight: 500;
+  margin: 0;
+  font-size: 16px;
+}
+
+/* 에러 상태 */
+.content-area .mentor-profile-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fef7f0 100%);
+  border-radius: 16px;
+  margin: 24px;
+  padding: 48px;
+  text-align: center;
+}
+
+.content-area .error-icon {
+  margin-bottom: 24px;
+  opacity: 0.7;
+}
+
+.content-area .error-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #991b1b;
+  margin-bottom: 8px;
+}
+
+.content-area .error-desc {
+  color: #991b1b;
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+.content-area .mentor-profile-error button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.content-area .mentor-profile-error button:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* 멘토 프로필 리스트 */
+.content-area .mentor-profile-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  padding: 24px;
+  flex: 1; /* ⭐ 부모 flex 컨테이너 내에서 사용 가능한 공간을 채우도록 합니다. */
+  overflow-y: auto; /* ⭐ 세로 스크롤바를 필요할 때만 표시합니다. */
+  max-height: 500px; /* ⭐ 스크롤이 시작될 최대 높이를 설정합니다. (필요에 따라 조절) */
+  /* min-height를 설정하여 내용이 적을 때도 최소한의 높이를 가질 수 있습니다. */
+  /* min-height: 200px; */
+  border-radius: 16px; /* 컨테이너 자체에 둥근 모서리 적용 */
+  background-color: #f8fafc; /* 배경색 추가 (선택 사항) */
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.05); /* 내부 그림자 (선택 사항) */
+}
+/* ⭐ 스크롤바 스타일링 (선택 사항) */
+.mentor-profile-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mentor-profile-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.mentor-profile-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.mentor-profile-list::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 멘토 프로필 카드 */
+.content-area .mentor-profile-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.content-area .mentor-profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(45deg, #ffa000, #ff6f00);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.content-area .mentor-profile-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  border-color: #cbd5e1;
+}
+
+.content-area .mentor-profile-card:hover::before {
+  opacity: 1;
+}
+
+/* 프로필 카드 헤더 */
+.content-area .profile-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.content-area .profile-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.content-area .avatar-initials {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0);
+}
+
+/* 아바타 이미지 스타일 */
+.content-area .avatar-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+  border: 2px solid white;
+}
+
+.content-area .status-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: #10b981;
+  border: 3px solid white;
+  border-radius: 50%;
+}
+
+.content-area .profile-basic-info {
+  flex: 1;
+}
+
+.content-area .profile-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+
+.content-area .profile-title {
+  color: #64748b;
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.content-area .category-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  color: #3730a3;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 프로필 카드 본문 */
+.content-area .profile-card-body {
+  margin-bottom: 20px;
+}
+
+.content-area .introduction-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.content-area .section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 8px 0;
+}
+
+.content-area .introduction-text {
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 프로필 카드 푸터 */
+.content-area .profile-card-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.content-area .profile-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.content-area .profile-action-btn.primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.content-area .profile-action-btn.primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #5b21b6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.content-area .profile-action-btn.secondary {
+  background: white;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.content-area .profile-action-btn.secondary:hover {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+/* 삭제 버튼 스타일 */
+.content-area .profile-action-btn.danger {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.content-area .profile-action-btn.danger:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.15));
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* 삭제 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.delete-modal-container {
+  background: white;
+  border-radius: 20px;
+  padding: 0;
+  max-width: 480px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.delete-modal-header {
+  position: relative;
+  padding: 32px 32px 24px 32px;
+  text-align: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.delete-modal-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px auto;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ef4444;
+}
+
+.delete-modal-header h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.delete-modal-body {
+  padding: 24px 32px;
+}
+
+.profile-delete-info h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.delete-warning {
+  color: #64748b;
+  margin: 0 0 16px 0;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.delete-warning-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
+  border-radius: 12px;
+  padding: 16px 20px;
+  border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.delete-warning-list li {
+  color: #ef4444;
+  padding: 6px 0;
+  position: relative;
+  padding-left: 20px;
+  font-size: 14px;
+}
+
+.delete-warning-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #ef4444;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.delete-modal-footer {
+  padding: 24px 32px 32px 32px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.cancel-btn {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.cancel-btn:hover {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.delete-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 빈 상태 */
+.content-area .mentor-profile-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e0f2fe 100%);
+  border-radius: 16px;
+  margin: 24px;
+  padding: 48px;
+  text-align: center;
+}
+
+.content-area .empty-icon {
+  margin-bottom: 24px;
+  opacity: 0.7;
+}
+
+.content-area .empty-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.content-area .empty-desc {
+  color: #64748b;
+  margin-bottom: 24px;
+  max-width: 400px;
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+.content-area .mentor-register-btn,
+.content-area .mentor-add-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.content-area .mentor-register-btn:hover,
+.content-area .mentor-add-btn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #5b21b6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.content-area .mentor-add-btn {
+  margin: 0 24px 24px auto;
+  display: block;
+}
+
+/* 카드 글로우 효과 */
+.content-area .card-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: white;
+  border-radius: 20px;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+.content-area .mentor-profile-card:hover .card-glow {
+  opacity: 0.1;
+}
+
+/* 애니메이션 */
+@keyframes mentorSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 카드 등장 애니메이션 */
+.content-area .mentor-profile-card {
+  animation: slideInUp 0.4s ease-out;
+}
+
+.content-area .mentor-profile-card[data-delay="1"] {
+  animation-delay: 0.1s;
+}
+
+.content-area .mentor-profile-card[data-delay="2"] {
+  animation-delay: 0.2s;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .content-area .mentor-registration-container {
+    margin: -1.5rem;
+  }
+  
+  .content-area .section-header {
+    padding: 24px;
+  }
+  
+  .content-area .header-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .content-area .mentor-profile-list {
+    padding: 16px;
+  }
+  
+  .content-area .mentor-profile-card {
+    padding: 16px;
+  }
+  
+  .content-area .profile-card-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+  }
+  
+  .content-area .profile-card-footer {
+    justify-content: stretch;
+  }
+  
+  .content-area .profile-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

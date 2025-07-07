@@ -1,0 +1,446 @@
+/* TossPayment 전용 CSS - Payment.css와 호환되도록 녹색 테마로 변경 */
+
+/* 할인 내역 표시 스타일 */
+.discount-breakdown {
+  background: linear-gradient(135deg, #f8fffe 0%, #f0fdfa 100%);
+  border: 2px solid #10b981;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.discount-breakdown::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.discount-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 1rem;
+}
+
+.discount-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.discount-value {
+  font-weight: 700;
+  color: #10b981;
+}
+
+.discount-minus {
+  color: #f59e0b !important;
+}
+
+.discount-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d1d5db, transparent);
+  margin: 12px 0;
+}
+
+.discount-total {
+  background: rgba(16, 185, 129, 0.1);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 8px -4px;
+}
+
+.discount-total .discount-value {
+  font-size: 1.1rem;
+  color: #059669;
+}
+
+.discount-final {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: white !important;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 8px -4px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.discount-final .discount-label,
+.discount-final .discount-value {
+  color: white !important;
+  font-weight: 700;
+}
+
+.discount-final-amount {
+  font-size: 1.2rem !important;
+}
+
+.discount-note {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+  font-size: 0.85rem;
+  color: #1e40af;
+  line-height: 1.4;
+}
+
+/* 토스 결제 버튼 스타일 - 녹색 테마로 변경 */
+.toss-payment-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #15803D 0%, #166534 100%);
+  box-shadow: 0 4px 16px rgba(21, 128, 61, 0.3);
+}
+
+.toss-payment-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(21, 128, 61, 0.4);
+  background: linear-gradient(135deg, #166534 0%, #14532d 100%);
+}
+
+.toss-payment-button:active {
+  transform: translateY(0);
+}
+
+/* 토스 결제 전용 카드 스타일 - 녹색 테마로 변경 */
+.toss-payment-card {
+  border: 2px solid #15803D;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #15803D 0%, #166534 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.toss-payment-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+/* 예약 정보 박스 스타일 - Payment.js와 일치하도록 변경 */
+.booking-info-box {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.booking-info-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #15803D, #16a34a);
+  border-radius: 12px 12px 0 0;
+}
+
+/* 결제 상태 아이콘 */
+.payment-status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* 성공 상태 */
+.payment-status-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+}
+
+/* 실패 상태 */
+.payment-status-error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+
+/* 로딩 스피너 개선 */
+.toss-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 폼 입력 필드 개선 - 녹색 테마로 변경 */
+.toss-input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.toss-input-group input {
+  color: #1f2937 !important; /* 텍스트 색상 강제 적용 */
+  background: #ffffff !important; /* 배경색 강제 적용 */
+  border: 1px solid #d1d5db !important;
+}
+
+.toss-input-group input:focus {
+  border-color: #15803D !important; /* 녹색 포커스 색상 */
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1) !important; /* 녹색 그림자 */
+  outline: none !important;
+  color: #1f2937 !important; /* 포커스 시에도 텍스트 색상 유지 */
+}
+
+.toss-input-group input::placeholder {
+  color: #9ca3af !important; /* placeholder 색상 */
+}
+
+.toss-input-group label {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: white;
+  padding: 0 8px;
+  font-size: 12px;
+  color: #15803D !important; /* 녹색 라벨 색상 */
+  font-weight: 600;
+  z-index: 1;
+}
+
+/* 모든 input 요소에 대한 기본 스타일 강제 적용 - 녹색 테마 */
+input[type="text"], 
+input[type="email"], 
+input[type="tel"], 
+input[type="number"] {
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+}
+
+input[type="text"]:focus, 
+input[type="email"]:focus, 
+input[type="tel"]:focus, 
+input[type="number"]:focus {
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+  border-color: #15803D !important; /* 녹색 포커스 색상 */
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1) !important; /* 녹색 그림자 */
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .toss-payment-card {
+    margin: 16px;
+    padding: 20px;
+  }
+  
+  .booking-info-box {
+    margin: 16px;
+    padding: 12px;
+  }
+}
+
+/* 다크 모드 지원 개선 */
+@media (prefers-color-scheme: dark) {
+  .booking-info-box {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border-color: #475569;
+    color: #e2e8f0;
+  }
+  
+  .toss-input-group label {
+    background: #1e293b;
+    color: #4ade80 !important; /* 다크 모드에서 녹색 계열 */
+  }
+  
+  /* 다크 모드에서도 입력 필드는 밝게 유지 (가독성을 위해) */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="tel"], 
+  input[type="number"] {
+    color: #1f2937 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #6b7280 !important;
+  }
+}
+
+/* 토스 폼 스타일 - Payment.css와 일치하도록 개선 */
+.toss-form-group {
+  margin-bottom: 1rem;
+}
+
+.toss-form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.9rem;
+}
+
+.toss-form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  color: #2d3748;
+}
+
+.toss-form-input:focus {
+  outline: none;
+  border-color: #15803D;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+}
+
+.toss-form-input::placeholder {
+  color: #9ca3af;
+}
+
+.toss-payment-title {
+  color: #2d3748;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.toss-payment-form {
+  width: 100%;
+}
+
+.toss-test-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #FFF8E1;
+  border-radius: 8px;
+  border-left: 4px solid #FF8F00;
+  font-size: 0.9rem;
+  color: #6D4C41;
+}
+
+.toss-test-info div {
+  margin: 0.25rem 0;
+}
+
+.toss-input-help {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  color: #6b7280;
+}
+
+.toss-success-content {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.toss-success-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 1rem 0;
+}
+
+.toss-success-desc {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.toss-confirm-result {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.toss-action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.toss-action-button {
+  background: none;
+  border: none;
+  color: #15803D;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.toss-action-button:hover {
+  background: rgba(21, 128, 61, 0.1);
+}
+
+.toss-action-divider {
+  color: #d1d5db;
+  font-weight: 300;
+}
+
+.price-value {
+  font-weight: 700;
+  color: #15803D;
+}
+
+/* 접근성 개선 - 녹색 테마 적용 */
+.toss-payment-button:focus {
+  outline: 3px solid rgba(21, 128, 61, 0.5);
+  outline-offset: 2px;
+}
+
+.screen-reader-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.readonly-field {
+  background-color: #f5f5f5;
+  color: #666;
+  cursor: not-allowed;
+}

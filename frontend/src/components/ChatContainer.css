@@ -1,0 +1,92 @@
+.chat-container {
+  display: flex;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+}
+
+.chat-sidebar {
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 채팅이 선택되지 않았을 때 표시되는 화면 */
+.no-chat-selected {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+
+.no-chat-content {
+  text-align: center;
+  max-width: 400px;
+  padding: 2rem;
+}
+
+.no-chat-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.6;
+}
+
+.no-chat-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.no-chat-description {
+  font-size: 1rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .chat-container {
+    position: relative;
+  }
+
+  .chat-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    transform: translateX(0);
+  }
+
+  .chat-sidebar.hidden-mobile {
+    transform: translateX(-100%);
+  }
+
+  .chat-main {
+    width: 100%;
+  }
+
+  .chat-main.hidden-mobile {
+    display: none;
+  }
+
+  .no-chat-selected {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .hidden-mobile {
+    display: block !important;
+    transform: none !important;
+  }
+}
