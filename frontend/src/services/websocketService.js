@@ -56,35 +56,88 @@ class WebSocketService {
           return;
         }
 
-        // WebSocket 전용 서브토큰 발급 (임시로 스킵)
+        // WebSocket 전용 서브토큰 발급
         try {
-          console.log('🔐 WebSocket 토큰 확인 중...');
-          // 임시로 서브토큰 발급을 건너뛰고 Access Token 직접 사용
-          this.websocketToken = token; // Access Token을 그대로 사용
-          console.log('✅ Access Token을 WebSocket 토큰으로 사용:', this.websocketToken.substring(0, 20) + '...');
+          console.log('🔐 WebSocket 전용 서브토큰 발급 요청...');
+          this.websocketToken = await websocketTokenUtils.generateWebSocketToken();
+          console.log('✅ WebSocket 서브토큰 발급 완료:', this.websocketToken.substring(0, 20) + '...');
         } catch (tokenError) {
           console.error('❌ WebSocket 서브토큰 발급 실패:', tokenError);
-          // 백엔드에서 서브토큰을 지원하지 않는다면 Access Token 직접 사용
-          this.websocketToken = token;
-          console.log('⚠️ 서브토큰 발급 실패 - Access Token 직접 사용');
+          reject(new Error('WebSocket 서브토큰 발급 실패'));
+          return;
         }
 
-        // WebSocket URL에 토큰을 파라미터로 추가
-        const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080';
-        // 환경에 따른 프로토콜 자동 선택
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsHost = import.meta.env.VITE_WS_URL ? 
-          import.meta.env.VITE_WS_URL : 
-          `${wsProtocol}//${window.location.hostname}:8080`;
-        
-        const wsUrl = `${wsHost}/ws-nest/websocket?token=${encodeURIComponent(this.websocketToken)}`;
-        console.log('🔌 WebSocket 연결 시도 (환경별 프로토콜):', wsHost + '/ws-nest/websocket?token=***');
-        console.log('🌍 현재 환경:', {
-          protocol: window.location.protocol,
-          hostname: window.location.hostname,
-          configuredWsUrl: import.meta.env.VITE_WS_URL,
-          finalWsHost: wsHost
-        });
+        // WebSocket URL 동적 생성 및 연결 전략
+        console.log('🔌 WebSocket 연결 준비:');
+        console.log('  - 환경:', import.meta.env.MODE);
+        console.log('  - 현재 도메인:', window.location.host);
+        console.log('  - 프로토콜:', window.location.protocol);
+        console.log('  - VITE_WS_URL:', import.meta.env.VITE_WS_URL);
+
+        let baseUrl = import.meta.env.VITE_WS_URL;
+
+        if (!baseUrl) {
+          const isProduction = window.location.protocol === 'https:';
+          const protocol = isProduction ? 'wss:' : 'ws:';
+
+          // 프로덕션에서는 현재 도메인 사용 (포트 없이), 개발에서는 localhost:8080 사용
+          let host;
+          if (isProduction) {
+            // www. 제거하고 순수 도메인만 사용 (nginx 프록시이므로 포트 제거)
+            host = window.location.host.replace(/^www\./, '').replace(/:.*$/, '');
+          } else {
+            host = 'localhost:8080';
+          }
+
+          baseUrl = `${protocol}//${host}`;
+        }
+
+        const wsUrl = `${baseUrl}/ws-nest/websocket?token=${encodeURIComponent(this.websocketToken)}`;
+
+        console.log('✅ 최종 WebSocket 설정:');
+        console.log('  - Base URL:', baseUrl);
+        console.log('  - Full URL:', baseUrl + '/ws-nest/websocket?token=***');
+        console.log('  - Token length:', this.websocketToken.length);
+
+        // 테스트용 WebSocket 연결 시도 (실제 연결은 STOMP가 처리)
+        console.log('🧪 WebSocket 기본 연결 테스트 시작...');
+        try {
+          const testWs = new WebSocket(wsUrl);
+          testWs.onopen = () => {
+            console.log('✅ 기본 WebSocket 연결 성공');
+            testWs.close();
+          };
+          testWs.onerror = (error) => {
+            console.error('❌ 기본 WebSocket 연결 실패:', error);
+          };
+          testWs.onclose = (event) => {
+            console.log('🔌 테스트 WebSocket 종료:', event.code, event.reason);
+          };
+        } catch (testError) {
+          console.error('❌ WebSocket 생성 자체 실패:', testError);
+        }
+
+        // 연결 전 기본 연결성 테스트
+        try {
+          const httpUrl = baseUrl.replace(/^wss?:/, window.location.protocol);
+          console.log('🌐 백엔드 연결성 테스트:', httpUrl + '/api/health');
+
+          const healthCheck = await fetch(httpUrl + '/api/health', {
+            method: 'GET',
+            timeout: 5000
+          }).catch(err => {
+            console.warn('⚠️ 백엔드 연결성 테스트 실패 (계속 진행):', err.message);
+            return null;
+          });
+
+          if (healthCheck && healthCheck.ok) {
+            console.log('✅ 백엔드 서버 응답 정상');
+          } else {
+            console.warn('⚠️ 백엔드 서버 응답 없음 (WebSocket 연결 계속 시도)');
+          }
+        } catch (healthError) {
+          console.warn('⚠️ 헬스체크 예외 (WebSocket 연결 계속 시도):', healthError.message);
+        }
         
         // STOMP 클라이언트 생성 (헤더에서 토큰 완전 제거)
         this.stompClient = new Client({
@@ -152,17 +205,20 @@ class WebSocketService {
         // WebSocket 레벨 에러 시
         this.stompClient.onWebSocketError = (error) => {
           console.error('🔴 WebSocket 레벨 에러:', error);
-          console.error('🔗 연결 시도했던 URL:', wsHost + '/ws-nest/websocket?token=***');
-          console.error('🌍 환경 정보:', {
-            currentProtocol: window.location.protocol,
-            currentHost: window.location.hostname,
-            targetWsHost: wsHost,
-            isHttps: window.location.protocol === 'https:',
-            shouldUseWss: window.location.protocol === 'https:' ? 'wss://' : 'ws://'
+          console.error('🔗 연결 시도했던 URL:', baseUrl + '/ws-nest/websocket?token=***');
+          console.error('🔍 에러 상세 정보:', {
+            name: error.name,
+            message: error.message,
+            type: error.type,
+            target: error.target?.url || 'unknown'
           });
+
+          // 네트워크 연결 상태 확인
+          console.log('🌐 네트워크 상태:', navigator.onLine ? '연결됨' : '오프라인');
+
           this.connectionPromise = null;
           
-          reject(new Error(`WebSocket connection failed to ${wsHost}/ws-nest/websocket`));
+          reject(new Error(`WebSocket connection failed to ${baseUrl}/ws-nest/websocket: ${error.message || 'Unknown error'}`));
         };
 
         // 연결 시작
