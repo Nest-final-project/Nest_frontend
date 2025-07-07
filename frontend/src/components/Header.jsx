@@ -49,18 +49,26 @@ const Header = ({
 
   const fetchNotificationCount = async () => {
     try {
-      // 첫 페이지만 가져와서 총 개수 확인
+      // 임시로 알림 개수 조회 비활성화 (406 에러 방지)
+      console.log('⚠️ 알림 개수 조회 임시 비활성화 (SSE 엔드포인트 이슈)');
+      setNotificationCount(0); // 기본값으로 설정
+      return;
+      
+      // 원래 코드 (백엔드 이슈 해결 후 사용)
+      /*
       const params = {
         page: 0,
-        size: 1, // 개수만 확인하므로 1개만 가져오기
+        size: 1,
         sort: 'createdAt,desc'
       };
       const response = await notificationAPI.getNotifications(params);
       if (response.data && response.data.data) {
         setNotificationCount(response.data.data.totalElements || 0);
       }
+      */
     } catch (error) {
       console.error('알림 개수 조회 실패:', error);
+      setNotificationCount(0); // 에러 시 0으로 설정
     }
   };
 

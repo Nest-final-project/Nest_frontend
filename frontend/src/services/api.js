@@ -36,6 +36,7 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    // Accept 헤더를 단순화 - 서버가 복잡한 Accept 헤더를 처리하지 못할 수 있음
     'Accept': 'application/json',
   },
   withCredentials: true, // CORS 설정: 쿠키 및 인증 정보 포함
@@ -64,9 +65,21 @@ api.interceptors.request.use(
           config.url?.includes(endpoint)
       );
 
+      // SSE 알림 내역 조회인지 확인
+      const isSSENotificationEndpoint = config.url?.includes('/sse/notifications') && 
+                                       !config.url?.includes('/subscribe');
+
       // 요청 로깅
       console.log(
           `🌐 [API 요청] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+
+      // SSE 알림 내역 조회의 경우 Accept 헤더 특별 처리
+      if (isSSENotificationEndpoint) {
+        console.log(`📢 [SSE 알림 내역] Accept 헤더를 application/json으로 설정`);
+        config.headers.Accept = 'application/json';
+        // Content-Type 제거 (GET 요청에서는 불필요)
+        delete config.headers['Content-Type'];
+      }
 
       if (isPublicEndpoint) {
         console.log(`📖 [공개 API] 토큰 없이 요청`);
@@ -450,9 +463,41 @@ export const categoryAPI = {
 
 // Notification API
 export const notificationAPI = {
-  // 알림 목록 조회 (SSE 알림 내역)
-  getNotifications: (params) => api.get('/sse/notifications', {params}),
+  // SSE 알림 내역 조회 (HTTP GET)
+  getNotifications: (params) => {
+    console.log('📢 SSE 알림 내역 조회 요청:', params);
+    
+    return api.get('/sse/notifications', {
+      params,
+      headers: {
+        // Accept 헤더를 명시적으로 application/json만 설정
+        'Accept': 'application/json'
+        // Content-Type은 GET 요청에서는 불필요하므로 제거
+      }
+    }).catch(error => {
+      // 406 에러 시 빈 데이터 반환
+      if (error.response?.status === 406) {
+        console.warn('⚠️ 406 Not Acceptable - 빈 알림 데이터 반환');
+        return {
+          data: {
+            data: {
+              content: [],
+              totalElements: 0,
+              totalPages: 0,
+              number: 0,
+              size: params?.size || 10,
+              hasNext: false,
+              hasPrevious: false
+            }
+          }
+        };
+      }
+      throw error; // 다른 에러는 그대로 전파
+    });
+  },
 
+  // SSE 구독용 엔드포인트 (sseService에서 사용)
+  getSSEEndpoint: () => '/sse/notifications/subscribe',
 };
 
 // Ticket API

@@ -56,21 +56,35 @@ class WebSocketService {
           return;
         }
 
-        // WebSocket 전용 서브토큰 발급
+        // WebSocket 전용 서브토큰 발급 (임시로 스킵)
         try {
-          console.log('🔐 WebSocket 전용 서브토큰 발급 요청...');
-          this.websocketToken = await websocketTokenUtils.generateWebSocketToken();
-          console.log('✅ WebSocket 서브토큰 발급 완료:', this.websocketToken.substring(0, 20) + '...');
+          console.log('🔐 WebSocket 토큰 확인 중...');
+          // 임시로 서브토큰 발급을 건너뛰고 Access Token 직접 사용
+          this.websocketToken = token; // Access Token을 그대로 사용
+          console.log('✅ Access Token을 WebSocket 토큰으로 사용:', this.websocketToken.substring(0, 20) + '...');
         } catch (tokenError) {
           console.error('❌ WebSocket 서브토큰 발급 실패:', tokenError);
-          reject(new Error('WebSocket 서브토큰 발급 실패'));
-          return;
+          // 백엔드에서 서브토큰을 지원하지 않는다면 Access Token 직접 사용
+          this.websocketToken = token;
+          console.log('⚠️ 서브토큰 발급 실패 - Access Token 직접 사용');
         }
 
         // WebSocket URL에 토큰을 파라미터로 추가
         const baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080';
-        const wsUrl = `${baseUrl}/ws-nest/websocket?token=${encodeURIComponent(this.websocketToken)}`;
-        console.log('🔌 WebSocket 연결 시도 (토큰 파라미터):', baseUrl + '/ws-nest/websocket?token=***');
+        // 환경에 따른 프로토콜 자동 선택
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = import.meta.env.VITE_WS_URL ? 
+          import.meta.env.VITE_WS_URL : 
+          `${wsProtocol}//${window.location.hostname}:8080`;
+        
+        const wsUrl = `${wsHost}/ws-nest/websocket?token=${encodeURIComponent(this.websocketToken)}`;
+        console.log('🔌 WebSocket 연결 시도 (환경별 프로토콜):', wsHost + '/ws-nest/websocket?token=***');
+        console.log('🌍 현재 환경:', {
+          protocol: window.location.protocol,
+          hostname: window.location.hostname,
+          configuredWsUrl: import.meta.env.VITE_WS_URL,
+          finalWsHost: wsHost
+        });
         
         // STOMP 클라이언트 생성 (헤더에서 토큰 완전 제거)
         this.stompClient = new Client({
@@ -138,10 +152,17 @@ class WebSocketService {
         // WebSocket 레벨 에러 시
         this.stompClient.onWebSocketError = (error) => {
           console.error('🔴 WebSocket 레벨 에러:', error);
-          console.error('🔗 연결 시도했던 URL:', baseUrl + '/ws-nest/websocket?token=***');
+          console.error('🔗 연결 시도했던 URL:', wsHost + '/ws-nest/websocket?token=***');
+          console.error('🌍 환경 정보:', {
+            currentProtocol: window.location.protocol,
+            currentHost: window.location.hostname,
+            targetWsHost: wsHost,
+            isHttps: window.location.protocol === 'https:',
+            shouldUseWss: window.location.protocol === 'https:' ? 'wss://' : 'ws://'
+          });
           this.connectionPromise = null;
           
-          reject(new Error(`WebSocket connection failed to ${baseUrl}/ws-nest/websocket`));
+          reject(new Error(`WebSocket connection failed to ${wsHost}/ws-nest/websocket`));
         };
 
         // 연결 시작

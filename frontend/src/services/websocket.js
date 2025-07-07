@@ -64,8 +64,19 @@ class WebSocketService {
         throw new Error('No valid token available for WebSocket connection');
       }
 
-      const socketUrl = 'ws://localhost:8080/ws-nest/websocket';
-      const socket = new WebSocket(socketUrl);
+      const socketUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080';
+      // 환경에 따른 프로토콜 자동 선택
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const finalSocketUrl = import.meta.env.VITE_WS_URL || 
+        `${wsProtocol}//${window.location.hostname}:8080`;
+      
+      console.log('🔌 WebSocket 연결 환경 확인:', {
+        configuredUrl: import.meta.env.VITE_WS_URL,
+        currentProtocol: window.location.protocol,
+        finalUrl: finalSocketUrl
+      });
+      
+      const socket = new WebSocket(`${finalSocketUrl}/ws-nest/websocket`);
 
       this.stompClient = new Client({
         webSocketFactory: () => socket,

@@ -26,6 +26,10 @@ import AdminDashboard from './components/admin/AdminDashboard.jsx';
 import AboutPage from './components/About/AboutPage.jsx';
 import {authUtils, userInfoUtils} from './utils/tokenUtils';
 import {registerDebugFunctions} from './utils/websocketDebug';
+// 개발 환경에서만 WebSocket 테스트 함수 임포트
+if (import.meta.env.MODE === 'development') {
+  import('./utils/websocketConnectionTest');
+}
 import {BrowserRouter, Routes, Route, useNavigate, useParams, useLocation} from 'react-router-dom';
 import MentorProfilePage from './components/MentorProfilePage.jsx';
 import OAuth2CallbackPage from "./components/OAuth2CallbackPage.jsx";

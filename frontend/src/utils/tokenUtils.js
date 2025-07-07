@@ -161,7 +161,10 @@ export const websocketTokenUtils = {
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+      // 프론트엔드와 같은 도메인 사용 (CORS 방지)
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://www.nest-dev.click';
+      console.log('🌐 WebSocket 토큰 발급 API URL:', apiUrl);
+      
       const response = await fetch(`${apiUrl}/socket/token`, {
         method: 'POST',
         headers: {
