@@ -485,12 +485,13 @@ const ChatList = ({onChatSelect, currentChatId, onBack}) => {
         {isSearchMode && (
             <div className="search-container">
               <div className="search-input-wrapper">
-                <Search className="search-icon"/>
+                <Search className="search-icon" />
                 <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="search-input"
+                    placeholder="채팅방 검색..."
                     autoFocus
                 />
                 {searchTerm && (
