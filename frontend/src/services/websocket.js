@@ -17,12 +17,8 @@ class WebSocketService {
   }
 
   async connect() {
-    // JWT 토큰 만료 문제로 인한 무한 재연결 방지를 위해 연결 완전 차단
-    console.error('🚫 WebSocket 연결이 완전히 비활성화되었습니다');
-    console.error('💡 JWT 토큰 만료로 인한 무한 재연결을 방지하기 위함입니다');
-    console.error('💡 새로운 유효한 토큰을 획득한 후 이 코드를 수정하세요');
-    this.emit('connectionFailed', new Error('WebSocket connection disabled'));
-    return;
+    // WebSocket 연결 활성화 (이전에 비활성화되었던 코드를 수정)
+    console.log('🔌 WebSocket 연결 시작...');
 
     try {
       // 이전 인증 실패로 인한 연결 차단 확인
@@ -64,7 +60,33 @@ class WebSocketService {
         throw new Error('No valid token available for WebSocket connection');
       }
 
-      const socketUrl = 'ws://localhost:8080/ws-nest/websocket';
+      // WebSocket URL 동적 생성 (환경 변수 우선, 없으면 현재 도메인 기반)
+      let baseUrl = import.meta.env.VITE_WS_URL;
+      
+      if (!baseUrl) {
+        const isProduction = window.location.protocol === 'https:';
+        const protocol = isProduction ? 'wss:' : 'ws:';
+        
+        // 프로덕션에서는 현재 도메인 사용 (포트 없이), 개발에서는 localhost:8080 사용
+        let host;
+        if (isProduction) {
+          // www. 제거하고 순수 도메인만 사용 (nginx 프록시이므로 포트 제거)
+          host = window.location.host.replace(/^www\./, '').replace(/:.*$/, '');
+        } else {
+          host = 'localhost:8080';
+        }
+        
+        baseUrl = `${protocol}//${host}`;
+      }
+      
+      const socketUrl = `${baseUrl}/ws-nest/websocket`;
+      
+      console.log('🔌 WebSocket 연결 정보:');
+      console.log('  - 환경:', import.meta.env.MODE);
+      console.log('  - 현재 도메인:', window.location.host);
+      console.log('  - Base URL:', baseUrl);
+      console.log('  - Socket URL:', socketUrl);
+      
       const socket = new WebSocket(socketUrl);
 
       this.stompClient = new Client({
